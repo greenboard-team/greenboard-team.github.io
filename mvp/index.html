@@ -209,7 +209,7 @@ footer a{color:var(--accent)}
       const res = await fetch(API + "/apuntarse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, avatar, correo, id: miId }) });
       const r = await res.json();
       if (!r.ok) {
-        const msgs = { nombre: "Escribe tu nombre.", avatar: "Elige una cara.", correo: "Ese correo no parece válido.", lleno: "La lista está llena. Habla con el equipo en clase." };
+        const msgs = { nombre: "Escribe tu nombre.", avatar: "Elige una cara.", correo: "Ese correo no parece válido.", lleno: "La lista está llena. Habla con el equipo en clase.", cerrado: "La lista se abre el martes 10/11 a las 15:00, durante la presentación. Vuelve entonces." };
         err.textContent = msgs[r.error] || "No se pudo apuntar. Inténtalo otra vez."; err.hidden = false;
       } else {
         if (r.repetido && r.id !== miId) { miId = r.id; try { localStorage.setItem("gb_mvp_id", miId); } catch {} }
@@ -222,6 +222,17 @@ footer a{color:var(--accent)}
     btn.disabled = false; btn.textContent = "Apuntarme";
   });
 
+  // Antes de la hora de apertura, el formulario avisa y no deja apuntarse.
+  (async () => {
+    try {
+      const e = await (await fetch(API + "/estado", { cache: "no-store" })).json();
+      if (!e.abierta) {
+        const cuando = new Date(e.abre).toLocaleString("es-ES", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+        $("enviar").disabled = true; $("enviar").textContent = "Se abre el " + cuando;
+        const t = (e.abre - Date.now()); if (t > 0 && t < 36e5 * 6) setTimeout(() => location.reload(), t + 1500);
+      }
+    } catch {}
+  })();
   refresca();
   setInterval(refresca, 4000);
 })();

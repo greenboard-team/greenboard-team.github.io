@@ -13,5 +13,11 @@ class_name = "Lista"
 tag = "v1"
 new_sqlite_classes = ["Lista"]
 
+[vars]
+# Cuándo se abre la lista para apuntarse (antes, la API responde "cerrado"). ISO 8601 con zona: 15:00 de Madrid.
+APERTURA = "2026-11-10T15:00:00+01:00"
+# Nombre del objeto que guarda la lista y la foto. Cambiarlo = empezar de cero con código nuevo.
+OBJETO = "sprint2-martes"
+
 [observability]
 enabled = true

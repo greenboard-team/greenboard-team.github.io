@@ -5,6 +5,7 @@
 //   POST /apuntarse             -> body {nombre, avatar, correo?} -> { ok, n, plaza, id }
 //   GET  /lista?completo=1      -> igual que /lista pero con correos. Cabecera Authorization: Bearer <ADMIN_TOKEN>
 //   POST /reset                 -> vacía la lista. Misma cabecera.
+//   GET  /estado                -> { abre, abierta }: la lista admite apuntarse desde APERTURA (wrangler.toml).
 //   POST /foto                  -> cuerpo: la imagen (image/jpeg|png|webp, máx. 4 MB). Cabecera X-Equipo: <EQUIPO_CODE>.
 //   GET  /foto                  -> la imagen tal cual (o 404). GET /foto/meta -> { hay, ts, tipo, bytes }
 //   DELETE /foto                -> la quita. Authorization: Bearer <ADMIN_TOKEN>.
@@ -160,7 +161,16 @@ export default {
     if (admin) h.set("X-Interno-Admin", "1");
     if (equipoOk) h.set("X-Interno-Equipo", "1");
     const interno = new Request(req, { headers: h });
-    const stub = env.LISTA.get(env.LISTA.idFromName("sprint2"));
+    // La lista se abre a una hora (APERTURA en wrangler.toml, ISO con zona). Antes, apuntarse devuelve "cerrado";
+    // el admin puede probar igualmente. La foto no tiene hora.
+    const abre = Date.parse(env.APERTURA || "2026-11-10T15:00:00+01:00");
+    if (req.method === "POST" && url.pathname === "/apuntarse" && Number.isFinite(abre) && Date.now() < abre && !admin) {
+      return json({ ok: false, error: "cerrado", abre }, 403, headers);
+    }
+    if (req.method === "GET" && url.pathname === "/estado") {
+      return json({ abre, abierta: !Number.isFinite(abre) || Date.now() >= abre }, 200, headers);
+    }
+    const stub = env.LISTA.get(env.LISTA.idFromName(env.OBJETO || "sprint2-martes"));
     const res = await stub.fetch(interno);
     const out = new Response(res.body, res);
     for (const [k, v] of Object.entries(headers)) out.headers.set(k, v);
