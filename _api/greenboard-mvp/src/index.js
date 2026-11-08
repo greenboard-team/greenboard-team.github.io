@@ -109,7 +109,8 @@ export class Lista {
       return new Response(new Blob(partes), { headers: { "Content-Type": meta.tipo, "Cache-Control": "no-store", "X-Foto-Ts": String(meta.ts) } });
     }
     if (url.pathname === "/foto" && req.method === "POST") {
-      if (!this.env.EQUIPO_CODE || req.headers.get("X-Equipo") !== this.env.EQUIPO_CODE) return json({ ok: false, error: "codigo" }, 401);
+      const codigo = (req.headers.get("X-Equipo") || "").trim().toLowerCase();
+      if (!this.env.EQUIPO_CODE || codigo !== this.env.EQUIPO_CODE.trim().toLowerCase()) return json({ ok: false, error: "codigo" }, 401);
       const tipo = (req.headers.get("Content-Type") || "").split(";")[0].trim();
       if (!["image/jpeg", "image/png", "image/webp"].includes(tipo)) return json({ ok: false, error: "tipo" }, 415);
       const buf = new Uint8Array(await req.arrayBuffer());
