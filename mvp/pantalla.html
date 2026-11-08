@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Greenboard · pantalla de clase para la diapositiva 9. Misma composición que la diapositiva (texto a la izquierda, QR a la derecha);
+     cada persona que se apunta sale del QR y se queda flotando alrededor. Pantalla completa con la tecla F. -->
+<title>Greenboard · Pantalla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --board:#123B2C; --chalk:#E9F2E4; --chalk-2:#CFE0CF; --soft:#A9C4AE; --lime:#9BE15D; --ink:#13241C; --warn:#F6BD60;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--board);color:var(--chalk);font-family:var(--f-body);overflow:hidden;position:relative}
+body::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;
+  background-image:radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,#fff 0 1px,transparent 1.5px);background-size:23px 29px,31px 37px}
+.stage{position:relative;z-index:1;height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;padding:0 4vw}
+h1{font-family:var(--f-display);margin:0;line-height:1.02;letter-spacing:-.02em;font-size:clamp(34px,5.4vw,88px);font-weight:800}
+.texto{position:relative;z-index:3;max-width:44vw}
+.lema{font-family:var(--f-display);font-weight:700;font-style:italic;font-size:clamp(18px,2.4vw,40px);color:var(--lime);margin:1.6vh 0 0}
+.raya{border:0;border-top:1px solid rgba(233,242,228,.35);margin:2.4vh 0}
+.descubre{font-size:clamp(16px,1.9vw,30px);margin:0}
+.promesa{margin:1.6vh 0 0;font-size:clamp(14px,1.5vw,24px);color:var(--chalk-2);max-width:36ch}
+.promesa b{color:var(--lime)}
+.contador{display:inline-flex;align-items:baseline;gap:.5vw;margin-top:2.6vh;font-family:var(--f-display);background:rgba(0,0,0,.18);border-radius:999px;padding:.6vh 1.4vw .8vh}
+.contador .n{font-size:clamp(26px,3.4vw,56px);font-weight:800;color:var(--lime);line-height:1;font-variant-numeric:tabular-nums}
+.contador .de{font-size:clamp(14px,1.6vw,26px);color:var(--soft)}
+.contador .txt{font-family:var(--f-body);font-size:clamp(12px,1.1vw,18px);color:var(--soft);margin-left:.6vw}
+.completo{display:inline-block;margin-top:1.6vh;background:var(--lime);color:var(--ink);font-weight:800;font-family:var(--f-display);border-radius:999px;padding:.7vh 1.4vw;font-size:clamp(13px,1.4vw,22px);animation:pop .6s cubic-bezier(.2,1.5,.4,1) both}
+/* QR */
+.lado{position:relative;height:100%;display:grid;place-items:center}
+.qr{position:relative;z-index:2;background:#fff;border-radius:1.4vw;padding:1.3vw;width:min(28vw,52vh);box-shadow:0 2vw 5vw rgba(0,0,0,.4);display:grid;gap:1vh;justify-items:center;transition:transform .35s cubic-bezier(.2,1.5,.4,1)}
+.qr.late{transform:scale(1.04)}
+.qr img{width:100%;height:auto;display:block;image-rendering:pixelated}
+.qr .url{font-family:var(--f-mono);font-size:clamp(12px,1.25vw,20px);color:var(--ink);text-align:center;word-break:break-all}
+.onda{position:absolute;left:50%;top:50%;width:min(28vw,52vh);aspect-ratio:1;border-radius:50%;border:.35vw solid var(--lime);transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;z-index:1}
+.onda.va{animation:onda 1.3s ease-out both}
+@keyframes onda{0%{transform:translate(-50%,-50%) scale(.7);opacity:.9}100%{transform:translate(-50%,-50%) scale(2.1);opacity:0}}
+/* Gente flotando */
+#gente{position:absolute;inset:0;z-index:4;pointer-events:none}
+.p{position:absolute;width:var(--d);height:var(--d);margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
+   --dx:0px;--dy:0px;animation:entrar 1.1s cubic-bezier(.18,1.35,.35,1) both}
+.p .flota{width:100%;height:100%;animation:deriva var(--t,18s) ease-in-out var(--r,0s) infinite alternate}
+.p .cara{width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 .35vw var(--lime),0 1vw 2.6vw rgba(0,0,0,.45);background:#fff}
+.p .cara svg{width:100%;height:100%;display:block}
+.p .num{position:absolute;right:-.3vw;top:-.3vw;width:2.1vw;height:2.1vw;min-width:22px;min-height:22px;border-radius:50%;background:var(--lime);color:var(--ink);font-family:var(--f-display);font-weight:800;font-size:clamp(11px,1.1vw,18px);display:grid;place-items:center;box-shadow:0 .3vw .8vw rgba(0,0,0,.35)}
+.p .nom{position:absolute;left:50%;top:calc(100% + .5vh);transform:translateX(-50%);background:rgba(0,0,0,.45);backdrop-filter:blur(4px);color:var(--chalk);font-weight:700;font-size:clamp(11px,1.15vw,19px);padding:.2vh .8vw;border-radius:999px;white-space:nowrap;max-width:14vw;overflow:hidden;text-overflow:ellipsis}
+.p.espera{--d:4.4vw}
+.p.espera .cara{box-shadow:0 0 0 .22vw rgba(233,242,228,.55),0 .8vw 2vw rgba(0,0,0,.4);opacity:.92}
+.p.espera .num{background:rgba(233,242,228,.9)}
+.p.espera .nom{font-size:clamp(10px,.95vw,15px);background:rgba(0,0,0,.35)}
+@keyframes entrar{0%{transform:translate(var(--dx),var(--dy)) scale(.08) rotate(-25deg);opacity:0}25%{opacity:1}100%{transform:translate(0,0) scale(1) rotate(0)}}
+@keyframes deriva{0%{transform:translate(0,0) rotate(0)}33%{transform:translate(var(--x1),var(--y1)) rotate(var(--r1))}66%{transform:translate(var(--x2),var(--y2)) rotate(var(--r2))}100%{transform:translate(var(--x3),var(--y3)) rotate(0)}}
+@keyframes pop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:none}}
+/* Confeti al completar las 5 plazas */
+.chispa{position:absolute;width:.7vw;height:.7vw;border-radius:2px;left:var(--x);top:var(--y);background:var(--c);pointer-events:none;z-index:5;animation:chispa 1.6s cubic-bezier(.1,.8,.3,1) forwards}
+@keyframes chispa{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--mx),var(--my)) rotate(720deg);opacity:0}}
+.estado{position:absolute;right:1.2vw;bottom:1vh;font-family:var(--f-mono);font-size:12px;color:rgba(233,242,228,.45);z-index:6}
+.estado i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lime);margin-right:6px;vertical-align:middle;animation:lat 1.6s ease-in-out infinite}
+.estado.off i{background:var(--warn);animation:none}
+@keyframes lat{0%,100%{opacity:1}50%{opacity:.25}}
+@media (max-aspect-ratio:1/1){.stage{grid-template-columns:1fr;grid-template-rows:auto 1fr;align-content:start;padding-top:3vh}.texto{max-width:100%}.qr{width:min(56vw,46vh)}.onda{width:min(56vw,46vh)}.p{--d:13vw}.p.espera{--d:8vw}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}.p .flota{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <section class="texto">
+    <h1>Somos Greenboard.</h1>
+    <p class="lema">«Toda tu universidad en una pantalla»</p>
+    <hr class="raya">
+    <p class="descubre">Descubre Greenboard</p>
+    <p class="promesa">Escanea el código: <b>los 5 primeros</b> prueban el MVP esta semana.</p>
+    <div class="contador" aria-live="polite"><span class="n" id="n">0</span><span class="de">/ 5</span><span class="txt" id="txt">plazas ocupadas</span></div>
+    <div id="completo"></div>
+  </section>
+  <aside class="lado">
+    <div class="onda" id="onda"></div>
+    <div class="qr" id="qr">
+      <img src="qr.svg" alt="Código QR de greenboard-team.github.io/mvp" width="600" height="600">
+      <p class="url">greenboard-team.github.io/mvp</p>
+    </div>
+  </aside>
+</div>
+<div id="gente"></div>
+<p class="estado" id="estado"><i></i>conectando</p>
+
+<script src="avatares.js"></script>
+<script>
+(function(){
+  const API = "https://greenboard-mvp.utad-study-connector.workers.dev";
+  const PLAZAS = 5;
+  const $ = (id) => document.getElementById(id);
+  const gente = $("gente"), qr = $("qr"), onda = $("onda");
+  const puestos = new Map(); // id -> {el, x, y, r}
+  let completoMostrado = false;
+  let vw = innerWidth, vh = innerHeight;
+  addEventListener("resize", () => { vw = innerWidth; vh = innerHeight; });
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  function rectDe(el) { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, cx: (r.left + r.right) / 2, cy: (r.top + r.bottom) / 2, w: r.width, h: r.height }; }
+  function tocaRect(x, y, rad, R, m) { return x + rad > R.l - m && x - rad < R.r + m && y + rad > R.t - m && y - rad < R.b + m; }
+
+  // Colocación en nube: candidatos al azar por toda la pantalla (fuera del QR, del texto y de los demás) y gana el que
+  // mejor se ajusta a una distancia objetivo del QR, distinta para cada persona. Así se reparten alrededor sin alinearse.
+  function sitio(rad) {
+    const Q = rectDe(qr), T = rectDe(document.querySelector(".texto"));
+    const base = Math.max(Q.w, Q.h) / 2;
+    const objetivo = base + rad * rnd(1.15, 2.6);
+    let mejor = null, mejorS = Infinity;
+    for (let k = 0; k < 500; k++) {
+      const x = rnd(rad + 10, vw - rad - 10), y = rnd(rad + 30, vh - rad - 44);
+      if (tocaRect(x, y, rad, Q, rad * 0.35)) continue;
+      if (tocaRect(x, y, rad, T, 6)) continue;
+      let choca = false;
+      for (const p of puestos.values()) { if (p.x === null || p.x === undefined) continue; if (Math.hypot(p.x - x, p.y - y) < p.r + rad + Math.min(p.r, rad) * 0.9) { choca = true; break; } }
+      if (choca) continue;
+      const dist = Math.hypot((x - Q.cx), (y - Q.cy) * 1.15);
+      const sc = Math.abs(dist - objetivo) + rnd(0, rad * 0.8);
+      if (sc < mejorS) { mejorS = sc; mejor = { x, y }; }
+    }
+    if (mejor) return mejor;
+    // Sin hueco libre: en el borde del QR, aunque se solape con alguien.
+    const ang = rnd(0, Math.PI * 2), b2 = base + rad * 1.2;
+    return { x: Math.min(Math.max(Q.cx + Math.cos(ang) * b2, rad), vw - rad), y: Math.min(Math.max(Q.cy + Math.sin(ang) * b2, rad + 30), vh - rad - 44) };
+  }
+
+  function aparece(p, esPlaza) {
+    const d = (esPlaza ? 8.8 : 4.4) / 100 * vw;        // igual que --d en CSS
+    const rad = d / 2;
+    const { x, y } = sitio(rad);
+    const Q = rectDe(qr);
+    const el = document.createElement("div");
+    el.className = "p" + (esPlaza ? "" : " espera");
+    el.style.setProperty("--d", (esPlaza ? 8.8 : 4.4) + "vw");
+    el.style.left = x + "px"; el.style.top = y + "px";
+    el.style.setProperty("--dx", (Q.cx - x) + "px"); el.style.setProperty("--dy", (Q.cy - y) + "px");
+    // Deriva lenta, como una nube: tres puntos de paso al azar, amplitud según el tamaño.
+    const amp = rad * (esPlaza ? 0.32 : 0.45);
+    for (let i = 1; i <= 3; i++) { el.style.setProperty("--x" + i, rnd(-amp, amp).toFixed(1) + "px"); el.style.setProperty("--y" + i, rnd(-amp, amp).toFixed(1) + "px"); }
+    el.style.setProperty("--r1", rnd(-5, 5).toFixed(1) + "deg"); el.style.setProperty("--r2", rnd(-5, 5).toFixed(1) + "deg");
+    el.style.setProperty("--t", rnd(14, 24).toFixed(1) + "s"); el.style.setProperty("--r", (-rnd(0, 12)).toFixed(1) + "s");
+    el.innerHTML = `<div class="flota"><div class="cara">${avatarSVG(p.avatar)}</div><span class="num">${p.n}</span><span class="nom"></span></div>`;
+    el.querySelector(".nom").textContent = p.nombre;
+    gente.appendChild(el);
+    puestos.set(p.id, { el, x, y, r: rad });   // sustituye la reserva hecha al programar la aparición
+    qr.classList.add("late"); setTimeout(() => qr.classList.remove("late"), 400);
+    onda.classList.remove("va"); void onda.offsetWidth; onda.classList.add("va");
+  }
+
+  function confeti() {
+    const Q = rectDe(qr); const colores = ["#9BE15D", "#FFD166", "#8ECAE6", "#F4A6C2", "#E9F2E4"];
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement("i"); c.className = "chispa";
+      c.style.setProperty("--x", Q.cx + "px"); c.style.setProperty("--y", Q.cy + "px");
+      const ang = rnd(0, Math.PI * 2), dist = rnd(vw * 0.12, vw * 0.38);
+      c.style.setProperty("--mx", Math.cos(ang) * dist + "px"); c.style.setProperty("--my", (Math.sin(ang) * dist + vh * 0.25) + "px");
+      c.style.setProperty("--c", colores[i % colores.length]); c.style.animationDelay = rnd(0, 0.25) + "s";
+      document.body.appendChild(c); setTimeout(() => c.remove(), 2200);
+    }
+  }
+
+  function pinta(d) {
+    const ocupadas = Math.min(d.total, PLAZAS);
+    $("n").textContent = ocupadas;
+    $("txt").textContent = ocupadas === 1 ? "plaza ocupada" : "plazas ocupadas";
+    const ids = new Set(d.personas.map(p => p.id));
+    for (const [id, p] of puestos) { if (!ids.has(id)) { p.el && p.el.remove(); puestos.delete(id); } }
+    let nuevos = 0;
+    d.personas.forEach((p) => {
+      if (puestos.has(p.id)) return;
+      // Reservamos ya el id para que el siguiente sondeo no lo vuelva a programar; escalonamos las apariciones.
+      puestos.set(p.id, { el: null, x: null, y: null, r: 0 });
+      setTimeout(() => aparece(p, p.plaza), nuevos * 450); nuevos++;
+    });
+    if (d.total >= PLAZAS && !completoMostrado) {
+      completoMostrado = true;
+      $("completo").innerHTML = '<span class="completo">¡Plazas completas! Sigue abierta la lista de espera</span>';
+      if (nuevos > 0) setTimeout(confeti, nuevos * 450 + 500);
+    }
+    if (d.total < PLAZAS && completoMostrado) { completoMostrado = false; $("completo").innerHTML = ""; }
+  }
+
+  async function tick() {
+    try {
+      const d = await (await fetch(API + "/lista", { cache: "no-store" })).json();
+      pinta(d);
+      $("estado").className = "estado"; $("estado").innerHTML = `<i></i>en directo · ${d.total} apuntados`;
+    } catch {
+      $("estado").className = "estado off"; $("estado").innerHTML = "<i></i>sin conexión, reintentando";
+    }
+  }
+  // Esperamos a que las fuentes estén para medir bien el texto y el QR.
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { tick(); setInterval(tick, 1500); });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "f" || e.key === "F") { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); }
+  });
+})();
+</script>
+</body>
+</html>

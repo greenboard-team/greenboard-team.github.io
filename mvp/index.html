@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Greenboard · lista de prueba del MVP (QR de la diapositiva 9). Nombre + avatar; los 5 primeros tienen plaza. La lista vive en _api/greenboard-mvp. -->
+<title>Prueba Greenboard</title>
+<meta name="theme-color" content="#123B2C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F3F6F1; --surface:#FFFFFF; --ink:#13241C; --muted:#56685E; --line:#D5DED7;
+  --board:#123B2C; --board-2:#1A4D3A; --chalk:#E9F2E4; --lime:#9BE15D; --accent:#1F8F5F;
+  --warn:#B4541A; --warn-bg:#FCEBDD; --ok-bg:#E2F3E8;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
+  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
+  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+h1,h2{font-family:var(--f-display);line-height:1.08;margin:0;text-wrap:balance}
+.board{background:var(--board);color:var(--chalk);position:relative;overflow:hidden;padding:20px 0 34px}
+.board::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;
+  background-image:radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,#fff 0 1px,transparent 1.5px);background-size:23px 29px,31px 37px}
+.board .wrap{position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--chalk);text-decoration:none}
+.brand i{width:32px;height:32px;border-radius:9px;background:var(--lime);display:grid;place-items:center;color:#10301F;font-style:normal;font-size:18px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin:26px 0 8px}
+h1{font-size:clamp(32px,8.5vw,44px);font-weight:800;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--lime)}
+.lead{color:#CFE0CF;margin:12px 0 0;font-size:18px;max-width:36ch}
+.estado{display:inline-flex;gap:8px;align-items:center;margin-top:18px;font-family:var(--f-mono);font-size:13px;color:#A9C4AE;background:rgba(255,255,255,.08);border-radius:999px;padding:6px 12px}
+.estado b{color:var(--lime);font-weight:500}
+.estado .dot{width:8px;height:8px;border-radius:50%;background:var(--lime);animation:lat 1.6s ease-in-out infinite}
+@keyframes lat{0%,100%{opacity:1}50%{opacity:.3}}
+main{padding:22px 0 60px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+label{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+label small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=email]{width:100%;font:inherit;font-size:18px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+input:focus-visible{outline:3px solid var(--lime);outline-offset:1px;border-color:var(--accent)}
+.campo{margin-bottom:18px}
+.caras{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.cara{aspect-ratio:1;border-radius:50%;border:3px solid transparent;background:transparent;padding:0;cursor:pointer;position:relative;transition:transform .15s}
+.cara svg{width:100%;height:100%;display:block;border-radius:50%}
+.cara:hover{transform:translateY(-2px)}
+.cara[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--ok-bg)}
+.cara[aria-pressed="true"]::after{content:"✓";position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
+.cara:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;width:100%;border:0;border-radius:999px;padding:15px 20px;font:inherit;font-weight:700;font-size:18px;background:var(--lime);color:#10301F;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:wait}
+.nota{font-size:13.5px;color:var(--muted);margin:12px 0 0}
+.error{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:15px;margin-top:12px}
+/* Resultado */
+.res{text-align:center;display:grid;gap:10px;justify-items:center}
+.res .big{width:132px;height:132px;animation:pop .6s cubic-bezier(.2,1.4,.4,1) both}
+.res .big svg{width:100%;height:100%}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.res h2{font-size:30px;font-weight:800}
+.res .num{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.res .pill{display:inline-block;font-weight:700;border-radius:999px;padding:6px 14px;background:var(--ok-bg);color:var(--accent)}
+.res .pill.espera{background:var(--warn-bg);color:var(--warn)}
+.lista{margin-top:22px}
+.lista h2{font-size:18px;margin-bottom:10px}
+.fila{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.fila svg{width:36px;height:36px;flex:none}
+.fila .n{font-family:var(--f-mono);font-size:13px;color:var(--muted);width:24px}
+.fila .quien{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila .tag{font-size:12px;font-weight:700;color:var(--accent)}
+.fila .tag.espera{color:var(--warn)}
+footer{color:var(--muted);font-size:13px;padding:0 0 30px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.res .big,.estado .dot{animation:none}}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <a class="brand" href="../"><i>G</i>Greenboard</a>
+    <p class="eyebrow">Prueba del MVP · Sprint 3</p>
+    <h1>Prueba Greenboard <em>antes que nadie</em></h1>
+    <p class="lead">Los 5 primeros que se apunten prueban el prototipo esta semana con sus clases y entregas de verdad.</p>
+    <p class="estado" id="estado"><span class="dot"></span><span>Conectando…</span></p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <form class="card" id="form" novalidate>
+      <div class="campo">
+        <label for="nombre">Tu nombre</label>
+        <input type="text" id="nombre" name="nombre" maxlength="24" autocomplete="given-name" placeholder="Como quieras salir en la pantalla" required>
+      </div>
+      <div class="campo">
+        <label id="lbl-cara">Elige tu cara</label>
+        <div class="caras" id="caras" role="group" aria-labelledby="lbl-cara"></div>
+      </div>
+      <div class="campo">
+        <label for="correo">Correo <small>(opcional, solo para avisarte de la prueba)</small></label>
+        <input type="email" id="correo" name="correo" maxlength="80" autocomplete="email" placeholder="tu@live.u-tad.com">
+      </div>
+      <button class="btn" type="submit" id="enviar">Apuntarme</button>
+      <p class="error" id="error" hidden></p>
+      <p class="nota">En la pantalla de clase solo salen el nombre y el avatar. Nada más.</p>
+    </form>
+
+    <section class="card res" id="resultado" hidden>
+      <div class="big" id="res-avatar"></div>
+      <h2 id="res-titulo"></h2>
+      <p class="num" id="res-num"></p>
+      <span class="pill" id="res-pill"></span>
+      <p class="nota" id="res-nota"></p>
+    </section>
+
+    <section class="lista" id="lista" hidden>
+      <h2>Ya apuntados</h2>
+      <div id="filas"></div>
+    </section>
+  </div>
+</main>
+<footer><div class="wrap">Greenboard · Proyectos III, U-tad · <a href="../">greenboard-team.github.io</a></div></footer>
+
+<script src="avatares.js"></script>
+<script>
+(function(){
+  const API = "https://greenboard-mvp.utad-study-connector.workers.dev";
+  const $ = (id) => document.getElementById(id);
+  let avatar = 0;
+  let miId = "";
+  try { miId = localStorage.getItem("gb_mvp_id") || ""; } catch {}
+  if (!miId) { miId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); try { localStorage.setItem("gb_mvp_id", miId); } catch {} }
+
+  // Avatares
+  const caras = $("caras");
+  AVATARES.forEach((a, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cara"; b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", a.nombre);
+    b.innerHTML = avatarSVG(i + 1);
+    b.addEventListener("click", () => {
+      avatar = i + 1;
+      caras.querySelectorAll(".cara").forEach((x, j) => x.setAttribute("aria-pressed", String(j === i)));
+    });
+    caras.appendChild(b);
+  });
+
+  function pintaEstado(d) {
+    const quedan = Math.max(d.plazas - d.total, 0);
+    $("estado").innerHTML = '<span class="dot"></span><span>' +
+      (quedan > 0 ? `Apuntados: <b>${d.total}</b> · quedan <b>${quedan}</b> plazas de ${d.plazas}` : `Plazas completas (<b>${d.plazas}</b>) · lista de espera: <b>${d.total - d.plazas}</b>`) + '</span>';
+  }
+  function pintaLista(d) {
+    if (!d.personas.length) { $("lista").hidden = true; return; }
+    $("lista").hidden = false;
+    $("filas").innerHTML = d.personas.map(p =>
+      `<div class="fila">${avatarSVG(p.avatar)}<span class="n">${p.n}</span><span class="quien">${esc(p.nombre)}${p.id === miId ? " (tú)" : ""}</span><span class="tag ${p.plaza ? "" : "espera"}">${p.plaza ? "Plaza" : "Espera"}</span></div>`).join("");
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  function muestraResultado(r, nombre) {
+    $("form").hidden = true;
+    const res = $("resultado"); res.hidden = false;
+    $("res-avatar").innerHTML = avatarSVG(r.avatar);
+    $("res-titulo").textContent = r.plaza ? `¡Dentro, ${nombre}!` : `Apuntado, ${nombre}`;
+    $("res-num").textContent = r.plaza ? `Eres el nº ${r.n} de ${r.plazas || 5}` : `Lista de espera · nº ${r.n - (r.plazas || 5)}`;
+    const pill = $("res-pill"); pill.textContent = r.plaza ? "Tienes plaza para probar el MVP" : "Lista de espera";
+    pill.className = "pill" + (r.plaza ? "" : " espera");
+    $("res-nota").textContent = r.plaza
+      ? "Mira la pantalla: ya estás ahí. Te contactamos esta semana para la prueba."
+      : "Si alguien de los 5 no puede, te avisamos. Mientras, mira la pantalla: también sales.";
+    try { localStorage.setItem("gb_mvp_res", JSON.stringify({ ...r, nombre })); } catch {}
+  }
+
+  async function refresca() {
+    try {
+      const d = await (await fetch(API + "/lista", { cache: "no-store" })).json();
+      pintaEstado(d); pintaLista(d);
+      try {
+        const guardado = JSON.parse(localStorage.getItem("gb_mvp_res") || "null");
+        if (guardado) {
+          const yo = d.personas.find(p => p.id === miId);
+          if (yo) muestraResultado({ ...guardado, n: yo.n, plaza: yo.plaza, avatar: yo.avatar, plazas: d.plazas }, yo.nombre);
+          else { localStorage.removeItem("gb_mvp_res"); $("form").hidden = false; $("resultado").hidden = true; }
+        }
+      } catch {}
+    } catch {
+      $("estado").innerHTML = '<span class="dot"></span><span>Sin conexión con la lista. Vuelve a intentarlo.</span>';
+    }
+  }
+
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const err = $("error"); err.hidden = true;
+    const nombre = $("nombre").value.trim();
+    const correo = $("correo").value.trim();
+    if (nombre.length < 2) { err.textContent = "Escribe tu nombre (al menos dos letras)."; err.hidden = false; $("nombre").focus(); return; }
+    if (!avatar) { err.textContent = "Elige una cara para salir en la pantalla."; err.hidden = false; return; }
+    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { err.textContent = "Ese correo no parece válido. Puedes dejarlo vacío."; err.hidden = false; $("correo").focus(); return; }
+    const btn = $("enviar"); btn.disabled = true; btn.textContent = "Apuntando…";
+    try {
+      const res = await fetch(API + "/apuntarse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, avatar, correo, id: miId }) });
+      const r = await res.json();
+      if (!r.ok) {
+        const msgs = { nombre: "Escribe tu nombre.", avatar: "Elige una cara.", correo: "Ese correo no parece válido.", lleno: "La lista está llena. Habla con el equipo en clase." };
+        err.textContent = msgs[r.error] || "No se pudo apuntar. Inténtalo otra vez."; err.hidden = false;
+      } else {
+        if (r.repetido && r.id !== miId) { miId = r.id; try { localStorage.setItem("gb_mvp_id", miId); } catch {} }
+        muestraResultado({ ...r, avatar, plazas: 5 }, nombre);
+        refresca();
+      }
+    } catch {
+      err.textContent = "Sin conexión. Comprueba la red y vuelve a pulsar."; err.hidden = false;
+    }
+    btn.disabled = false; btn.textContent = "Apuntarme";
+  });
+
+  refresca();
+  setInterval(refresca, 4000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# API de la lista de prueba del MVP (diapositiva 9 del Sprint 2).
+# Cuenta de Cloudflare de Dmitrii. Desplegar: npx wrangler deploy (desde esta carpeta).
+# Secreto, una sola vez: npx wrangler secret put ADMIN_TOKEN   (reinicia la lista y lee los correos)
+name = "greenboard-mvp"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "LISTA"
+class_name = "Lista"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Lista"]
+
+[observability]
+enabled = true
