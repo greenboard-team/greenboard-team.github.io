@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Greenboard · la presentación del Sprint 2 entera en una página, para no cambiar de ventana en clase.
+     Funciona con mando de presentaciones: envían PageDown/PageUp (o flechas), F5/Escape y «.» o B para pantalla en negro.
      Diapositivas 1-22 como imagen; la 4 con sus 12 clics; la 8 con el vídeo; la 9 es la pantalla en directo (pantalla.html).
      Teclas: → / espacio / clic = siguiente paso · ← = anterior · F = pantalla completa · 1-9 = ir a esa diapositiva · B = negro. -->
 <title>Greenboard · Presentación Sprint 2</title>
@@ -21,7 +22,7 @@ html,body{height:100%;margin:0;background:#000;color:#E9F2E4;font-family:"Atkins
 /* Diapositiva 8: vídeo sobre la imagen */
 .s8 video{position:absolute;background:#000;object-fit:cover}
 /* Diapositiva 9: pantalla en directo */
-.s9 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#123B2C}
+.s9 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#123B2C;pointer-events:none}
 #num{position:fixed;right:14px;bottom:10px;font:500 13px "JetBrains Mono",ui-monospace,monospace;color:rgba(233,242,228,.5);opacity:0;transition:opacity .4s}
 body.mueve #num{opacity:1}
 #negro{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .3s}
@@ -110,7 +111,7 @@ body.mueve #ayuda{opacity:1}
 
   // Diapositiva 9: la pantalla en directo, cargada la primera vez que se llega
   let ifr = null;
-  function cargaPantalla() { if (ifr) return; ifr = document.createElement("iframe"); ifr.src = "pantalla.html"; ifr.title = "Pantalla en directo"; capas[8].appendChild(ifr); }
+  function cargaPantalla() { if (ifr) return; ifr = document.createElement("iframe"); ifr.src = "pantalla.html"; ifr.title = "Pantalla en directo"; ifr.tabIndex = -1; capas[8].appendChild(ifr); }
 
   function muestra() {
     capas.forEach((c, i) => c.classList.toggle("activa", i + 1 === cur));
@@ -142,7 +143,8 @@ body.mueve #ayuda{opacity:1}
       case "ArrowLeft": case "PageUp": case "Backspace": e.preventDefault(); anterior(); break;
       case "Home": cur = 1; paso = 0; muestra(); break;
       case "End": cur = 9; paso = 0; muestra(); break;
-      case "f": case "F": if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); break;
+      case "f": case "F": case "F5": e.preventDefault(); if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); break;
+      case "Escape": e.preventDefault(); break;   // que el mando no saque de la página
       case "b": case "B": case ".": document.body.classList.toggle("negro"); break;
       default:
         if (/^[1-9]$/.test(e.key)) { cur = Number(e.key); paso = 0; muestra(); }
