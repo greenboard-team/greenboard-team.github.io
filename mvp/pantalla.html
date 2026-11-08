@@ -20,6 +20,10 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--board);color:var(--chalk);font-family:var(--f-body);overflow:hidden;position:relative}
+#foto{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;z-index:0}
+#foto.hay{opacity:1}
+#velo{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s ease;background:linear-gradient(90deg,rgba(14,46,34,.90) 0%,rgba(14,46,34,.78) 48%,rgba(14,46,34,.62) 100%)}
+#velo.hay{opacity:1}
 body::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;
   background-image:radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,#fff 0 1px,transparent 1.5px);background-size:23px 29px,31px 37px}
 .stage{position:relative;z-index:1;height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;padding:0 4vw}
@@ -72,6 +76,7 @@ h1{font-family:var(--f-display);margin:0;line-height:1.02;letter-spacing:-.02em;
 </style>
 </head>
 <body>
+<div id="foto" aria-hidden="true"></div><div id="velo"></div>
 <div class="stage">
   <section class="texto">
     <h1>Somos Greenboard.</h1>
@@ -198,6 +203,19 @@ h1{font-family:var(--f-display);margin:0;line-height:1.02;letter-spacing:-.02em;
       $("estado").className = "estado off"; $("estado").innerHTML = "<i></i>sin conexión, reintentando";
     }
   }
+  // Foto del equipo (subida desde foto.html): de fondo, con velo verde. Se comprueba cada 6 s.
+  let fotoTs = 0;
+  async function foto() {
+    try {
+      const m = await (await fetch(API + "/foto/meta", { cache: "no-store" })).json();
+      if (!m.hay) { if (fotoTs) { fotoTs = 0; $("foto").classList.remove("hay"); $("velo").classList.remove("hay"); } return; }
+      if (m.ts === fotoTs) return;
+      const im = new Image(); im.onload = () => { $("foto").style.backgroundImage = `url("${im.src}")`; $("foto").classList.add("hay"); $("velo").classList.add("hay"); fotoTs = m.ts; };
+      im.src = API + "/foto?ts=" + m.ts;
+    } catch {}
+  }
+  foto(); setInterval(foto, 6000);
+
   // Esperamos a que las fuentes estén para medir bien el texto y el QR.
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { tick(); setInterval(tick, 1500); });
 

@@ -5,6 +5,9 @@
 //   POST /apuntarse             -> body {nombre, avatar, correo?} -> { ok, n, plaza, id }
 //   GET  /lista?completo=1      -> igual que /lista pero con correos. Cabecera Authorization: Bearer <ADMIN_TOKEN>
 //   POST /reset                 -> vacía la lista. Misma cabecera.
+//   POST /foto                  -> cuerpo: la imagen (image/jpeg|png|webp, máx. 4 MB). Cabecera X-Equipo: <EQUIPO_CODE>.
+//   GET  /foto                  -> la imagen tal cual (o 404). GET /foto/meta -> { hay, ts, tipo, bytes }
+//   DELETE /foto                -> la quita. Authorization: Bearer <ADMIN_TOKEN>.
 
 const PLAZAS = 5;
 const MAX_PERSONAS = 80;
@@ -21,8 +24,8 @@ function cors(req) {
   const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
   return {
     "Access-Control-Allow-Origin": ok ? origin : ORIGENES[0],
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Equipo",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
@@ -92,6 +95,43 @@ export class Lista {
       return json({ ok: true, n, plaza: n <= PLAZAS, id: persona.id });
     }
 
+    // --- Foto del equipo para la diapositiva 9: guardada en trozos de 100 KiB en el almacenamiento del objeto.
+    const TROZO = 100 * 1024, MAX_FOTO = 4 * 1024 * 1024;
+    if (url.pathname === "/foto/meta" && req.method === "GET") {
+      const meta = await this.ctx.storage.get("foto:meta");
+      return json(meta ? { hay: true, ...meta } : { hay: false });
+    }
+    if (url.pathname === "/foto" && req.method === "GET") {
+      const meta = await this.ctx.storage.get("foto:meta");
+      if (!meta) return new Response("sin foto", { status: 404, headers: { "Cache-Control": "no-store" } });
+      const trozos = await this.ctx.storage.get([...Array(meta.n).keys()].map((i) => "foto:" + i));
+      const partes = []; for (let i = 0; i < meta.n; i++) partes.push(trozos.get("foto:" + i));
+      return new Response(new Blob(partes), { headers: { "Content-Type": meta.tipo, "Cache-Control": "no-store", "X-Foto-Ts": String(meta.ts) } });
+    }
+    if (url.pathname === "/foto" && req.method === "POST") {
+      if (!this.env.EQUIPO_CODE || req.headers.get("X-Equipo") !== this.env.EQUIPO_CODE) return json({ ok: false, error: "codigo" }, 401);
+      const tipo = (req.headers.get("Content-Type") || "").split(";")[0].trim();
+      if (!["image/jpeg", "image/png", "image/webp"].includes(tipo)) return json({ ok: false, error: "tipo" }, 415);
+      const buf = new Uint8Array(await req.arrayBuffer());
+      if (buf.byteLength < 1000) return json({ ok: false, error: "vacia" }, 400);
+      if (buf.byteLength > MAX_FOTO) return json({ ok: false, error: "grande" }, 413);
+      const n = Math.ceil(buf.byteLength / TROZO);
+      const viejo = await this.ctx.storage.get("foto:meta");
+      const entradas = {};
+      for (let i = 0; i < n; i++) entradas["foto:" + i] = buf.slice(i * TROZO, (i + 1) * TROZO);
+      await this.ctx.storage.put(entradas);
+      if (viejo && viejo.n > n) await this.ctx.storage.delete([...Array(viejo.n - n).keys()].map((i) => "foto:" + (n + i)));
+      const meta = { ts: Date.now(), tipo, bytes: buf.byteLength, n };
+      await this.ctx.storage.put("foto:meta", meta);
+      return json({ ok: true, ...meta });
+    }
+    if (url.pathname === "/foto" && req.method === "DELETE") {
+      if (!admin) return json({ ok: false, error: "token" }, 401);
+      const meta = await this.ctx.storage.get("foto:meta");
+      if (meta) { await this.ctx.storage.delete([...Array(meta.n).keys()].map((i) => "foto:" + i)); await this.ctx.storage.delete("foto:meta"); }
+      return json({ ok: true });
+    }
+
     if (req.method === "POST" && url.pathname === "/reset") {
       if (!admin) return json({ ok: false, error: "token" }, 401);
       await this.ctx.storage.put("personas", []);
@@ -108,7 +148,7 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
     const url = new URL(req.url);
     if (url.pathname === "/" ) {
-      return new Response("greenboard-mvp: GET /lista · POST /apuntarse", { headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" } });
+      return new Response("greenboard-mvp: GET /lista · POST /apuntarse · GET/POST /foto", { headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" } });
     }
     const stub = env.LISTA.get(env.LISTA.idFromName("sprint2"));
     const res = await stub.fetch(req);

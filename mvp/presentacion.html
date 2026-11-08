@@ -6,7 +6,8 @@
 <!-- Greenboard · la presentación del Sprint 2 entera en una página, para no cambiar de ventana en clase.
      Funciona con mando de presentaciones: envían PageDown/PageUp (o flechas), F5/Escape y «.» o B para pantalla en negro.
      Diapositivas 1-22 como imagen; la 4 con sus 12 clics; la 8 con el vídeo; la 9 es la pantalla en directo (pantalla.html).
-     Teclas: → / espacio / clic = siguiente paso · ← = anterior · F = pantalla completa · 1-9 = ir a esa diapositiva · B = negro. -->
+     Teclas: → / espacio / clic = siguiente paso · ← = anterior · F = pantalla completa · 1-9 = ir a esa diapositiva · B = negro.
+     U = subir la foto del equipo (se pone de fondo en la 9; pide el código del equipo la primera vez). -->
 <title>Greenboard · Presentación Sprint 2</title>
 <style>
 html,body{height:100%;margin:0;background:#000;color:#E9F2E4;font-family:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;overflow:hidden}
@@ -38,7 +39,9 @@ body.mueve #ayuda{opacity:1}
 <body>
 <div id="marco"></div>
 <div id="negro"></div>
-<p id="ayuda">→ siguiente · ← anterior · F pantalla completa · B negro · en la 8: V vídeo grande, P pausa</p>
+<p id="ayuda">→ siguiente · ← anterior · F pantalla completa · B negro · en la 8: V vídeo grande, P pausa · U subir foto del equipo</p>
+<input type="file" id="fotoInput" accept="image/*" hidden>
+<p id="aviso" style="position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#9BE15D;color:#10301F;font-weight:700;padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .3s;pointer-events:none"></p>
 <p id="num"></p>
 
 <script>
@@ -160,6 +163,29 @@ body.mueve #ayuda{opacity:1}
   });
   document.addEventListener("click", (e) => { if (e.target.closest("video, iframe")) return; if (e.clientX < innerWidth * 0.15) anterior(); else siguiente(); });
   document.addEventListener("mousemove", toca);
+
+  // U: subir la foto del equipo desde aquí mismo (misma API que foto.html). Se pone de fondo en la 9 sola.
+  const API = "https://greenboard-mvp.utad-study-connector.workers.dev";
+  function avisa(txt, ms) { const a = document.getElementById("aviso"); a.textContent = txt; a.style.opacity = 1; clearTimeout(avisa.t); avisa.t = setTimeout(() => a.style.opacity = 0, ms || 3500); }
+  document.getElementById("fotoInput").addEventListener("change", async (ev) => {
+    const f = ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    let codigo = ""; try { codigo = localStorage.getItem("gb_equipo") || ""; } catch {}
+    if (!codigo) codigo = (prompt("Código del equipo (lo tiene Dmitrii):") || "").trim();
+    if (!codigo) return;
+    avisa("Subiendo la foto…", 20000);
+    try {
+      const bmp = await createImageBitmap(f); const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.85));
+      const r = await fetch(API + "/foto", { method: "POST", headers: { "Content-Type": "image/jpeg", "X-Equipo": codigo }, body: blob });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) { if (j.error === "codigo") { try { localStorage.removeItem("gb_equipo"); } catch {} } throw new Error(j.error === "codigo" ? "Código incorrecto" : "No se pudo subir"); }
+      try { localStorage.setItem("gb_equipo", codigo); } catch {}
+      avisa("Foto subida: ya está de fondo en la 9");
+    } catch (e) { avisa(e.message || "No se pudo subir"); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "u" || e.key === "U") document.getElementById("fotoInput").click(); });
 
   // Posición desde el hash (#4.7 = diapositiva 4, paso 7), al cargar y si alguien lo cambia a mano
   function desdeHash() {

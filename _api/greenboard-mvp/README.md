@@ -12,6 +12,9 @@ URL: `https://greenboard-mvp.utad-study-connector.workers.dev`
 | `POST /apuntarse` | Cuerpo `{nombre, avatar (1-10), correo?, id?}`. Devuelve `{ok, n, plaza, id}`; si el `id` o el nombre ya estaban, el puesto que ya tenía (`repetido: true`). Máximo 80 personas. |
 | `GET /lista?completo=1` | Igual que `/lista` pero con los correos. Cabecera `Authorization: Bearer <ADMIN_TOKEN>`. |
 | `POST /reset` | Vacía la lista (para el ensayo y antes de la clase). Misma cabecera. |
+| `POST /foto` | Cuerpo: la imagen (jpeg/png/webp, máx. 4 MB). Cabecera `X-Equipo: <EQUIPO_CODE>` (código corto que teclea el equipo en `mvp/foto.html`, o tecla U en `presentacion.html`). |
+| `GET /foto` · `GET /foto/meta` | La foto del equipo tal cual, y `{hay, ts, tipo, bytes}`. La pantalla la comprueba cada 6 s y la pone de fondo con un velo verde. |
+| `DELETE /foto` | Quita la foto. `Authorization: Bearer <ADMIN_TOKEN>`. |
 
 Los 5 primeros tienen plaza; el resto sale como lista de espera. El orden es el de llegada al servidor.
 
@@ -23,6 +26,7 @@ o con `npx wrangler`:
 ```bash
 npx wrangler deploy                       # publicar cambios de src/index.js
 npx wrangler secret put ADMIN_TOKEN       # fijar o rotar el token (el actual está en material/pro3alb/mvp-admin-token.txt)
+npx wrangler secret put EQUIPO_CODE       # código del equipo para subir la foto (mismo fichero)
 npx wrangler tail                         # ver peticiones en directo
 ```
 
