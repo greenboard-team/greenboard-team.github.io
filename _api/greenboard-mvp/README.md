@@ -41,7 +41,12 @@ Invoke-RestMethod -Uri "https://greenboard-mvp.utad-study-connector.workers.dev/
 
 ## En clase
 
-1. Abrir `https://greenboard-team.github.io/mvp/pantalla.html` en el navegador del PC del aula, pulsar `F` para pantalla
-   completa, y pasar a esa pestaña al llegar a la diapositiva 9 (o dejarla como la propia diapositiva 9).
+La presentación entera está en `mvp/presentacion.html`: las 22 diapositivas como imagen (la 4 con sus 12 clics,
+la 8 con el vídeo) y la 9 es la pantalla en directo. Teclas: → / espacio / clic siguiente, ← anterior, F pantalla
+completa, B pantalla en negro, 1-9 ir a esa diapositiva. Con eso Juan no cambia de ventana.
+
+
+1. Abrir `https://greenboard-team.github.io/mvp/presentacion.html` en el navegador del PC del aula y pulsar `F`.
+   Si se prefiere PowerPoint, `pantalla.html` sola sirve como diapositiva 9 (Alt+Tab al llegar).
 2. Los que escanean entran en `/mvp/`, ponen nombre, eligen avatar y aparecen en la pantalla con animación.
 3. Si la lista no responde, la pantalla sigue mostrando el QR y avisa abajo a la derecha en ámbar.

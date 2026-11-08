@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Greenboard · la presentación del Sprint 2 entera en una página, para no cambiar de ventana en clase.
+     Diapositivas 1-22 como imagen; la 4 con sus 12 clics; la 8 con el vídeo; la 9 es la pantalla en directo (pantalla.html).
+     Teclas: → / espacio / clic = siguiente paso · ← = anterior · F = pantalla completa · 1-9 = ir a esa diapositiva · B = negro. -->
+<title>Greenboard · Presentación Sprint 2</title>
+<style>
+html,body{height:100%;margin:0;background:#000;color:#E9F2E4;font-family:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#marco{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--k,1));transform-origin:center;background:#123B2C}
+.capa{position:absolute;inset:0;opacity:0;transition:opacity .35s ease;pointer-events:none}
+.capa.activa{opacity:1;pointer-events:auto}
+.capa img.fondo{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* Diapositiva 4: capturas que van cayendo */
+.s4 .pieza{position:absolute;opacity:0;transform:translateY(-40px) scale(1.06);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1.15)}
+.s4 .pieza.ve{opacity:1;transform:none}
+.s4 .pieza img{width:100%;height:100%;display:block;box-shadow:0 18px 40px rgba(0,0,0,.35);border:2px solid #fff;box-sizing:border-box;background:#fff}
+.s4 .pie{position:absolute;display:flex;align-items:center;justify-content:center;background:#176B4D;color:#fff;font-weight:700;font-size:24px;letter-spacing:.01em;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+/* Diapositiva 8: vídeo sobre la imagen */
+.s8 video{position:absolute;background:#000;object-fit:cover}
+/* Diapositiva 9: pantalla en directo */
+.s9 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#123B2C}
+#num{position:fixed;right:14px;bottom:10px;font:500 13px "JetBrains Mono",ui-monospace,monospace;color:rgba(233,242,228,.5);opacity:0;transition:opacity .4s}
+body.mueve #num{opacity:1}
+#negro{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .3s}
+body.negro #negro{opacity:1;pointer-events:auto}
+#ayuda{position:fixed;left:14px;bottom:10px;font-size:13px;color:rgba(233,242,228,.5);opacity:0;transition:opacity .4s}
+body.mueve #ayuda{opacity:1}
+@media (prefers-reduced-motion:reduce){.capa,.s4 .pieza{transition:none}}
+</style>
+</head>
+<body>
+<div id="marco"></div>
+<div id="negro"></div>
+<p id="ayuda">→ siguiente · ← anterior · F pantalla completa · B negro</p>
+<p id="num"></p>
+
+<script>
+(function(){
+  const TOTAL = 22;                 // 1-9 presentación, 10-22 backup
+  const marco = document.getElementById("marco");
+  const capas = [];
+  let s4 = null;                    // datos de la diapositiva 4
+  let cur = 1, paso = 0;            // diapositiva actual y paso dentro de ella
+  const PASOS4 = 12;                // clics de la 4
+
+  function ajusta() {
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    marco.style.setProperty("--k", k);
+  }
+  addEventListener("resize", ajusta); ajusta();
+
+  // Una capa por diapositiva, con su imagen de fondo.
+  for (let i = 1; i <= TOTAL; i++) {
+    const d = document.createElement("div");
+    d.className = "capa" + (i === 4 ? " s4" : i === 8 ? " s8" : i === 9 ? " s9" : "");
+    d.dataset.n = i;
+    if (i !== 9) {
+      const img = document.createElement("img"); img.className = "fondo"; img.alt = "";
+      img.src = i === 4 ? "deck/s4base0.jpg" : `deck/s${i}.jpg`;
+      if (i > 2) img.loading = "lazy";
+      d.appendChild(img);
+    }
+    marco.appendChild(d); capas.push(d);
+  }
+
+  // Diapositiva 4: posiciones relativas de capturas y pies, del .pptx (deck/s4.json)
+  const ORDEN4 = [["g",0],["S1 0"],["S1 1"],["S1 2"],["g",1],["S2 3"],["S2 4"],["S2 5"],["g",2],["S3 6"],["S3 7"],["S3 8"]];
+  fetch("deck/s4.json").then(r => r.json()).then(j => {
+    s4 = j;
+    const capa = capas[3];
+    j.items.forEach(it => {
+      if (it.name.startsWith("Group")) return;
+      const el = document.createElement("div");
+      el.className = "pieza" + (it.text !== undefined ? " pie" : "");
+      el.dataset.name = it.name.replace(" pie", ""); el.dataset.pie = it.text !== undefined ? "1" : "";
+      el.style.left = (it.l * 100) + "%"; el.style.top = (it.t * 100) + "%";
+      el.style.width = (it.w * 100) + "%"; el.style.height = (it.h * 100) + "%";
+      const rot = it.rot > 180 ? it.rot - 360 : it.rot;
+      el.style.transform = ""; el.style.setProperty("--rot", rot + "deg");
+      if (it.text !== undefined) { el.textContent = it.text; }
+      else { const im = document.createElement("img"); im.src = "deck/" + it.img.replace(/\.(png|jpe?g)$/i, ".webp"); im.alt = it.name; el.appendChild(im); }
+      capa.appendChild(el);
+    });
+    // la rotación se aplica en el estado final (transform:none la anularía), así que la ponemos como estilo propio:
+    capa.querySelectorAll(".pieza").forEach(el => {
+      const r = el.style.getPropertyValue("--rot");
+      el.addEventListener("transitionend", () => {}, { once: true });
+      el.style.setProperty("rotate", r);
+    });
+    pinta4();
+  });
+  function pinta4() {
+    if (!s4) return;
+    const capa = capas[3];
+    let tarjetas = 0; const visibles = new Set();
+    for (let k = 0; k < paso && k < PASOS4; k++) { const o = ORDEN4[k]; if (o[0] === "g") tarjetas = o[1] + 1; else visibles.add(o[0]); }
+    if (cur === 4) capa.querySelector("img.fondo").src = `deck/s4base${tarjetas}.jpg`;
+    capa.querySelectorAll(".pieza").forEach(el => el.classList.toggle("ve", visibles.has(el.dataset.name)));
+  }
+
+  // Diapositiva 8: vídeo con la geometría del .pptx (12192000 x 6858000 EMU)
+  const vid = document.createElement("video");
+  vid.src = "deck/greenboard-concepto.mp4"; vid.playsInline = true; vid.preload = "metadata";
+  vid.style.left = (2049973 / 12192000 * 100) + "%"; vid.style.top = (1299761 / 6858000 * 100) + "%";
+  vid.style.width = (8093144 / 12192000 * 100) + "%"; vid.style.height = (4550721 / 6858000 * 100) + "%";
+  capas[7].appendChild(vid);
+
+  // Diapositiva 9: la pantalla en directo, cargada la primera vez que se llega
+  let ifr = null;
+  function cargaPantalla() { if (ifr) return; ifr = document.createElement("iframe"); ifr.src = "pantalla.html"; ifr.title = "Pantalla en directo"; capas[8].appendChild(ifr); }
+
+  function muestra() {
+    capas.forEach((c, i) => c.classList.toggle("activa", i + 1 === cur));
+    document.getElementById("num").textContent = cur <= 9 ? `${cur} / 9` : `backup · ${cur - 9} / ${TOTAL - 9}`;
+    if (cur === 4) pinta4();
+    if (cur === 8) { vid.currentTime = 0; vid.play().catch(() => {}); } else if (!vid.paused) vid.pause();
+    if (cur === 9) cargaPantalla();
+    if (cur === 8) cargaPantalla();           // que la 9 esté lista cuando lleguemos
+    location.hash = cur === 1 && paso === 0 ? "" : `${cur}${paso ? "." + paso : ""}`;
+    // precarga la siguiente
+    if (cur < TOTAL && cur + 1 !== 9) { const im = new Image(); im.src = `deck/s${cur + 1}.jpg`; }
+    toca();
+  }
+  function siguiente() {
+    if (cur === 4 && paso < PASOS4) { paso++; pinta4(); location.hash = `4.${paso}`; toca(); return; }
+    if (cur < TOTAL) { cur++; paso = 0; muestra(); }
+  }
+  function anterior() {
+    if (cur === 4 && paso > 0) { paso--; pinta4(); location.hash = paso ? `4.${paso}` : "4"; toca(); return; }
+    if (cur > 1) { cur--; paso = cur === 4 ? PASOS4 : 0; muestra(); }
+  }
+  let t;
+  function toca() { document.body.classList.add("mueve"); clearTimeout(t); t = setTimeout(() => document.body.classList.remove("mueve"), 1800); }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "IFRAME") return;
+    switch (e.key) {
+      case "ArrowRight": case " ": case "PageDown": case "Enter": e.preventDefault(); siguiente(); break;
+      case "ArrowLeft": case "PageUp": case "Backspace": e.preventDefault(); anterior(); break;
+      case "Home": cur = 1; paso = 0; muestra(); break;
+      case "End": cur = 9; paso = 0; muestra(); break;
+      case "f": case "F": if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); break;
+      case "b": case "B": case ".": document.body.classList.toggle("negro"); break;
+      default:
+        if (/^[1-9]$/.test(e.key)) { cur = Number(e.key); paso = 0; muestra(); }
+    }
+  });
+  document.addEventListener("click", (e) => { if (e.target.closest("video, iframe")) return; if (e.clientX < innerWidth * 0.15) anterior(); else siguiente(); });
+  document.addEventListener("mousemove", toca);
+
+  // Posición desde el hash (#4.7 = diapositiva 4, paso 7), al cargar y si alguien lo cambia a mano
+  function desdeHash() {
+    const m = /^#(\d+)(?:\.(\d+))?$/.exec(location.hash);
+    const c = m ? Math.min(Math.max(Number(m[1]), 1), TOTAL) : 1;
+    const p = m ? Math.min(Number(m[2] || 0), c === 4 ? PASOS4 : 0) : 0;
+    if (c !== cur || p !== paso) { cur = c; paso = p; muestra(); }
+  }
+  addEventListener("hashchange", desdeHash);
+  { const m = /^#(\d+)(?:\.(\d+))?$/.exec(location.hash);
+    if (m) { cur = Math.min(Math.max(Number(m[1]), 1), TOTAL); paso = Math.min(Number(m[2] || 0), cur === 4 ? PASOS4 : 0); } }
+  muestra();
+})();
+</script>
+</body>
+</html>
