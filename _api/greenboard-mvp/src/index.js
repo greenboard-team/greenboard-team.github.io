@@ -54,7 +54,8 @@ export class Lista {
 
   async fetch(req) {
     const url = new URL(req.url);
-    const admin = this.env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${this.env.ADMIN_TOKEN}`;
+    const admin = req.headers.get("X-Interno-Admin") === "1";          // lo pone el Worker tras comprobar el token
+    const equipoOk = req.headers.get("X-Interno-Equipo") === "1";      // ídem con el código del equipo
 
     if (req.method === "GET" && url.pathname === "/lista") {
       const personas = await this.personas();
@@ -109,8 +110,7 @@ export class Lista {
       return new Response(new Blob(partes), { headers: { "Content-Type": meta.tipo, "Cache-Control": "no-store", "X-Foto-Ts": String(meta.ts) } });
     }
     if (url.pathname === "/foto" && req.method === "POST") {
-      const codigo = (req.headers.get("X-Equipo") || "").trim().toLowerCase();
-      if (!this.env.EQUIPO_CODE || codigo !== this.env.EQUIPO_CODE.trim().toLowerCase()) return json({ ok: false, error: "codigo" }, 401);
+      if (!equipoOk) return json({ ok: false, error: "codigo" }, 401);
       const tipo = (req.headers.get("Content-Type") || "").split(";")[0].trim();
       if (!["image/jpeg", "image/png", "image/webp"].includes(tipo)) return json({ ok: false, error: "tipo" }, 415);
       const buf = new Uint8Array(await req.arrayBuffer());
@@ -151,8 +151,17 @@ export default {
     if (url.pathname === "/" ) {
       return new Response("greenboard-mvp: GET /lista · POST /apuntarse · GET/POST /foto", { headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" } });
     }
+    // Credenciales: se comprueban aquí, con los secretos actuales, y se pasan al objeto como cabeceras internas.
+    const admin = !!env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`;
+    const codigo = (req.headers.get("X-Equipo") || "").trim().toLowerCase();
+    const equipoOk = !!env.EQUIPO_CODE && codigo !== "" && codigo === env.EQUIPO_CODE.trim().toLowerCase();
+    const h = new Headers(req.headers);
+    h.delete("X-Interno-Admin"); h.delete("X-Interno-Equipo");
+    if (admin) h.set("X-Interno-Admin", "1");
+    if (equipoOk) h.set("X-Interno-Equipo", "1");
+    const interno = new Request(req, { headers: h });
     const stub = env.LISTA.get(env.LISTA.idFromName("sprint2"));
-    const res = await stub.fetch(req);
+    const res = await stub.fetch(interno);
     const out = new Response(res.body, res);
     for (const [k, v] of Object.entries(headers)) out.headers.set(k, v);
     return out;
