@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Greenboard · la presentación del Sprint 2 entera en una página, para no cambiar de ventana en clase.
      Funciona con mando de presentaciones: envían PageDown/PageUp (o flechas), F5/Escape y «.» o B para pantalla en negro.
-     Diapositivas 1-22 como imagen; la 4 con sus 12 clics; la 8 con el vídeo; la 9 es la pantalla en directo (pantalla.html).
+     Diapositivas 1-22 como imagen; la 4 con sus 12 clics; la 6 y la 7 con sus 3 clics; la 8 con el vídeo; la 9 es la pantalla en directo (pantalla.html).
      Teclas: → / espacio / clic = siguiente paso · ← = anterior · F = pantalla completa · 1-9 = ir a esa diapositiva · B = negro.
      U = subir la foto del equipo (se pone de fondo en la 9; pide el código del equipo la primera vez). -->
 <title>Greenboard · Presentación Sprint 2</title>
@@ -20,6 +20,14 @@ html,body{height:100%;margin:0;background:#000;color:#E9F2E4;font-family:"Atkins
 .s4 .pieza.ve{opacity:1;transform:none}
 .s4 .pieza img{width:100%;height:100%;display:block;box-shadow:0 18px 40px rgba(0,0,0,.35);border:2px solid #fff;box-sizing:border-box;background:#fff}
 .s4 .pie{position:absolute;display:flex;align-items:center;justify-content:center;background:#176B4D;color:#fff;font-weight:700;font-size:24px;letter-spacing:.01em;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+/* Diapositivas 6 y 7: las animaciones del .pptx (6: cada columna sube desde abajo; 7: cada paso aparece con zoom) */
+.s6,.s7{overflow:hidden}
+.anim{position:absolute;opacity:0;pointer-events:none}
+.anim img{width:100%;height:100%;display:block}
+.s6 .anim{transform:translateY(var(--dy));transition:transform .5s ease-out,opacity .01s linear}
+.s7 .anim{transform:scale(0);transition:transform .5s ease-out,opacity .5s ease-out}
+.s6 .anim.ve,.s7 .anim.ve{opacity:1;transform:none}
+.s7 .anim.aparece{transition:none}
 /* Diapositiva 8: vídeo sobre la imagen */
 .s8 video{position:absolute;background:#000;object-fit:cover;cursor:pointer;transition:all .3s ease}
 .s8.grande video{left:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:contain;cursor:pointer}
@@ -33,7 +41,7 @@ body.mueve #num{opacity:1}
 body.negro #negro{opacity:1;pointer-events:auto}
 #ayuda{position:fixed;left:14px;bottom:10px;font-size:13px;color:rgba(233,242,228,.5);opacity:0;transition:opacity .4s}
 body.mueve #ayuda{opacity:1}
-@media (prefers-reduced-motion:reduce){.capa,.s4 .pieza{transition:none}}
+@media (prefers-reduced-motion:reduce){.capa,.s4 .pieza,.anim{transition:none!important}}
 </style>
 </head>
 <body>
@@ -52,6 +60,19 @@ body.mueve #ayuda{opacity:1}
   let s4 = null;                    // datos de la diapositiva 4
   let cur = 1, paso = 0;            // diapositiva actual y paso dentro de ella
   const PASOS4 = 12;                // clics de la 4
+  // Clics de las 6 y 7, como en el .pptx. Cada pieza es un recorte de la diapositiva (deck/s6_p0.webp…)
+  // sobre un fondo sin ellas (deck/s6base.jpg). l, t, w, h en % de la diapositiva; «clic» = en qué clic entra.
+  const ANIM = {
+    6: [ { l:1.979, t:31.204, w:30.156, h:48.333, clic:1 },     // Blackboard Learn
+         { l:35.052, t:30.926, w:30.208, h:48.333, clic:2 },    // Universitas XXI
+         { l:67.969, t:30.463, w:30.156, h:48.333, clic:3 } ],  // Greenboard
+    7: [ { l:4.167, t:27.407, w:46.146, h:17.037, clic:1 },     // 1 Recibe un aviso
+         { l:4.167, t:46.667, w:46.146, h:16.944, clic:2 },     // 2 Consulta su horario
+         { l:4.167, t:67.593, w:46.146, h:16.944, clic:3 },     // 3 Todo bajo control
+         { l:53.802, t:27.407, w:41.927, h:57.222, clic:3, aparece:true } ]  // la maqueta, a la vez que el 3
+  };
+  const PASOS = { 4: PASOS4, 6: 3, 7: 3 };
+  const pasosDe = (n) => PASOS[n] || 0;
 
   function ajusta() {
     const k = Math.min(innerWidth / 1920, innerHeight / 1080);
@@ -62,15 +83,27 @@ body.mueve #ayuda{opacity:1}
   // Una capa por diapositiva, con su imagen de fondo.
   for (let i = 1; i <= TOTAL; i++) {
     const d = document.createElement("div");
-    d.className = "capa" + (i === 4 ? " s4" : i === 8 ? " s8" : i === 9 ? " s9" : "");
+    d.className = "capa" + (i === 4 ? " s4" : i === 6 ? " s6" : i === 7 ? " s7" : i === 8 ? " s8" : i === 9 ? " s9" : "");
     d.dataset.n = i;
     if (i !== 9) {
       const img = document.createElement("img"); img.className = "fondo"; img.alt = "";
-      img.src = i === 4 ? "deck/s4base0.jpg" : `deck/s${i}.jpg`;
+      img.src = i === 4 ? "deck/s4base0.jpg" : ANIM[i] ? `deck/s${i}base.jpg` : `deck/s${i}.jpg`;
       if (i > 2) img.loading = "lazy";
       d.appendChild(img);
     }
+    (ANIM[i] || []).forEach((p, j) => {
+      const el = document.createElement("div"); el.className = "anim" + (p.aparece ? " aparece" : "");
+      el.dataset.clic = p.clic;
+      el.style.left = p.l + "%"; el.style.top = p.t + "%"; el.style.width = p.w + "%"; el.style.height = p.h + "%";
+      el.style.setProperty("--dy", (1080 * (100 - p.t) / 100) + "px");   // desde justo debajo de la diapositiva
+      const im = document.createElement("img"); im.src = `deck/s${i}_p${j}.webp`; im.alt = ""; el.appendChild(im);
+      d.appendChild(el);
+    });
     marco.appendChild(d); capas.push(d);
+  }
+  function pintaAnim() {
+    if (!ANIM[cur]) return;
+    capas[cur - 1].querySelectorAll(".anim").forEach(el => el.classList.toggle("ve", Number(el.dataset.clic) <= paso));
   }
 
   // Diapositiva 4: posiciones relativas de capturas y pies, del .pptx (deck/s4.json)
@@ -126,6 +159,7 @@ body.mueve #ayuda{opacity:1}
     capas.forEach((c, i) => c.classList.toggle("activa", i + 1 === cur));
     document.getElementById("num").textContent = cur <= 9 ? `${cur} / 9` : `backup · ${cur - 9} / ${TOTAL - 9}`;
     if (cur === 4) pinta4();
+    pintaAnim();
     if (cur === 8) { vid.currentTime = 0; vid.play().catch(() => {}); } else { if (!vid.paused) vid.pause(); videoGrande(false); }
     if (cur === 9) cargaPantalla();
     if (cur === 8) cargaPantalla();           // que la 9 esté lista cuando lleguemos
@@ -135,12 +169,12 @@ body.mueve #ayuda{opacity:1}
     toca();
   }
   function siguiente() {
-    if (cur === 4 && paso < PASOS4) { paso++; pinta4(); location.hash = `4.${paso}`; toca(); return; }
+    if (paso < pasosDe(cur)) { paso++; if (cur === 4) pinta4(); else pintaAnim(); location.hash = `${cur}.${paso}`; toca(); return; }
     if (cur < TOTAL) { cur++; paso = 0; muestra(); }
   }
   function anterior() {
-    if (cur === 4 && paso > 0) { paso--; pinta4(); location.hash = paso ? `4.${paso}` : "4"; toca(); return; }
-    if (cur > 1) { cur--; paso = cur === 4 ? PASOS4 : 0; muestra(); }
+    if (paso > 0) { paso--; if (cur === 4) pinta4(); else pintaAnim(); location.hash = paso ? `${cur}.${paso}` : `${cur}`; toca(); return; }
+    if (cur > 1) { cur--; paso = pasosDe(cur); muestra(); }
   }
   let t;
   function toca() { document.body.classList.add("mueve"); clearTimeout(t); t = setTimeout(() => document.body.classList.remove("mueve"), 1800); }
@@ -191,12 +225,12 @@ body.mueve #ayuda{opacity:1}
   function desdeHash() {
     const m = /^#(\d+)(?:\.(\d+))?$/.exec(location.hash);
     const c = m ? Math.min(Math.max(Number(m[1]), 1), TOTAL) : 1;
-    const p = m ? Math.min(Number(m[2] || 0), c === 4 ? PASOS4 : 0) : 0;
+    const p = m ? Math.min(Number(m[2] || 0), pasosDe(c)) : 0;
     if (c !== cur || p !== paso) { cur = c; paso = p; muestra(); }
   }
   addEventListener("hashchange", desdeHash);
   { const m = /^#(\d+)(?:\.(\d+))?$/.exec(location.hash);
-    if (m) { cur = Math.min(Math.max(Number(m[1]), 1), TOTAL); paso = Math.min(Number(m[2] || 0), cur === 4 ? PASOS4 : 0); } }
+    if (m) { cur = Math.min(Math.max(Number(m[1]), 1), TOTAL); paso = Math.min(Number(m[2] || 0), pasosDe(cur)); } }
   muestra();
 })();
 </script>
