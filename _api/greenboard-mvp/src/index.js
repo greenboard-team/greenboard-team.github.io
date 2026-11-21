@@ -23,9 +23,14 @@ const ORIGENES = [
   "http://localhost:5500", "http://127.0.0.1:5500",
 ];
 
+// Vista previa de una rama antes de fusionarla (Cloudflare Pages, proyecto "greenboard-preview"):
+// https://greenboard-preview.pages.dev y sus alias por rama, p. ej. https://pr-4.greenboard-preview.pages.dev
+const PREVIEW = /^https:\/\/([a-z0-9-]+\.)?greenboard-preview\.pages\.dev$/;
+
 function cors(req) {
   const origin = req.headers.get("Origin") || "";
-  const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
+  const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:") ||
+    PREVIEW.test(origin);
   return {
     "Access-Control-Allow-Origin": ok ? origin : ORIGENES[0],
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",

@@ -16,6 +16,14 @@
      (/app/*, _api/greenboard-mvp/src/cuentas.js). Sin sesión no se ve nada real. Con #demo, los datos de ejemplo. -->
 <title>Greenboard · prototipo</title>
 <meta name="theme-color" content="#123B2C">
+<!-- Se instala como app en el móvil (PWA): manifest, iconos del logo y service worker (sw.js, solo la carcasa) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Greenboard">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -295,6 +303,19 @@ a.fila:hover{background:var(--bg)}
 .cargando{color:var(--muted);font-size:14px;padding:8px 0}
 body.sin-menu .app{grid-template-columns:minmax(0,1fr)}
 body.sin-menu .side{display:none}
+/* Instalar como app */
+.instalar{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 10px 10px 12px;margin-top:14px}
+.instalar img{width:40px;height:40px;border-radius:10px;flex:none}
+.instalar p{margin:0;flex:1;min-width:0;font-size:14px}
+.instalar p b{display:block;font-size:15px}
+.instalar .cerrar{border:0;background:transparent;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.compartir{display:inline-grid;place-items:center;width:20px;height:20px;border:1.5px solid currentColor;border-radius:5px;font-size:12px;vertical-align:-4px}
+/* Abierta como app: la barra de estado de iOS va encima del verde (black-translucent) */
+@media (display-mode:standalone){
+  .side{padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  body.sin-menu::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--board);z-index:30}
+  body.sin-menu .puerta{padding-top:env(safe-area-inset-top,0px)}
+}
 </style>
 </head>
 <body>
@@ -685,6 +706,7 @@ V.inicio = () => {
     <div class="sug" id="sug" role="listbox" hidden></div>
   </div>
   <div class="chips" id="chips" aria-label="Sugerencias para ahora">${chips().map(c => `<button class="chip ${c.rojo?'rojo':''}" onclick="abrir('${c.id}'${c.q?`,'${c.q}'`:''})">${ic(c.ico)}${c.t}${c.por?` <span class="por">· ${c.por}</span>`:''}</button>`).join('')}</div>
+  ${instalarHTML()}
   ${S.avisoCerrado || !avisoHTML() ? '' : `<div class="aviso" id="aviso"><span class="ic">${ic('aviso')}</span><p>${avisoHTML()}</p><button aria-label="Cerrar aviso" onclick="S.avisoCerrado=true;guardar();pintar()">${ic('cerrar')}</button></div>`}
   <div class="panel" id="panel">
     ${S.abiertas.map(tarjeta).join('')}
@@ -1015,8 +1037,36 @@ function aulaReal(){
 V.ajustes = () => `<div class="row"><h3>Ajustes</h3><span class="note">${esc(REAL.correo)}</span></div>
   <h3 class="sub">Tus grupos</h3><p>${REAL.grupos.map(g => `<span class="pill ok">${esc(g)}</span>`).join(' ')} <a href="#/grupos" style="margin-left:8px">Cambiar</a></p>
   <h3 class="sub">Blackboard</h3>${REAL.bb ? `<p>Tus entregas se leen de tu calendario de Blackboard. <button class="linkbtn" onclick="quitarBB()">Quitar el enlace</button></p>` : `<div class="tarj">${migrarHTML()}</div>`}
+  <h3 class="sub">App en el móvil</h3>${instalarHTML(true) || '<p class="note">Greenboard ya está instalada en este dispositivo, o este navegador no permite instalarla.</p>'}
   <h3 class="sub">Sesión</h3><p><button class="btn dark" onclick="salir()">Cerrar sesión</button></p>
   <p class="note">Horario actualizado: ${esc(REAL.generado || '—')}. Asistencia, comunidad, pádel y matrícula siguen siendo de ejemplo.</p>`;
+
+/* Instalar como app. Android y Chrome: el aviso nativo (beforeinstallprompt). iPhone y iPad: no hay aviso, se
+   explica el gesto (Compartir -> Añadir a pantalla de inicio). Abierta ya como app, no se enseña nada. */
+let AVISO_INSTALAR = null;
+const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const esIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let INSTALAR_CERRADO = false; try { INSTALAR_CERRADO = localStorage.getItem('gb-instalar-cerrado') === '1'; } catch(e){}
+function instalarHTML(siempre){
+  if (instalada() || (INSTALAR_CERRADO && !siempre)) return '';
+  const x = siempre ? '' : `<button class="cerrar" aria-label="No mostrar más" onclick="cerrarInstalar()">${ic('cerrar')}</button>`;
+  if (AVISO_INSTALAR) return `<div class="instalar" id="instalar"><img src="icons/icon-192.png" alt=""><p><b>Instala Greenboard</b>Ábrela como una app, desde tu pantalla de inicio.</p><button class="btn sm" onclick="instalar()">Instalar</button>${x}</div>`;
+  if (esIOS()) return `<div class="instalar" id="instalar"><img src="icons/icon-192.png" alt=""><p><b>Añadir a pantalla de inicio</b>Toca <span class="compartir" aria-label="Compartir">↑</span> Compartir y luego «Añadir a pantalla de inicio».</p>${x}</div>`;
+  return '';
+}
+function cerrarInstalar(){ INSTALAR_CERRADO = true; try { localStorage.setItem('gb-instalar-cerrado','1'); } catch(e){} pintar(); }
+async function instalar(){
+  if (!AVISO_INSTALAR) return;
+  AVISO_INSTALAR.prompt();
+  const r = await AVISO_INSTALAR.userChoice.catch(() => null);
+  AVISO_INSTALAR = null; pintar();
+  if (r && r.outcome === 'accepted') toast('Greenboard instalada');
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); AVISO_INSTALAR = e; pintar(); });
+window.addEventListener('appinstalled', () => { AVISO_INSTALAR = null; pintar(); });
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')){
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('service worker:', e.message));
+}
 
 function arrancar(){
   const m = location.hash.match(/entrar=([A-Za-z0-9_-]{20,})/);
