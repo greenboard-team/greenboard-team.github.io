@@ -1,0 +1,37 @@
+{
+ "_leeme": "Reservas de ejemplo: huecos de pádel (las pistas de U-tad existen y son de pago; los huecos son inventados) y aulas libres del modo demo. Con sesión, las aulas libres son las reales.",
+ "padel": {
+  "horas": [
+   "17:00",
+   "18:00",
+   "19:00",
+   "20:00"
+  ],
+  "ocupadas": [
+   "18:00"
+  ]
+ },
+ "aulas": {
+  "horas": [
+   "10:00",
+   "12:00",
+   "14:00",
+   "16:00",
+   "18:00"
+  ],
+  "libres": [
+   {
+    "a": "Aula 104",
+    "cap": "30 plazas"
+   },
+   {
+    "a": "Aula 201",
+    "cap": "40 plazas"
+   },
+   {
+    "a": "Aula 003",
+    "cap": "12 plazas · con pizarra"
+   }
+  ]
+ }
+}

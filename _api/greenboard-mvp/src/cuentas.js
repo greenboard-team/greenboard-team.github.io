@@ -1,4 +1,4 @@
-// Datos reales del prototipo (/mvp/app/), solo para alumnos de U-tad. Todo cuelga de /app/ y pide sesión,
+// Datos reales de la app (/mvp/), solo para alumnos de U-tad. Todo cuelga de /app/ y pide sesión,
 // salvo entrar. Nada real se puede leer desde la página pública de github.io sin haber entrado.
 //
 //   POST   /app/entrar       {correo, codigo?}  -> con código de invitación: {ok, token}. Con enlace: {ok, modo:"enlace"}
@@ -29,7 +29,7 @@
 
 const SESION_DIAS = 30;
 const ENLACE_MIN = 15;
-const APP_URL = "https://greenboard-team.github.io/mvp/app/";
+const APP_URL = "https://greenboard-team.github.io/mvp/";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },

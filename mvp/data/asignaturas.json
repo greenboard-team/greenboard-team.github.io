@@ -1,0 +1,464 @@
+{
+ "_leeme": "Datos de ejemplo del prototipo (modo demo). Asignaturas y entregas: las reales de Blackboard del mock-up de Gonzalo (26/10/2026); horario, asistencia, contenido y notas: de ejemplo. Con sesión, asignaturas, horario y entregas se sustituyen por los reales.",
+ "asignaturas": [
+  {
+   "id": "opti",
+   "n": "Optimización",
+   "c": "2609_MAIS4_OPTI_A"
+  },
+  {
+   "id": "psdi",
+   "n": "Programación de Sistemas Distribuidos",
+   "c": "2609_MAIS3_PSDI_A_FIIS3_A"
+  },
+  {
+   "id": "aaui",
+   "n": "Aprendizaje Automático I",
+   "c": "2609_MAIS4_AAUI_A_FIIS4_A"
+  },
+  {
+   "id": "pro3",
+   "n": "Proyectos III: Desarrollo Web y Apps",
+   "c": "2609_MAIS4_PRO3_A_FIIS4_A",
+   "p": "Alberto León Martín"
+  },
+  {
+   "id": "esal",
+   "n": "Estructuras Algebraicas",
+   "c": "2609_MAIS4_ESAL_A",
+   "last": "Nuevo: Grupos 7 · Homomorfismos.pdf"
+  },
+  {
+   "id": "aiii",
+   "n": "Análisis Matemático III",
+   "c": "2609_MAIS4_AIII_A",
+   "last": "Calificación publicada: Asistencia"
+  },
+  {
+   "id": "isof",
+   "n": "Ingeniería del Software",
+   "c": "2609_MAIS4_ISOF_A_FIIS4_A_INSG_A",
+   "last": "Nuevo contenido añadido"
+  }
+ ],
+ "entregas": [
+  {
+   "t": "Entregables 1",
+   "s": "opti",
+   "d": "2026-10-23T10:48"
+  },
+  {
+   "t": "Práctica 1",
+   "s": "psdi",
+   "d": "2026-10-28T23:59"
+  },
+  {
+   "t": "Proyecto I: Gemstone prices",
+   "s": "aaui",
+   "d": "2026-11-09T23:59"
+  },
+  {
+   "t": "SPRINT 2 · Presentación de 7 min",
+   "s": "pro3",
+   "d": "2026-11-10T23:59"
+  },
+  {
+   "t": "Participación",
+   "s": "esal",
+   "d": "2026-12-22T11:01"
+  }
+ ],
+ "hoy": [
+  {
+   "h": "09:00",
+   "f": "10:30",
+   "s": "aiii",
+   "a": "Aula 201"
+  },
+  {
+   "h": "11:00",
+   "f": "12:30",
+   "s": "pro3",
+   "a": "Aula 112",
+   "antes": "Aula 003",
+   "changed": true
+  },
+  {
+   "h": "15:00",
+   "f": "16:30",
+   "s": "opti",
+   "a": "Aula 104"
+  }
+ ],
+ "asistencia": {
+  "aiii": [
+   {
+    "dias": 1,
+    "v": 0
+   },
+   {
+    "dias": 3,
+    "v": 1
+   },
+   {
+    "dias": 8,
+    "v": 1
+   },
+   {
+    "dias": 10,
+    "v": 1
+   },
+   {
+    "dias": 15,
+    "v": 1
+   }
+  ]
+ },
+ "asistenciaPorDefecto": [
+  {
+   "dias": 2,
+   "v": 1
+  },
+  {
+   "dias": 7,
+   "v": 1
+  },
+  {
+   "dias": 9,
+   "v": 1
+  },
+  {
+   "dias": 14,
+   "v": 1
+  }
+ ],
+ "contenido": {
+  "opti": [
+   {
+    "u": "Tema 1 · Programación lineal",
+    "items": [
+     {
+      "t": "Apuntes · Tema 1.pdf"
+     },
+     {
+      "t": "Ejercicios · Tema 1.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Método símplex",
+    "items": [
+     {
+      "t": "Apuntes · Tema 2.pdf"
+     },
+     {
+      "t": "Ejercicios · Tema 2.pdf"
+     },
+     {
+      "t": "Entregables 1 · enunciado",
+      "tipo": "enunciado"
+     }
+    ]
+   },
+   {
+    "u": "Tema 3 · Dualidad",
+    "items": [
+     {
+      "t": "Apuntes · Tema 3.pdf",
+      "nuevo": true
+     }
+    ]
+   }
+  ],
+  "psdi": [
+   {
+    "u": "Tema 1 · Introducción a los sistemas distribuidos",
+    "items": [
+     {
+      "t": "Transparencias · Tema 1.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Sockets y RPC",
+    "items": [
+     {
+      "t": "Transparencias · Tema 2.pdf"
+     },
+     {
+      "t": "Código de ejemplo",
+      "tipo": "enlace"
+     }
+    ]
+   },
+   {
+    "u": "Prácticas",
+    "items": [
+     {
+      "t": "Práctica 1 · enunciado",
+      "tipo": "enunciado"
+     }
+    ]
+   }
+  ],
+  "aaui": [
+   {
+    "u": "Tema 1 · Regresión",
+    "items": [
+     {
+      "t": "Apuntes · Regresión.pdf"
+     },
+     {
+      "t": "Notebook · Regresión lineal",
+      "tipo": "enlace"
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Clasificación",
+    "items": [
+     {
+      "t": "Apuntes · Clasificación.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Proyectos",
+    "items": [
+     {
+      "t": "Proyecto I: Gemstone prices · enunciado",
+      "tipo": "enunciado"
+     }
+    ]
+   }
+  ],
+  "pro3": [
+   {
+    "u": "Proyecto Q1",
+    "items": [
+     {
+      "t": "SPRINT 1 - Presentación 10 min",
+      "tipo": "enunciado"
+     },
+     {
+      "t": "SPRINT 2 - Presentación de 7 min",
+      "tipo": "enunciado"
+     }
+    ]
+   },
+   {
+    "u": "Recursos",
+    "items": [
+     {
+      "t": "Normas de los sprints.pdf"
+     }
+    ]
+   }
+  ],
+  "esal": [
+   {
+    "u": "Tema 1 · Grupos",
+    "items": [
+     {
+      "t": "Grupos 6 · Subgrupos normales.pdf"
+     },
+     {
+      "t": "Grupos 7 · Homomorfismos.pdf",
+      "nuevo": true
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Anillos",
+    "items": [
+     {
+      "t": "Disponible a partir del tema 2",
+      "tipo": "pronto"
+     }
+    ]
+   }
+  ],
+  "aiii": [
+   {
+    "u": "Tema 1 · Sucesiones y series de funciones",
+    "items": [
+     {
+      "t": "Apuntes · Tema 1.pdf"
+     },
+     {
+      "t": "Hoja de problemas 1.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Integrales de línea",
+    "items": [
+     {
+      "t": "Apuntes · Tema 2.pdf"
+     },
+     {
+      "t": "Hoja de problemas 2.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Tema 3 · Integrales de superficie",
+    "items": [
+     {
+      "t": "Apuntes · Tema 3.pdf",
+      "nuevo": true
+     }
+    ]
+   }
+  ],
+  "isof": [
+   {
+    "u": "Tema 1 · Procesos de desarrollo",
+    "items": [
+     {
+      "t": "Transparencias · Tema 1.pdf"
+     }
+    ]
+   },
+   {
+    "u": "Tema 2 · Requisitos",
+    "items": [
+     {
+      "t": "Transparencias · Tema 2.pdf",
+      "nuevo": true
+     },
+     {
+      "t": "Plantilla de requisitos.docx"
+     }
+    ]
+   }
+  ]
+ },
+ "notas": {
+  "opti": [
+   {
+    "t": "Entregables 1",
+    "p": 20,
+    "n": 7.8
+   },
+   {
+    "t": "Entregables 2",
+    "p": 20,
+    "n": null
+   },
+   {
+    "t": "Examen parcial",
+    "p": 20,
+    "n": 6.5
+   },
+   {
+    "t": "Examen final",
+    "p": 40,
+    "n": null
+   }
+  ],
+  "psdi": [
+   {
+    "t": "Práctica 1",
+    "p": 25,
+    "n": 8.5
+   },
+   {
+    "t": "Práctica 2",
+    "p": 25,
+    "n": null
+   },
+   {
+    "t": "Examen",
+    "p": 50,
+    "n": null
+   }
+  ],
+  "aaui": [
+   {
+    "t": "Proyecto I: Gemstone prices",
+    "p": 30,
+    "n": 9
+   },
+   {
+    "t": "Proyecto II",
+    "p": 30,
+    "n": null
+   },
+   {
+    "t": "Examen",
+    "p": 40,
+    "n": null
+   }
+  ],
+  "pro3": [
+   {
+    "t": "SPRINT 1 · Presentación 10 min",
+    "p": 15,
+    "n": 8
+   },
+   {
+    "t": "SPRINT 2 · Presentación de 7 min",
+    "p": 15,
+    "n": null
+   },
+   {
+    "t": "SPRINT 3",
+    "p": 15,
+    "n": null
+   },
+   {
+    "t": "Proyecto final",
+    "p": 55,
+    "n": null
+   }
+  ],
+  "esal": [
+   {
+    "t": "Participación",
+    "p": 10,
+    "n": null
+   },
+   {
+    "t": "Examen parcial",
+    "p": 30,
+    "n": 5.5
+   },
+   {
+    "t": "Examen final",
+    "p": 60,
+    "n": null
+   }
+  ],
+  "aiii": [
+   {
+    "t": "Asistencia",
+    "p": 10,
+    "n": 8,
+    "nuevo": true
+   },
+   {
+    "t": "Examen parcial",
+    "p": 30,
+    "n": 6.8
+   },
+   {
+    "t": "Examen final",
+    "p": 60,
+    "n": null
+   }
+  ],
+  "isof": [
+   {
+    "t": "Práctica 1",
+    "p": 30,
+    "n": 7
+   },
+   {
+    "t": "Examen",
+    "p": 70,
+    "n": null
+   }
+  ]
+ }
+}

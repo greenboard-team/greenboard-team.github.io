@@ -18,7 +18,7 @@ URL: `https://greenboard-mvp.utad-study-connector.workers.dev`
 
 Los 5 primeros tienen plaza; el resto sale como lista de espera. El orden es el de llegada al servidor.
 
-## Datos reales del prototipo (`/mvp/app/`, solo alumnos de U-tad)
+## Datos reales de la app (`/mvp/`, solo alumnos de U-tad)
 
 `src/cuentas.js`, en el mismo Worker, con su propio Durable Object (`Cuentas`). Todo va bajo `/app/` y pide la
 cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesión, la página pública no ve nada real.

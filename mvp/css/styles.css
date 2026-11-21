@@ -1,3 +1,4 @@
+/* Greenboard · prototipo del MVP (/mvp/app/) · estilos. Colores y tipos del mock-up de Gonzalo (PR #25). */
 /* Colores y tipos del mock-up de Gonzalo (PR #25) */
 :root{
   --bg:#F3F6F1; --surface:#FFFFFF; --ink:#13241C; --muted:#56685E; --line:#D5DED7;
@@ -274,3 +275,16 @@ a.fila:hover{background:var(--bg)}
 .cargando{color:var(--muted);font-size:14px;padding:8px 0}
 body.sin-menu .app{grid-template-columns:minmax(0,1fr)}
 body.sin-menu .side{display:none}
+/* Instalar como app */
+.instalar{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 10px 10px 12px;margin-top:14px}
+.instalar img{width:40px;height:40px;border-radius:10px;flex:none}
+.instalar p{margin:0;flex:1;min-width:0;font-size:14px}
+.instalar p b{display:block;font-size:15px}
+.instalar .cerrar{border:0;background:transparent;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.compartir{display:inline-grid;place-items:center;width:20px;height:20px;border:1.5px solid currentColor;border-radius:5px;font-size:12px;vertical-align:-4px}
+/* Abierta como app: la barra de estado de iOS va encima del verde (black-translucent) */
+@media (display-mode:standalone){
+  .side{padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  body.sin-menu::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--board);z-index:30}
+  body.sin-menu .puerta{padding-top:env(safe-area-inset-top,0px)}
+}

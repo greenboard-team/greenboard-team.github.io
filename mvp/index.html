@@ -14,12 +14,22 @@
      Datos reales (#42, datos reales): tras entrar con un correo de alumno de U-tad, el horario de tus grupos de
      WebUntis con sus cambios, las aulas libres y tus entregas de Blackboard salen del Worker greenboard-mvp
      (/app/*, _api/greenboard-mvp/src/cuentas.js). Sin sesión no se ve nada real. Con #demo, los datos de ejemplo. -->
+<!-- Ficheros: css/styles.css (estilos) · js/arranque.js (carga data/*.json y luego los módulos en orden:
+     datos.js, buscador.js, ui.js, real.js, app.js) · data/*.json (datos de ejemplo del modo demo) ·
+     sw.js (service worker: solo la carcasa) · manifest.webmanifest e icons/ (instalar como app). -->
 <title>Greenboard · prototipo</title>
 <meta name="theme-color" content="#123B2C">
+<!-- Se instala como app en el móvil (PWA): manifest, iconos del logo y service worker (sw.js, solo la carcasa) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Greenboard">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="styles.css">
-<script src="app.js" defer></script>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <div class="app">
@@ -32,5 +42,7 @@
 </div>
 <div id="guia"></div>
 <div id="toast" class="toast" role="status" hidden></div>
+
+<script src="js/arranque.js" defer></script>
 </body>
 </html>
