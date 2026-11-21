@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Greenboard · prototipo navegable del MVP (issue #42). Recorre el Happy Path de la demo
+     (greenboard: mvp/happy-path.md). Una sola página, datos de ejemplo, sin servidor ni portales reales.
+     Rutas con #/ para que el botón «atrás» del móvil funcione. -->
+<title>Greenboard · prototipo</title>
+<meta name="theme-color" content="#123B2C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F3F6F1; --surface:#FFFFFF; --ink:#13241C; --muted:#56685E; --line:#D5DED7;
+  --board:#123B2C; --board-2:#1A4D3A; --chalk:#E9F2E4; --lime:#9BE15D; --accent:#1F8F5F;
+  --warn:#B4541A; --warn-bg:#FCEBDD; --ok-bg:#E2F3E8; --info:#2F5FA8; --info-bg:#E3ECF8;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
+  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A;
+  --info:#8FB4EE; --info-bg:#1B2A40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
+  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A;
+  --info:#8FB4EE; --info-bg:#1B2A40; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;margin:0;text-wrap:balance}
+svg.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Marco: en el móvil ocupa toda la pantalla; en el ordenador se ve como un teléfono */
+.app{max-width:430px;min-height:100%;margin:0 auto;background:var(--bg);position:relative;display:flex;flex-direction:column}
+@media (min-width:700px){
+  body{background:var(--board);padding-top:24px}
+  .app{min-height:calc(100vh - 24px);border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+}
+
+/* Guía de la demo */
+.guia{background:var(--lime);color:#10301F;font-size:14px;padding:8px 14px;display:flex;gap:10px;align-items:center}
+.guia b{font-family:var(--f-mono);font-weight:500;font-size:12px;background:rgba(16,48,31,.12);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.guia span{flex:1;min-width:0}
+.guia a{font-weight:700}
+.guia button{border:0;background:transparent;padding:4px;cursor:pointer;color:#10301F;font-size:13px;text-decoration:underline}
+.guia-off{position:fixed;right:12px;bottom:84px;z-index:30;border:0;border-radius:999px;background:var(--lime);color:#10301F;font-weight:700;font-size:13px;padding:8px 12px;box-shadow:0 4px 14px rgba(0,0,0,.2);cursor:pointer}
+.pulso{position:relative;z-index:1;animation:pulso 1.6s ease-out infinite;border-radius:16px}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(155,225,93,.9)}70%{box-shadow:0 0 0 12px rgba(155,225,93,0)}100%{box-shadow:0 0 0 0 rgba(155,225,93,0)}}
+@media (prefers-reduced-motion:reduce){.pulso{animation:none;outline:3px solid var(--lime);outline-offset:2px}}
+
+/* Cabeceras */
+.top{background:var(--board);color:var(--chalk);padding:18px 16px 22px}
+.top .fila1{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:17px}
+.brand i{width:28px;height:28px;border-radius:8px;background:var(--lime);display:grid;place-items:center;color:#10301F;font-style:normal;font-size:16px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--board-2);border:2px solid var(--lime);display:grid;place-items:center;font-weight:700;font-size:14px}
+.top h1{font-size:28px;font-weight:800;margin-top:18px}
+.top p{margin:4px 0 0;color:#B9D1BE;font-size:15px}
+.barra{display:flex;align-items:center;gap:6px;padding:12px 8px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.barra h1{font-size:18px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atras{border:0;background:transparent;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.atras:hover{background:var(--bg)}
+
+.vista{flex:1;display:flex;flex-direction:column}
+.cont{padding:16px;display:grid;gap:18px;padding-bottom:96px}
+.sec h2{font-size:17px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.sec h2 .n{font-family:var(--f-mono);font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:2px 8px;font-weight:500}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.lista{display:grid}
+.item{display:flex;gap:12px;align-items:center;padding:12px 14px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item:hover{background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.item .txt{flex:1;min-width:0}
+.item .t{font-weight:700;display:block}
+.item .s{color:var(--muted);font-size:14px;display:block}
+.item .chev{color:var(--muted)}
+.ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ico.warn{background:var(--warn-bg);color:var(--warn)}
+.ico.ok{background:var(--ok-bg);color:var(--accent)}
+.ico.info{background:var(--info-bg);color:var(--info)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.ok{background:var(--ok-bg);color:var(--accent)}
+.tag.info{background:var(--info-bg);color:var(--info)}
+.tag.gris{background:var(--bg);color:var(--muted)}
+
+/* Clases del día */
+.clase{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:0;border-top:1px solid var(--line);background:transparent;width:100%;text-align:left;cursor:pointer}
+.clase:first-child{border-top:0}
+.clase .h{font-family:var(--f-mono);font-size:13px;color:var(--muted);line-height:1.3}
+.clase .h b{display:block;color:var(--ink);font-weight:500;font-size:14px}
+.clase .t{font-weight:700;display:block}
+.clase .aula{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.clase .aula s{opacity:.7}
+.clase .aula strong{color:var(--accent)}
+.clase.cambio{background:linear-gradient(90deg,var(--ok-bg),transparent 70%);box-shadow:inset 4px 0 0 var(--accent)}
+.clase.nueva{box-shadow:inset 4px 0 0 var(--info)}
+a.item,a.clase,a.uni{text-decoration:none}
+.hueco{padding:8px 14px 8px 84px;font-size:13px;color:var(--muted);border-top:1px dashed var(--line)}
+
+/* Tarjeta comunidad */
+.uni{display:flex;gap:12px;align-items:center;padding:14px;border-radius:16px;border:0;width:100%;text-align:left;cursor:pointer;background:var(--board);color:var(--chalk)}
+.uni .ico{background:var(--lime);color:#10301F}
+.uni .s{color:#B9D1BE;font-size:14px;display:block}
+.uni .t{font-weight:700;display:block}
+
+/* Detalle */
+.hero{padding:18px 16px;background:var(--surface);border-bottom:1px solid var(--line);display:grid;gap:8px}
+.hero h2{font-size:26px;font-weight:800}
+.dato{display:flex;gap:10px;align-items:center;font-size:16px}
+.dato svg{color:var(--muted)}
+.aula-grande{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.aula-grande strong{font-family:var(--f-display);font-size:34px;color:var(--accent);font-weight:800}
+.aula-grande s{color:var(--muted)}
+.nota{font-size:13.5px;color:var(--muted);margin:0}
+.btn{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;border:0;border-radius:999px;padding:14px 18px;font-weight:700;font-size:17px;background:var(--lime);color:#10301F;cursor:pointer;text-decoration:none}
+.btn.sec2{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Formulario del trámite */
+.campo{display:grid;gap:6px}
+.campo>label,.campo>.lab{font-weight:700;font-size:15px}
+.fijo{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.fijo small{color:var(--accent);font-weight:700;font-size:12px}
+select{font:inherit;font-size:16px;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%}
+.opc{display:flex;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;background:var(--surface)}
+.opc:has(input:checked){border-color:var(--accent);background:var(--ok-bg)}
+.opc input{accent-color:var(--accent);width:18px;height:18px}
+.adj{display:flex;gap:10px;align-items:center;border:1.5px dashed var(--line);border-radius:12px;padding:14px;cursor:pointer;background:transparent;width:100%;text-align:left}
+.adj.hecho{border-style:solid;border-color:var(--accent);background:var(--ok-bg)}
+.origen{display:flex;gap:10px;align-items:flex-start;background:var(--info-bg);color:var(--info);border-radius:12px;padding:12px 14px;font-size:14px}
+:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+
+/* Confirmación */
+.ok-hero{text-align:center;display:grid;justify-items:center;gap:10px;padding:36px 16px 10px}
+.ok-hero .big{width:84px;height:84px;border-radius:50%;background:var(--ok-bg);color:var(--accent);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+.ok-hero .big svg{width:42px;height:42px;stroke-width:2.5}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.ok-hero h2{font-size:26px;font-weight:800}
+
+/* Pantalla de bloqueo (paso 1) */
+.bloqueo{flex:1;background:radial-gradient(120% 80% at 50% 0%,#2A6B4F 0%,var(--board) 55%,#08160F 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:56px 16px 24px;gap:6px}
+.bloqueo .hora{font-family:var(--f-display);font-size:76px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.bloqueo .fecha{font-size:17px;opacity:.85;margin-bottom:36px}
+.notif{width:100%;max-width:390px;border:0;text-align:left;cursor:pointer;background:rgba(255,255,255,.88);color:#13241C;border-radius:20px;padding:12px 14px;display:grid;gap:4px;backdrop-filter:blur(12px);animation:baja .6s cubic-bezier(.2,1.2,.4,1)}
+@keyframes baja{from{transform:translateY(-24px)}}
+.notif .cab{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#56685E}
+.notif .cab i{width:20px;height:20px;border-radius:6px;background:#9BE15D;display:grid;place-items:center;color:#10301F;font-style:normal;font-size:12px;font-weight:800}
+.notif .cab span{margin-left:auto;text-transform:none;letter-spacing:0}
+.notif b{font-size:16px}
+.bloqueo .pie{margin-top:auto;font-size:13px;opacity:.7;text-align:center}
+.bloqueo .pie a{color:#fff}
+
+/* Navegación inferior */
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:15}
+@media (min-width:700px){.nav{border-radius:20px 20px 0 0}}
+.nav a{display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--muted);text-decoration:none;padding:6px 0;border-radius:12px}
+.nav a[aria-current="page"]{color:var(--accent);font-weight:700}
+.nav a[aria-current="page"] svg{background:var(--ok-bg);border-radius:999px;width:44px;padding:0 10px}
+.ejemplo{font-size:12px;color:var(--muted);text-align:center;margin:0}
+.ejemplo a{color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25);animation:sube .25s ease-out}
+@keyframes sube{from{transform:translate(-50%,10px);opacity:0}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+/* ---------- Iconos (trazo, 24×24) ---------- */
+const P = {
+  atras:'<path d="M15 18l-6-6 6-6"/>', chev:'<path d="M9 18l6-6-6-6"/>',
+  hoy:'<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/>',
+  entregas:'<path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 13l2 2 4-4"/>',
+  tramites:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  uni:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/>',
+  aula:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  reloj:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  cambio:'<path d="M4 7h13l-3-3M20 17H7l3 3"/>', mas:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  mover:'<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M10 15h6l-2-2M14 17l2-2"/>',
+  profe:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+  clip:'<path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',
+  check:'<path d="M5 12l5 5 9-10"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  falta:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
+  evento:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>'
+};
+const ic = (n, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+
+/* ---------- Datos de ejemplo (no son datos de U-tad) ---------- */
+const HOY = 'Martes 24 de noviembre';
+const ASIG = {
+  prog:{nombre:'Programación', profe:'Prof. Ruiz'},
+  disc:{nombre:'Matemática Discreta', profe:'Prof. Ortega'},
+  bd:{nombre:'Bases de Datos', profe:'Prof. Navarro'},
+  calc:{nombre:'Cálculo', profe:'Prof. Serrano'},
+};
+const CLASES_HOY = [
+  {id:'disc', ini:'09:00', fin:'10:30', aula:'A-105', ahora:true},
+  {id:'prog', ini:'10:45', fin:'12:15', aula:'B-204', antes:'A-108', cambio:'aula'},
+  {id:'bd',   ini:'12:30', fin:'14:00', aula:'C-301'},
+  {id:'calc', ini:'15:00', fin:'16:30', aula:'A-210', cambio:'recuperacion'},
+];
+const CAMBIOS = [
+  {ico:'cambio', tono:'ok', t:'Programación cambia de aula', s:'Hoy 10:45 · ahora en B-204 (antes A-108)', ir:'#/clase/prog', k:'cambio-prog'},
+  {ico:'mas', tono:'info', t:'Clase de recuperación de Cálculo', s:'Hoy 15:00 · Aula A-210 · nueva', ir:'#/clase/calc'},
+  {ico:'mover', tono:'warn', t:'Bases de Datos se mueve', s:'Del jueves 26 al viernes 27, 10:45', ir:'#/asignatura/bd'},
+];
+const ENTREGAS = [
+  {id:'grafos', asig:'disc', t:'Ejercicios de grafos', dia:'Jue 26 nov', falta:'en 2 días'},
+  {id:'p3', asig:'prog', t:'Práctica 3: listas enlazadas', dia:'Vie 27 nov · 23:59', falta:'en 3 días'},
+  {id:'hoja5', asig:'calc', t:'Hoja 5: integrales', dia:'Lun 30 nov', falta:'en 6 días'},
+  {id:'er', asig:'bd', t:'Modelo entidad-relación', dia:'Mar 1 dic', falta:'en 7 días'},
+  {id:'pf', asig:'prog', t:'Proyecto final: entrega parcial', dia:'Vie 4 dic · 23:59', falta:'en 10 días'},
+];
+const PROXIMAS = {
+  prog:[{d:'Hoy', h:'10:45', aula:'B-204', cambio:true},{d:'Jue 26', h:'10:45', aula:'A-108'}],
+  disc:[{d:'Hoy', h:'09:00', aula:'A-105'},{d:'Mié 25', h:'12:30', aula:'A-105'}],
+  bd:[{d:'Hoy', h:'12:30', aula:'C-301'},{d:'Vie 27', h:'10:45', aula:'C-301', cambio:true, nota:'antes jueves 26'}],
+  calc:[{d:'Hoy', h:'15:00', aula:'A-210', cambio:true, nota:'recuperación'},{d:'Mié 25', h:'09:00', aula:'A-210'}],
+};
+const FALTA = {asig:'prog', d:'Lunes 23 nov', h:'10:45–12:15'};
+const EVENTO = {t:'Charla: cómo conseguir tus primeras prácticas', d:'Hoy', h:'17:00–18:00', lugar:'Auditorio', quien:'Organiza: Delegación de estudiantes', plazas:'34 plazas libres'};
+const TRAMITES = ['Modificación de matrícula','Certificado general','Evaluación única'];
+
+/* ---------- Estado (se guarda en la sesión del navegador, si se puede) ---------- */
+const INI = {abierta:false, vioClase:false, vioAsig:false, adjunto:false, justificado:false, apuntada:false, guia:true};
+let S = {...INI};
+try{ Object.assign(S, JSON.parse(sessionStorage.getItem('gb-demo')||'{}')); }catch(e){}
+const guardar = () => { try{ sessionStorage.setItem('gb-demo', JSON.stringify(S)); }catch(e){} };
+function reiniciar(){ S = {...INI}; guardar(); location.hash = '#/aviso'; render(); }
+
+/* ---------- Guía del Happy Path: qué paso toca según lo que ya se ha hecho ---------- */
+function pasoGuia(){
+  if(!S.abierta)     return {n:1, txt:'Llega un aviso al móvil. Tócalo.', rutas:['aviso'], obj:'#notif'};
+  if(!S.vioClase)    return {n:2, txt:'Mira «Lo que ha cambiado» y toca la clase de Programación.', rutas:['hoy'], obj:'[data-k="clase-prog"]'};
+  if(!S.vioAsig)     return {n:3, txt:'Aula nueva y sus entregas, juntas. Toca «Ver asignatura».', rutas:['clase/prog'], obj:'#ver-asig'};
+  if(!S.justificado){
+    if(ruta()==='justificar/prog') return {n:5, txt: S.adjunto ? 'Ya está todo. Envía el trámite.' : 'Sale ya rellenado. Adjunta el justificante.', rutas:['justificar/prog'], obj: S.adjunto ? '#enviar' : '#adjuntar'};
+    return {n:4, txt:'Ayer faltó. Toca «Justificar falta».', rutas:['asignatura/prog'], obj:'#btn-just'};
+  }
+  if(ruta()==='justificado') return {n:5, txt:'Trámite enviado. Vuelve a Hoy.', rutas:['justificado'], obj:'#volver-hoy'};
+  if(!S.apuntada){
+    if(ruta()==='evento') return {n:6, txt:'Encaja en su hueco libre. Toca «Me apunto».', rutas:['evento'], obj:'#apuntarse'};
+    return {n:6, txt:'La sorpresa: toca «Hoy en la uni».', rutas:['hoy'], obj:'#evento-card'};
+  }
+  return {n:7, txt:'Fin del recorrido: cambios, clases, entregas, un trámite y la uni, en una pantalla.', rutas:[], obj:null};
+}
+const RUTA_DE = {1:'#/aviso',2:'#/hoy',3:'#/clase/prog',4:'#/asignatura/prog',5:'#/justificar/prog',6:'#/hoy'};
+
+function guiaHTML(){
+  if(!S.guia) return '';
+  const p = pasoGuia();
+  if(p.n===7) return `<div class="guia" role="status"><b>Demo ✓</b><span>${p.txt}</span><button onclick="reiniciar()">Reiniciar</button></div>`;
+  const fuera = !p.rutas.includes(ruta());
+  return `<div class="guia" role="status"><b>Paso ${p.n}/6</b><span>${fuera ? `Fuera del recorrido. <a href="${RUTA_DE[p.n]}">Volver al paso ${p.n}</a>` : p.txt}</span><button onclick="S.guia=false;guardar();render()" aria-label="Ocultar guía">Ocultar</button></div>`;
+}
+
+/* ---------- Piezas comunes ---------- */
+const ruta = () => (location.hash.replace(/^#\/?/,'') || 'aviso');
+const barra = (titulo, atras='#/hoy') => `<header class="barra"><a class="atras" href="${atras}" aria-label="Atrás" onclick="if(history.length>1){history.back();return false}">${ic('atras')}</a><h1>${titulo}</h1></header>`;
+const nav = (act) => `<nav class="nav" aria-label="Secciones">${[
+  ['hoy','Hoy','hoy'],['entregas','Entregas','entregas'],['tramites','Trámites','tramites'],['comunidad','Comunidad','uni']
+].map(([r,t,i]) => `<a href="#/${r}" ${act===r?'aria-current="page"':''}>${ic(i)}${t}</a>`).join('')}</nav>`;
+const pie = `<p class="ejemplo">Prototipo · datos de ejemplo · no se conecta a ningún portal<br><a href="#" onclick="reiniciar();return false">Reiniciar demo</a> · <a href="../">Volver a la web</a></p>`;
+const itemEntrega = e => `<a class="item" href="#/entrega/${e.id}"><span class="ico info">${ic('entregas')}</span><span class="txt"><span class="t">${e.t}</span><span class="s">${ASIG[e.asig].nombre} · ${e.dia}</span></span><span class="tag ${e.falta.match(/[23] días/)?'warn':'gris'}">${e.falta}</span></a>`;
+const filaClase = c => {
+  const a = ASIG[c.id];
+  const cls = ['clase', c.cambio==='aula'?'cambio':'', c.cambio==='recuperacion'?'nueva':'', c.ahora?'ahora':''].join(' ');
+  const aula = c.antes ? `${ic('aula')}<s>${c.antes}</s> → <strong>${c.aula}</strong>` : `${ic('aula')}Aula ${c.aula}`;
+  const tag = c.cambio==='aula' ? '<span class="tag ok">Aula nueva</span>' : c.cambio==='recuperacion' ? '<span class="tag info">Recuperación</span>' : c.ahora ? '<span class="tag gris">Ahora</span>' : '';
+  return `<a class="${cls}" href="#/clase/${c.id}" data-k="clase-${c.id}"><span class="h"><b>${c.ini}</b>${c.fin}</span><span><span class="t">${a.nombre}</span><span class="aula">${aula}</span></span>${tag}</a>`;
+};
+
+/* ---------- Pantallas ---------- */
+const V = {};
+
+V.aviso = () => `<div class="bloqueo">
+  <div class="hora">10:05</div><div class="fecha">${HOY}</div>
+  <button class="notif" id="notif" onclick="S.abierta=true;guardar();location.hash='#/hoy'">
+    <span class="cab"><i>G</i>Greenboard<span>ahora</span></span>
+    <b>Programación cambia de aula hoy</b>
+    <span>10:45 · ahora en B-204 (antes A-108)</span>
+  </button>
+  <p class="pie">Toca el aviso para abrir Greenboard<br><a href="#/hoy" onclick="S.abierta=true;guardar()">o entra directamente</a></p>
+</div>`;
+
+V.hoy = () => {
+  const tarde = S.apuntada
+    ? `<a class="clase nueva" href="#/evento"><span class="h"><b>17:00</b>18:00</span><span><span class="t">Charla de prácticas</span><span class="aula">${ic('aula')}${EVENTO.lugar}</span></span><span class="tag ok">Apuntada</span></a>`
+    : `<div class="hueco">16:30 · Tarde libre</div>`;
+  const clases = CLASES_HOY.map(filaClase).join('') + tarde;
+  return `<div class="top"><div class="fila1"><span class="brand"><i>G</i>Greenboard</span><span class="avatar" aria-label="Lucía">L</span></div>
+    <h1>Hola, Lucía</h1><p>${HOY} · doble grado</p></div>
+  <div class="cont">
+    <section class="sec"><h2>Lo que ha cambiado <span class="n">${CAMBIOS.length}</span></h2>
+      <div class="card lista">${CAMBIOS.map(c => `<a class="item" href="${c.ir}"><span class="ico ${c.tono}">${ic(c.ico)}</span><span class="txt"><span class="t">${c.t}</span><span class="s">${c.s}</span></span>${ic('chev','i chev')}</a>`).join('')}</div>
+    </section>
+    <section class="sec"><h2>Tus clases de hoy</h2><div class="card">${clases}</div></section>
+    <section class="sec"><h2>Hoy en la uni</h2>
+      <a class="uni" id="evento-card" href="#/evento"><span class="ico">${ic('evento')}</span><span class="txt"><span class="t">${EVENTO.t}</span><span class="s">${EVENTO.h} · ${EVENTO.lugar} · encaja en tu tarde libre</span></span>${S.apuntada?'<span class="tag ok">Apuntada</span>':ic('chev','i')}</a>
+    </section>
+    <section class="sec"><h2>Próximas entregas</h2><div class="card lista">${ENTREGAS.slice(0,3).map(itemEntrega).join('')}</div></section>
+    ${pie}
+  </div>${nav('hoy')}`;
+};
+
+V.clase = (id) => {
+  const c = CLASES_HOY.find(x => x.id===id); const a = ASIG[id];
+  if(!c) return V.hoy();
+  if(id==='prog'){ S.vioClase = true; guardar(); }
+  const ents = ENTREGAS.filter(e => e.asig===id);
+  const aviso = c.cambio==='aula' ? `<span class="tag ok">${ic('cambio','i')} Cambio de aula · avisado hoy 10:05</span>` :
+                c.cambio==='recuperacion' ? `<span class="tag info">${ic('mas','i')} Clase de recuperación · nueva</span>` : '';
+  return `${barra(a.nombre)}
+  <div class="hero">${aviso}<h2>${a.nombre}</h2>
+    <div class="dato">${ic('reloj')}Hoy, ${c.ini} – ${c.fin}</div>
+    <div class="aula-grande"><strong>Aula ${c.aula}</strong>${c.antes?`<s>antes ${c.antes}</s>`:''}</div>
+    <div class="dato">${ic('profe')}${a.profe}</div>
+  </div>
+  <div class="cont">
+    <section class="sec"><h2>Próximas entregas de ${a.nombre}</h2>
+      <div class="card lista">${ents.length ? ents.map(itemEntrega).join('') : '<p class="item s">No tienes entregas pendientes.</p>'}</div></section>
+    <a class="btn sec2" id="ver-asig" href="#/asignatura/${id}">Ver asignatura ${ic('chev')}</a>
+  </div>${nav('hoy')}`;
+};
+
+V.asignatura = (id) => {
+  const a = ASIG[id]; if(!a) return V.hoy();
+  if(id==='prog'){ S.vioAsig = true; guardar(); }
+  const prox = PROXIMAS[id].map(p => `<div class="item" style="cursor:default"><span class="ico ${p.cambio?'ok':'info'}">${ic('hoy')}</span><span class="txt"><span class="t">${p.d}, ${p.h}</span><span class="s">Aula ${p.aula}${p.nota?' · '+p.nota:''}</span></span>${p.cambio?'<span class="tag ok">Cambio</span>':''}</div>`).join('');
+  const ents = ENTREGAS.filter(e => e.asig===id).map(itemEntrega).join('');
+  let asist = '<p class="nota" style="padding:14px">Sin faltas este mes.</p>';
+  if(FALTA.asig===id){
+    asist = `<div class="item" style="cursor:default"><span class="ico ${S.justificado?'ok':'warn'}">${ic(S.justificado?'check':'falta')}</span><span class="txt"><span class="t">${FALTA.d} · ${FALTA.h}</span><span class="s">${S.justificado?'Justificante enviado':'Falta sin justificar'}</span></span></div>
+    ${S.justificado?'':`<div style="padding:0 14px 14px"><a class="btn" id="btn-just" href="#/justificar/${id}">${ic('tramites')} Justificar falta</a></div>`}`;
+  }
+  // Una falta sin justificar sube arriba del todo: es lo primero que Lucía tiene que resolver
+  const secAsist = `<section class="sec"><h2>Asistencia</h2><div class="card">${asist}</div></section>`;
+  const pendiente = FALTA.asig===id && !S.justificado;
+  return `${barra(a.nombre)}
+  <div class="hero"><h2>${a.nombre}</h2><div class="dato">${ic('profe')}${a.profe}</div></div>
+  <div class="cont">
+    ${pendiente ? secAsist : ''}
+    <section class="sec"><h2>Próximas clases</h2><div class="card lista">${prox}</div></section>
+    <section class="sec"><h2>Entregas</h2><div class="card lista">${ents || '<p class="nota" style="padding:14px">No tienes entregas pendientes.</p>'}</div></section>
+    ${pendiente ? '' : secAsist}
+  </div>${nav('hoy')}`;
+};
+
+V.entrega = (id) => {
+  const e = ENTREGAS.find(x => x.id===id); if(!e) return V.entregas();
+  const a = ASIG[e.asig];
+  return `${barra('Entrega')}
+  <div class="hero"><span class="tag warn">${ic('reloj','i')} ${e.falta}</span><h2>${e.t}</h2>
+    <div class="dato">${ic('hoy')}${e.dia}</div><div class="dato">${ic('profe')}${a.nombre} · ${a.profe}</div></div>
+  <div class="cont">
+    <div class="origen">${ic('info')}<span>La entrega se sube en Blackboard. Greenboard te avisa de la fecha y te lleva allí.</span></div>
+    <button class="btn" onclick="toast('En el prototipo no se abre Blackboard.')">Abrir en Blackboard ${ic('ext')}</button>
+    <a class="btn sec2" href="#/asignatura/${e.asig}">Ver ${a.nombre}</a>
+  </div>${nav('entregas')}`;
+};
+
+V.justificar = (id) => {
+  const a = ASIG[id] || ASIG.prog;
+  return `${barra('Justificar falta')}
+  <div class="cont">
+    <div class="origen">${ic('info')}<span>Es el trámite <b>«Justificación de faltas de asistencia»</b> de Classlife. Greenboard lo abre ya rellenado con tu asignatura y la clase.</span></div>
+    <div class="campo"><span class="lab">Asignatura</span><div class="fijo">${a.nombre}<small>Rellenado</small></div></div>
+    <div class="campo"><span class="lab">Clase a la que faltaste</span>
+      <label class="opc"><input type="radio" name="cl" checked> ${FALTA.d} · ${FALTA.h}</label></div>
+    <div class="campo"><label for="motivo">Motivo</label>
+      <select id="motivo"><option>Cita médica</option><option>Enfermedad</option><option>Deber inexcusable</option><option>Otro</option></select></div>
+    <div class="campo"><span class="lab">Justificante</span>
+      <button class="adj ${S.adjunto?'hecho':''}" id="adjuntar" onclick="S.adjunto=true;guardar();render()">${ic(S.adjunto?'check':'clip')}<span>${S.adjunto?'<b>justificante-medico.pdf</b> · 182 KB':'Adjuntar foto o PDF'}</span></button></div>
+    <button class="btn" id="enviar" ${S.adjunto?'':'disabled'} onclick="S.justificado=true;guardar();location.hash='#/justificado'">Enviar justificante</button>
+    <p class="nota">En el prototipo no se envía nada a Classlife.</p>
+  </div>`;
+};
+
+V.justificado = () => `<div class="ok-hero"><div class="big">${ic('check')}</div><h2>Justificante enviado</h2>
+    <p class="nota" style="font-size:16px">${ASIG[FALTA.asig].nombre} · ${FALTA.d}<br>Te avisaremos cuando lo revisen.</p></div>
+  <div class="cont"><a class="btn" id="volver-hoy" href="#/hoy">Volver a Hoy</a>
+    <p class="nota" style="text-align:center">Sin correos a Secretaría y sin buscar el trámite en otro portal.</p></div>`;
+
+V.evento = () => `${barra('Hoy en la uni')}
+  <div class="hero"><span class="tag ok">${ic('evento','i')} Encaja en tu tarde libre</span><h2>${EVENTO.t}</h2>
+    <div class="dato">${ic('reloj')}${EVENTO.d}, ${EVENTO.h}</div><div class="dato">${ic('aula')}${EVENTO.lugar}</div>
+    <div class="dato">${ic('uni')}${EVENTO.quien}</div></div>
+  <div class="cont">
+    <p style="margin:0">Charla de 1 hora con estudiantes de último curso que ya han hecho prácticas: cómo buscarlas, qué piden y cómo preparar la entrevista.</p>
+    <p class="nota">${EVENTO.plazas} · evento de ejemplo</p>
+    ${S.apuntada ? `<div class="btn sec2" style="cursor:default">${ic('check')} Apuntada · está en tu horario de hoy</div>`
+      : `<button class="btn" id="apuntarse" onclick="S.apuntada=true;guardar();render();toast('Apuntada. Lo verás en tu horario de hoy.')">Me apunto</button>`}
+  </div>${nav('comunidad')}`;
+
+V.entregas = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Entregas</h1><p>Todas tus entregas, por fecha</p></div>
+  <div class="cont"><div class="card lista">${ENTREGAS.map(itemEntrega).join('')}</div>${pie}</div>${nav('entregas')}`;
+
+V.tramites = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Trámites</h1><p>Los trámites de Classlife, a un toque</p></div>
+  <div class="cont"><div class="card lista">
+    <a class="item" href="#/justificar/prog"><span class="ico warn">${ic('tramites')}</span><span class="txt"><span class="t">Justificación de faltas de asistencia</span><span class="s">${S.justificado ? 'Justificante enviado' : 'Tienes 1 falta sin justificar'}</span></span>${ic('chev','i chev')}</a>
+    ${TRAMITES.map(t => `<button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('tramites')}</span><span class="txt"><span class="t">${t}</span></span>${ic('chev','i chev')}</button>`).join('')}
+  </div>${pie}</div>${nav('tramites')}`;
+
+V.comunidad = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Comunidad</h1><p>Lo que pasa en la uni, según tus huecos</p></div>
+  <div class="cont">
+    <a class="uni" href="#/evento"><span class="ico">${ic('evento')}</span><span class="txt"><span class="t">${EVENTO.t}</span><span class="s">Hoy ${EVENTO.h} · ${EVENTO.lugar}</span></span>${S.apuntada?'<span class="tag ok">Apuntada</span>':ic('chev','i')}</a>
+    <div class="card lista">
+      <button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('uni')}</span><span class="txt"><span class="t">Torneo de ajedrez entre grados</span><span class="s">Jue 26 · 13:30 · Cafetería · ejemplo</span></span></button>
+      <button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('uni')}</span><span class="txt"><span class="t">Grupo de estudio de Cálculo</span><span class="s">Mié 25 · 16:30 · Biblioteca · ejemplo</span></span></button>
+    </div>${pie}
+  </div>${nav('comunidad')}`;
+
+/* ---------- Pintar ---------- */
+let toastT;
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+
+function render(){
+  const [r, arg] = ruta().split('/');
+  if(r!=='aviso' && !S.abierta){ S.abierta = true; guardar(); }   // entrar por un enlace directo cuenta como abrir la app
+  // La vista se pinta antes que la guía porque algunas vistas marcan progreso (vioClase, vioAsig)
+  const vista = (V[r] || V.hoy)(arg);
+  const app = document.getElementById('app');
+  app.innerHTML = guiaHTML() + `<div class="vista">${vista}</div>` + (S.guia ? '' : `<button class="guia-off" onclick="S.guia=true;guardar();render()">Guía de la demo</button>`);
+  if(S.guia){ const p = pasoGuia(); if(p.obj && p.rutas.includes(ruta())){ const el = app.querySelector(p.obj); if(el) el.classList.add('pulso'); } }
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0,0); });
+render();
+</script>
+</body>
+</html>
