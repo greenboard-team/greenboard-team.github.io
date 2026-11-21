@@ -33,17 +33,23 @@ cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesi�
 | `GET /app/aulas?dia=AAAA-MM-DD&desde=HH:MM&hasta=HH:MM` | Aulas sin clase en ese hueco, y hasta qué hora siguen libres. |
 | `PUT /app/blackboard` · `DELETE` | `{url}` del calendario de Blackboard (Calendario -> ⚙ -> Compartir calendario). Solo `https://u-tad.blackboard.com/webapps/calendar/calendarFeed/<token>/learn.ics`; se prueba antes de guardarlo. Es un secreto de cada alumno: no se registra en logs ni se devuelve nunca. |
 | `GET /app/entregas` | Tu calendario de Blackboard leído en el momento, partido en entregas y eventos. |
+| `GET /app/admin/codigos` | `Authorization: Bearer <ADMIN_TOKEN>`. Cada código vigente (enmascarado: `gb-x…`) con el correo que lo usa, sus grupos y su último acceso. |
+| `DELETE /app/admin/usuario?correo=` | Misma cabecera. Borra los datos de esa persona (grupos, enlace de Blackboard), sus sesiones y la unión con su código. |
 
 Los datos salen del pipeline de Dmitrii (repo privado *Estudios U-tad*): `python -m utad fetch-groups` exporta cada
 día el horario de **todos** los grupos de WebUntis (3 semanas, con los cambios respecto a la exportación anterior)
 a `groups.json`, y `rooms.json` ya tenía la ocupación de las aulas. Los dos se publican en su gist secreto, que el
 Worker lee con el secreto `DATA_BASE`.
 
+**Retirar el acceso a una persona:** quita su código de `INVITE_CODES` (`wrangler secret put` con la lista sin él). Sus
+sesiones abiertas dejan de valer en la siguiente petición y el código ya no sirve para entrar. Para borrar además sus
+datos: `DELETE /app/admin/usuario?correo=…`.
+
 Secretos nuevos (una vez, antes del primer `wrangler deploy` con esto):
 
 ```bash
 npx wrangler secret put DATA_BASE       # https://gist.githubusercontent.com/<usuario>/<gist>/raw (el GIST_BASE del conector)
-npx wrangler secret put INVITE_CODES    # p. ej. 5 códigos, uno por persona de la prueba, separados por comas
+npx wrangler secret put INVITE_CODES    # los 5 códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea
 # Solo si se activa el enlace mágico por correo (hace falta una cuenta de envío y un dominio verificado):
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put MAIL_FROM       # "Greenboard <hola@dominio-verificado>"

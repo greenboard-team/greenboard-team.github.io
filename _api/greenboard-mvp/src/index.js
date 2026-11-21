@@ -157,7 +157,10 @@ export default {
     }
     // Datos reales del prototipo, solo con sesión de alumno de U-tad (src/cuentas.js).
     if (url.pathname.startsWith("/app/")) {
-      const res = await env.CUENTAS.get(env.CUENTAS.idFromName("cuentas")).fetch(req);
+      const h = new Headers(req.headers);
+      h.delete("X-Interno-Admin");
+      if (env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`) h.set("X-Interno-Admin", "1");
+      const res = await env.CUENTAS.get(env.CUENTAS.idFromName("cuentas")).fetch(new Request(req, { headers: h }));
       const out = new Response(res.body, res);
       for (const [k, v] of Object.entries(headers)) out.headers.set(k, v);
       return out;

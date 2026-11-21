@@ -12,13 +12,16 @@
 //   PUT    /app/blackboard   {url}              -> guarda tu enlace de calendario de Blackboard (lo prueba antes)
 //   DELETE /app/blackboard                      -> lo olvida
 //   GET    /app/entregas                        -> {entregas, eventos} leídos de tu calendario de Blackboard
+//   GET    /app/admin/codigos                   -> (ADMIN_TOKEN) cada código vigente y el correo que lo usa
+//   DELETE /app/admin/usuario?correo=           -> (ADMIN_TOKEN) borra los datos y sesiones de esa persona
 //
 // Sesión: cabecera Authorization: Bearer <token>. El token no se guarda en claro (solo su SHA-256).
 // El enlace de Blackboard es un secreto de cada alumno: no se escribe nunca en los logs ni se devuelve.
 //
 // Entrar: el correo tiene que ser de alumno (DOMINIOS, por defecto live.u-tad.com). Dos modos:
-//   - código de invitación (INVITE_CODES, secreto "codigo1,codigo2,…"): cada código queda ligado al primer correo
-//     que lo usa. Sirve ya, sin cuentas nuevas, para las 5 personas de la prueba.
+//   - código de invitación (INVITE_CODES, secreto "codigo1,codigo2,…"): uno por persona; cada código queda ligado al
+//     primer correo que lo usa. Quitar un código de INVITE_CODES le quita el acceso a esa persona en su siguiente
+//     petición (las sesiones abiertas con él dejan de valer). Sirve ya, sin cuentas nuevas, para la prueba.
 //   - enlace mágico por correo, si hay RESEND_API_KEY y MAIL_FROM (necesita una cuenta de envío: decide Dmitrii).
 //
 // Datos: los genera el pipeline de Dmitrii a diario y los publica en su gist secreto (DATA_BASE, secreto):
@@ -173,19 +176,24 @@ async function enviarEnlace(env, correo, enlace) {
   if (!r.ok) throw new Error(`correo ${r.status}`);
 }
 
+const codigosDe = (env) => String(env.INVITE_CODES || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+const enmascara = (c) => c.slice(0, 4) + "…";
+
 // --- El objeto que guarda cuentas y sesiones ---
 export class Cuentas {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; this.st = ctx.storage; }
 
   async sesion(token) {
     if (!token) return null;
-    const s = await this.st.get("s:" + await sha256(token));
+    const k = "s:" + await sha256(token), s = await this.st.get(k);
     if (!s || s.exp < Date.now()) return null;
+    // Entró con un código que ya no está en INVITE_CODES: acceso retirado.
+    if (s.codigo && !codigosDe(this.env).includes(s.codigo)) { await this.st.delete(k); return null; }
     return s;
   }
-  async nuevaSesion(correo) {
+  async nuevaSesion(correo, codigo = null) {
     const token = aleatorio();
-    await this.st.put("s:" + await sha256(token), { correo, exp: Date.now() + SESION_DIAS * 864e5 });
+    await this.st.put("s:" + await sha256(token), { correo, codigo, exp: Date.now() + SESION_DIAS * 864e5 });
     const u = (await this.st.get("u:" + correo)) || { creado: Date.now(), grupos: [] };
     u.ultimo = Date.now(); await this.st.put("u:" + correo, u);
     return token;
@@ -209,7 +217,7 @@ export class Cuentas {
       if (!(await this.limite("entrar:" + correo, 8, 3600e3))) return json({ ok: false, error: "espera" }, 429);
       const codigo = String(b.codigo || "").trim().toLowerCase();
       if (codigo) {
-        const codigos = String(env.INVITE_CODES || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+        const codigos = codigosDe(env);
         const ok = codigos.find((c) => iguales(c, codigo));
         if (!ok) {
           // Límite global de códigos fallidos: probar correos distintos no sirve para adivinar códigos.
@@ -219,7 +227,7 @@ export class Cuentas {
         const dueño = await this.st.get("c:" + ok);
         if (dueño && dueño !== correo) return json({ ok: false, error: "codigo-usado" }, 401);
         if (!dueño) await this.st.put("c:" + ok, correo);
-        return json({ ok: true, token: await this.nuevaSesion(correo) });
+        return json({ ok: true, token: await this.nuevaSesion(correo, ok) });
       }
       if (!env.RESEND_API_KEY || !env.MAIL_FROM) return json({ ok: false, error: "sin-correo", modo: "codigo" }, 400);
       const enlace = aleatorio();
@@ -233,6 +241,30 @@ export class Cuentas {
       if (!e || e.exp < Date.now()) return json({ ok: false, error: "enlace" }, 401);
       await this.st.delete(k);
       return json({ ok: true, token: await this.nuevaSesion(e.correo) });
+    }
+
+    // Administración (el Worker comprueba ADMIN_TOKEN y lo pasa como cabecera interna).
+    if (ruta.startsWith("/admin/")) {
+      if (req.headers.get("X-Interno-Admin") !== "1") return json({ ok: false, error: "token" }, 401);
+      if (req.method === "GET" && ruta === "/admin/codigos") {
+        const out = [];
+        for (const c of codigosDe(env)) {
+          const correo = (await this.st.get("c:" + c)) || null;
+          const u = correo ? await this.st.get("u:" + correo) : null;
+          out.push({ codigo: enmascara(c), correo, grupos: u?.grupos || [], blackboard: !!u?.bb, ultimo: u?.ultimo || null });
+        }
+        return json({ ok: true, codigos: out });
+      }
+      if (req.method === "DELETE" && ruta === "/admin/usuario") {
+        const correo = correoValido(url.searchParams.get("correo"), dominios);
+        if (!correo) return json({ ok: false, error: "correo" }, 400);
+        const borrar = ["u:" + correo];
+        for (const [k, v] of await this.st.list({ prefix: "s:" })) if (v.correo === correo) borrar.push(k);
+        for (const [k, v] of await this.st.list({ prefix: "c:" })) if (v === correo) borrar.push(k);
+        await this.st.delete(borrar);
+        return json({ ok: true, borradas: borrar.length });
+      }
+      return json({ error: "no" }, 404);
     }
 
     // A partir de aquí, todo pide sesión.
