@@ -20,7 +20,7 @@ function abrir(id, q){
   guardar();
   cerrarSug(); document.getElementById('q').value = '';
   if (ruta()!=='inicio') location.hash = '#/inicio'; else pintar();
-  requestAnimationFrame(() => { const el = document.getElementById('a-'+id); if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'}); });
+  requestAnimationFrame(() => { const el = document.querySelector('#a-'+id+' .mat.foco') || document.getElementById('a-'+id); if (el) el.scrollIntoView({behavior:'smooth', block: el.classList.contains('mat') ? 'center' : 'nearest'}); });
 }
 function cerrarTarj(id){ S.abiertas = S.abiertas.filter(x => x!==id); guardar(); pintar(); }
 const cab = (id, icono, titulo, sub) => `<div class="tarj-h"><span class="ic">${ic(icono)}</span><h4>${titulo}${sub?`<small>${sub}</small>`:''}</h4><button class="cerrar" aria-label="Cerrar" onclick="cerrarTarj('${id}')">${ic('cerrar')}</button></div>`;
@@ -101,15 +101,18 @@ function asistencia(id, soloFalta){
 
 /* Contenido por temas: la guía docente primero (con su evaluación), luego cada tema plegable */
 const TIPO_IC = {enunciado:'doc', enlace:'chispa', pronto:'reloj'};
+/* Material elegido en la barra: su tema sale abierto y el archivo, marcado (lo pone elegir() en buscador.js) */
+let FOCO_MAT = null;
 function contenido(id){
   const s = subj(id), evalua = (NOTAS[id]||[]).map(x => `${esc(x.t)} ${x.p} %`).join(' · ');
   const guia = `<details class="tema" open><summary><span>${ic('libro')}Guía docente 2026/27</span><span class="note">evaluación</span></summary>
     <div class="tema-c"><button class="mat" onclick="abrirDoc()">${ic('doc')}<span>Guía docente · ${esc(corto(s))}.pdf</span></button>
     <p class="note" style="margin:6px 0 0"><b>Evaluación:</b> ${evalua} <span class="demo-flag">pesos de ejemplo</span></p></div></details>`;
-  const abierto = Math.max(0, (CONTENIDO[id]||[]).findIndex(u => u.items.some(x => x.nuevo)));
+  const conFoco = FOCO_MAT ? (CONTENIDO[id]||[]).findIndex(u => u.items.some(x => x.t===FOCO_MAT)) : -1;
+  const abierto = conFoco >= 0 ? conFoco : Math.max(0, (CONTENIDO[id]||[]).findIndex(u => u.items.some(x => x.nuevo)));
   return guia + (CONTENIDO[id]||[]).map((u,i) => `<details class="tema" ${i===abierto?'open':''}><summary><span>${ic('cal')}${esc(u.u)}</span><span class="note">${u.items.filter(x => x.tipo!=='pronto').length || ''}${u.items.some(x => x.nuevo)?' <span class="pill ok">nuevo</span>':''}</span></summary>
     <div class="tema-c">${u.items.map(x => x.tipo==='pronto' ? `<p class="note" style="margin:4px 0">${esc(x.t)}</p>`
-      : `<button class="mat" onclick="abrirDoc()">${ic(TIPO_IC[x.tipo]||'doc')}<span>${esc(x.t)}</span>${x.nuevo?'<span class="pill ok">nuevo</span>':''}</button>`).join('')}</div></details>`).join('');
+      : `<button class="mat${x.t===FOCO_MAT?' foco':''}" onclick="abrirDoc()">${ic(TIPO_IC[x.tipo]||'doc')}<span>${esc(x.t)}</span>${x.nuevo?'<span class="pill ok">nuevo</span>':''}</button>`).join('')}</div></details>`).join('');
 }
 function abrirDoc(){ toast('En la app real se abre el archivo de Blackboard.'); }
 function notasTabla(id){
