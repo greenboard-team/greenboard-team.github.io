@@ -243,7 +243,7 @@ const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</
 
 /* ---------- Datos ----------
    Asignaturas, códigos y entregas: los reales de Blackboard del mock-up de Gonzalo (26/10/2026).
-   Horario, aulas, asistencia, compañeros, pistas de pádel y aulas libres: de ejemplo. */
+   Horario, aulas, asistencia, compañeros, huecos de pádel y aulas libres: de ejemplo. Las pistas de pádel de U-tad sí existen (de pago); no sabemos por dónde se reservan hoy. */
 const SUBJECTS = [
   {id:'opti', n:"Optimización", c:"2609_MAIS4_OPTI_A"},
   {id:'psdi', n:"Programación de Sistemas Distribuidos", c:"2609_MAIS3_PSDI_A_FIIS3_A"},
@@ -320,7 +320,7 @@ const ses = id => ASIS[id] || ASIS_DEF;
 /* ---------- Catálogo de la barra: todo lo que se puede pedir desde Inicio ---------- */
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const ACCIONES = [
-  {id:'padel', tipo:'Reserva', t:'Reservar pista de pádel', s:'Pistas del campus · idea de Gonzalo', ico:'padel', k:'padel pista deporte jugar raqueta'},
+  {id:'padel', tipo:'Reserva', t:'Reservar pista de pádel', s:'Pistas de U-tad, de pago · idea de Gonzalo', ico:'padel', k:'padel pista deporte jugar raqueta'},
   {id:'aula', tipo:'Reserva', t:'Reservar un aula', s:'Reserva de Aulas (hoy en Classlife)', ico:'aula', k:'aula sala reservar estudiar estudio grupo reserva de aulas'},
   {id:'justificante', tipo:'Trámite', t:'Justificar una falta', s:'Sube el justificante junto a la falta', ico:'asis', k:'justificar justificante falta asistencia faltas medico'},
   {id:'horario', tipo:'Horario', t:'¿Dónde tengo clase?', s:'Tu horario de hoy con los cambios', ico:'pin', k:'donde clase aula horario hoy siguiente proxima'},
@@ -396,10 +396,10 @@ const cab = (id, icono, titulo, sub) => `<div class="tarj-h"><span class="ic">${
 const T = {};
 T.padel = () => {
   const p = S.padel;
-  if (p.hecho) return cab('padel','padel','Pista de pádel reservada','Idea de Gonzalo · pistas de ejemplo') +
-    `<div class="hecho">${ic('check')}<span>${p.hecho}</span></div><p class="note">Te lo recordaremos ese día. En la demo no se reserva nada de verdad.</p>
+  if (p.hecho) return cab('padel','padel','Pista de pádel reservada','Pistas de U-tad, de pago · horarios de ejemplo') +
+    `<div class="hecho">${ic('check')}<span>${p.hecho}</span></div><p class="note">Te lo recordaremos ese día. En la demo no se reserva ni se paga nada de verdad.</p>
      <button class="linkbtn" onclick="S.padel.hecho=null;guardar();pintar()">Cancelar reserva</button>`;
-  return cab('padel','padel','Reservar pista de pádel','Idea de Gonzalo · pistas de ejemplo') +
+  return cab('padel','padel','Reservar pista de pádel','Pistas de U-tad, de pago · horarios de ejemplo') +
     `<div class="lbl">Día</div><div class="seg">${dias().map(d => `<button aria-pressed="${p.dia===d.k}" onclick="S.padel.dia='${d.k}';S.padel.hora=null;guardar();pintar()">${d.t} <span class="note">${fmt.format(d.d)}</span></button>`).join('')}</div>
      <div class="lbl">Hora · 1 h</div><div class="slots">${PADEL_HORAS.map(h => { const occ = PADEL_OCUPADAS.includes(h) && p.dia!=='hoy';
        return `<button class="slot" ${occ?'disabled':''} aria-pressed="${p.hora===h}" onclick="S.padel.hora='${h}';guardar();pintar()">${h}<small>${occ?'ocupada':'Pista '+(1+PADEL_HORAS.indexOf(h)%2)}</small></button>`; }).join('')}</div>
