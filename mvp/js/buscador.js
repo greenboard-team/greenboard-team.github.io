@@ -39,7 +39,7 @@ function buscar(q){
 function parametros(q){
   const n = norm(q), r = {};
   if (/\bviernes\b/.test(n)) r.dia = 'viernes'; else if (/\bmanana\b/.test(n)) r.dia = 'manana'; else if (/\bhoy\b|\besta tarde\b/.test(n)) r.dia = 'hoy';
-  const h = n.match(/\b(?:a las\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:h\b)?/);
+  const h = n.match(/\b(?:a las\s*)?(\d{1,2})(?!\d)(?::(\d{2}))?\s*(?:h\b)?/);
   if (h && +h[1] >= 7 && +h[1] <= 22) r.hora = String(h[1]).padStart(2,'0') + ':' + (h[2]||'00');
   return r;
 }

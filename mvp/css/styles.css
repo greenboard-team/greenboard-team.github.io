@@ -53,7 +53,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between}
 .atras{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;margin-bottom:12px}
 
-/* Inicio: saludo, barra inteligente, chips y panel de tarjetas */
+/* Inicio: saludo, barra de búsqueda, chips y panel de tarjetas */
 .hola h2{font-size:28px;font-weight:800}
 .hola p{margin:2px 0 0;color:var(--muted)}
 .cmd{position:relative;margin-top:16px;z-index:12}

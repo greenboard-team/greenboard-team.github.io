@@ -48,12 +48,12 @@ const sinLeer = () => CHATS.reduce((a,c) => a + (S.leidos[c.id] ? 0 : c.sinLeer)
 
 /* ---------- Estado de la demo (sesión del navegador, si se puede) ---------- */
 const INI = {archivo:null, justificado:false, com:{}, mat:false, guia:true, avisoCerrado:false,
-             abiertas:[], padel:{dia:null, hora:null, hecho:null}, aula:{dia:'hoy', hora:'16:00', hecho:null}, usoBarra:false,
+             abiertas:[], padel:{dia:null, hora:null, hecho:null}, aula:{dia:'hoy', hora:'16:00', hecho:null},
              chats:{}, leidos:{}};
 let S = JSON.parse(JSON.stringify(INI));
 try{ Object.assign(S, JSON.parse(sessionStorage.getItem('gb-mvp2')||'{}')); }catch(e){}
 const guardar = () => { try{ sessionStorage.setItem('gb-mvp2', JSON.stringify(S)); }catch(e){} };
-function reiniciar(){ S = JSON.parse(JSON.stringify(INI)); guardar(); location.hash = '#/inicio'; render(); }
+function reiniciar(){ S = JSON.parse(JSON.stringify(INI)); guardar(); location.hash = '#/inicio'; pintar(); }
 
 /* ---------- Fechas (con la fecha real, como el mock-up) ---------- */
 const fmt = new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short'});
@@ -78,18 +78,28 @@ function avisoHTML(){
 }
 const aMin = h => { const [a,b] = h.split(':').map(Number); return a*60+b; };
 function pill(iso){
-  const d = Math.ceil((new Date(iso) - new Date())/864e5);
   if (new Date(iso) < new Date()) return '<span class="pill late">vencida</span>';
-  if (d <= 2) return `<span class="pill soon">${ic('cal')}${d<=1?'mañana':'en '+d+' días'}</span>`;
+  const d0 = new Date(); d0.setHours(0,0,0,0); const dd = new Date(iso); dd.setHours(0,0,0,0);
+  const d = Math.round((dd - d0)/864e5);   // días de calendario, no horas
+  if (d <= 2) return `<span class="pill soon">${ic('cal')}${['hoy','mañana','en 2 días'][d]}</span>`;
   return `<span class="pill ok">${ic('cal')}${fmt.format(new Date(iso))}</span>`;
 }
 /* Días para reservar: hoy, mañana y el próximo viernes (si no es hoy ni mañana) */
+const hastaViernes = () => (5 - new Date().getDay() + 7) % 7;   // 0 si hoy es viernes
 function dias(){
-  const out = [{k:'hoy', t:'Hoy', d:new Date()}];
-  const m = new Date(); m.setDate(m.getDate()+1); out.push({k:'manana', t:'Mañana', d:m});
-  const v = new Date(); v.setDate(v.getDate() + ((5 - v.getDay() + 7) % 7 || 7));
-  if (![0,1].includes(Math.round((v - new Date().setHours(0,0,0,0))/864e5))) out.push({k:'viernes', t:'Viernes', d:v});
+  const h0 = new Date(); h0.setHours(0,0,0,0);
+  const en = n => { const d = new Date(h0); d.setDate(d.getDate()+n); return d; };
+  const out = [{k:'hoy', t:'Hoy', d:en(0)}, {k:'manana', t:'Mañana', d:en(1)}];
+  if (hastaViernes() >= 2) out.push({k:'viernes', t:'Viernes', d:en(hastaViernes())});
   return out;
 }
+/* «viernes» puede ser hoy o mañana: se traduce al botón que existe */
+function diaValido(k){
+  if (dias().some(d => d.k===k)) return k;
+  if (k==='viernes') return hastaViernes()===1 ? 'manana' : 'hoy';
+  return 'hoy';
+}
+const yaPasada = (dia, h) => dia==='hoy' && aMin(h) <= new Date().getHours()*60 + new Date().getMinutes();
+const padelOcupada = (dia, h) => (PADEL_OCUPADAS.includes(h) && dia!=='hoy') || yaPasada(dia, h);
 const diaTxt = k => { const d = dias().find(x => x.k===k) || dias()[0]; return d.t + ', ' + fmt.format(d.d); };
 const ses = id => ASIS[id] || ASIS_DEF;

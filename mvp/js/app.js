@@ -30,13 +30,12 @@ function pintar(){
   document.getElementById('tabs').querySelectorAll('#tab-msg .count').forEach(e => { if (!sinLeer()) e.remove(); else e.textContent = sinLeer(); });
   document.getElementById('view').innerHTML = vista + (REAL
     ? `<p class="note pie">Prototipo del MVP con tus datos: horario y cambios de WebUntis (${esc(REAL.generado)}), aulas libres según ese horario${REAL.bb ? ', entregas de tu Blackboard' : ''} · asistencia, contenido, notas, chats, comunidad, pádel y matrícula de ejemplo · <a href="#/ajustes">Ajustes</a> · <a href="#" onclick="salir();return false">Cerrar sesión</a></p>`
-    : `<p class="note pie">Demo del MVP · asignaturas y entregas reales de Blackboard (26/10/2026); horario, aulas, asistencia, contenido, notas, chats, compañeros y reservas de ejemplo · no se conecta a ningún portal · <a href="#" onclick="reiniciar();return false">Reiniciar demo</a> · <a href="#" onclick="dejarDemo();return false">Entrar con mi correo de U-tad</a></p>`);
+    : `<p class="note pie">Demo del MVP · asignaturas y entregas reales de Blackboard (26/10/2026); horario, aulas, asistencia, notas, chats, compañeros, reservas y casi todo el contenido de ejemplo · no se conecta a ningún portal · <a href="#" onclick="reiniciar();return false">Reiniciar demo</a> · <a href="#" onclick="dejarDemo();return false">Entrar con mi correo de U-tad</a></p>`);
   document.getElementById('guia').innerHTML = guiaHTML();
   if (S.guia){ const p = paso(); if (p.obj){ const el = document.querySelector(p.obj); if (el) el.classList.add('spot'); } }
   document.querySelectorAll('.j-file').forEach(jf => jf.addEventListener('change', () => { const f = jf.files[0]; if (f){ S.archivo = f.name; guardar(); pintar(); } }));
   enlazarBarra();
 }
-const render = pintar;
 window.addEventListener('hashchange', () => {
   if (/entrar=/.test(location.hash)) arrancar();
   else if (!DEMO && /^#\/?demo\b/.test(location.hash)) verDemo();

@@ -11,11 +11,13 @@ function abrir(id, q){
     if (ruta()!=='inicio'){ location.hash = '#/inicio'; setTimeout(ir, 60); } else ir();
     return;
   }
-  if (q){ const p = parametros(q); if (id==='padel'){ if (p.dia) S.padel.dia = p.dia; if (p.hora && PADEL_HORAS.includes(p.hora)) S.padel.hora = p.hora; }
-          if (id==='aula'){ if (p.dia) S.aula.dia = p.dia; if (p.hora && AULA_HORAS.includes(p.hora)) S.aula.hora = p.hora; } }
-  if (id==='padel' && !S.padel.dia) S.padel.dia = dias().some(d => d.k==='viernes') ? 'viernes' : 'hoy';
+  if (q){ const p = parametros(q);
+    if (id==='padel'){ if (p.dia) S.padel.dia = diaValido(p.dia); if (p.hora && PADEL_HORAS.includes(p.hora) && !padelOcupada(S.padel.dia || 'hoy', p.hora)) S.padel.hora = p.hora; }
+    if (id==='aula'){ if (p.dia) S.aula.dia = diaValido(p.dia); if (p.hora && AULA_HORAS.includes(p.hora)) S.aula.hora = p.hora; } }
+  if (id==='padel'){ S.padel.dia = diaValido(S.padel.dia || 'viernes'); if (S.padel.hora && padelOcupada(S.padel.dia, S.padel.hora)) S.padel.hora = null; }
+  if (id==='aula') S.aula.dia = diaValido(S.aula.dia);
   S.abiertas = [id, ...S.abiertas.filter(x => x!==id)];
-  S.usoBarra = true; guardar();
+  guardar();
   cerrarSug(); document.getElementById('q').value = '';
   if (ruta()!=='inicio') location.hash = '#/inicio'; else pintar();
   requestAnimationFrame(() => { const el = document.getElementById('a-'+id); if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'}); });
@@ -31,8 +33,8 @@ T.padel = () => {
      <button class="linkbtn" onclick="S.padel.hecho=null;guardar();pintar()">Cancelar reserva</button>`;
   return cab('padel','padel','Reservar pista de pádel','Pistas de U-tad, de pago · horarios de ejemplo') +
     `<div class="lbl">Día</div><div class="seg">${dias().map(d => `<button aria-pressed="${p.dia===d.k}" onclick="S.padel.dia='${d.k}';S.padel.hora=null;guardar();pintar()">${d.t} <span class="note">${fmt.format(d.d)}</span></button>`).join('')}</div>
-     <div class="lbl">Hora · 1 h</div><div class="slots">${PADEL_HORAS.map(h => { const occ = PADEL_OCUPADAS.includes(h) && p.dia!=='hoy';
-       return `<button class="slot" ${occ?'disabled':''} aria-pressed="${p.hora===h}" onclick="S.padel.hora='${h}';guardar();pintar()">${h}<small>${occ?'ocupada':'Pista '+(1+PADEL_HORAS.indexOf(h)%2)}</small></button>`; }).join('')}</div>
+     <div class="lbl">Hora · 1 h</div><div class="slots">${PADEL_HORAS.map(h => { const occ = padelOcupada(p.dia, h);
+       return `<button class="slot" ${occ?'disabled':''} aria-pressed="${p.hora===h}" onclick="S.padel.hora='${h}';guardar();pintar()">${h}<small>${occ ? (yaPasada(p.dia,h) ? 'pasada' : 'ocupada') : 'Pista '+(1+PADEL_HORAS.indexOf(h)%2)}</small></button>`; }).join('')}</div>
      <button class="btn" id="reservar-padel" ${p.hora?'':'disabled'} onclick="reservarPadel()">${p.hora ? 'Reservar '+diaTxt(p.dia).split(',')[0].toLowerCase()+' a las '+p.hora : 'Elige una hora'}</button>`;
 };
 T.aula = () => REAL ? aulaReal() : aulaDemo();
@@ -42,15 +44,15 @@ function aulaDemo(){
     `<div class="hecho">${ic('check')}<span>${a.hecho}</span></div><button class="linkbtn" onclick="S.aula.hecho=null;guardar();pintar()">Cancelar reserva</button>`;
   return cab('aula','aula','Reservar un aula','En la app real, trámite «Reserva de Aulas» de Classlife') +
     `<div class="lbl">Día</div><div class="seg">${dias().map(d => `<button aria-pressed="${a.dia===d.k}" onclick="S.aula.dia='${d.k}';guardar();pintar()">${d.t}</button>`).join('')}</div>
-     <div class="lbl">Hora · 2 h</div><div class="seg">${AULA_HORAS.map(h => `<button aria-pressed="${a.hora===h}" onclick="S.aula.hora='${h}';guardar();pintar()">${h}</button>`).join('')}</div>
+     <div class="lbl">Hora · 2 h</div><div class="seg">${AULA_HORAS.map(h => `<button ${yaPasada(a.dia,h)?'disabled':''} aria-pressed="${a.hora===h}" onclick="S.aula.hora='${h}';guardar();pintar()">${h}</button>`).join('')}</div>
      <div class="lbl">Aulas libres <span class="demo-flag">de ejemplo</span></div>
-     ${AULAS_LIBRES.map(x => `<div class="fila"><span>${ic('aula')}</span><div><b>${x.a}</b><small>${x.cap}</small></div><button class="btn sm" onclick="S.aula.hecho='${x.a} · '+diaTxt(S.aula.dia)+' · '+S.aula.hora;guardar();pintar();toast('Aula reservada (demo)')">Reservar</button></div>`).join('')}`;
+     ${AULAS_LIBRES.map(x => `<div class="fila"><span>${ic('aula')}</span><div><b>${x.a}</b><small>${x.cap}</small></div><button class="btn sm" ${yaPasada(a.dia,a.hora)?'disabled':''} onclick="S.aula.hecho='${x.a} · '+diaTxt(S.aula.dia)+' · '+S.aula.hora;guardar();pintar();toast('Aula reservada (demo)')">Reservar</button></div>`).join('')}`;
 }
 T.matricula = () => cab('matricula','doc','Matrícula firmada','Documento de ejemplo') +
   `<div class="doc"><h5>Matrícula 2026/27 · ejemplo</h5>Alumno: ${REAL ? NOMBRE : 'Gonzalo Martínez Fernández'}<br>Titulación: ${REAL ? REAL.grupos.join(' + ') : 'Doble Grado MAIS, 4.º curso'}<br>Asignaturas: ${SUBJECTS.length}<br><span class="note">En la app real sería el PDF firmado de Secretaría.</span></div>`;
 function tarjetaCom(c){
   return cab('com-'+c.id,'uni',c.t,c.s) + `<div class="asis">${c.det.map(d => `<div class="ses" style="grid-template-columns:1fr auto"><span>${d}</span>${c.id==='apuntes'?`<span class="pill ${S.com[c.id]?'soon':'late'}">${S.com[c.id]?'pendiente':'sin acceso'}</span>`:''}</div>`).join('')}</div>
-   <p style="margin:12px 0 0"><button class="btn" id="btn-${c.id}" ${S.com[c.id]?'disabled':''} onclick="comAccion('${c.id}')">${S.com[c.id]?'✓ '+c.hecho:c.accion}</button></p>`;
+   <p style="margin:12px 0 0"><button class="btn" id="btn-${c.id}-tarj" ${S.com[c.id]?'disabled':''} onclick="comAccion('${c.id}')">${S.com[c.id]?'✓ '+c.hecho:c.accion}</button></p>`;
 }
 function tarjetaAsig(s){
   const l = ses(s.id), pres = l.filter(x => x.v).length;
@@ -69,7 +71,7 @@ function tarjeta(id){
   else if (id.startsWith('com-')) html = tarjetaCom(COMUNIDAD.find(c => 'com-'+c.id===id));
   else if (id.startsWith('notas-')){ const s = subj(id.slice(6)); html = cab(id,'asis','Notas · '+corto(s), s.c) + notasTabla(s.id) + `<p style="margin:10px 0 0"><a class="vermas" href="#/asig/${s.id}/notas">Ver asignatura →</a></p>`; }
   else if (id.startsWith('cont-')){ const s = subj(id.slice(5)); html = cab(id,'libro','Contenido · '+corto(s), 'Por temas, con la guía docente') + `<div class="temas">${contenido(s.id)}</div>`; }
-  else if (id.startsWith('chat-')){ const c = CHATS.find(x => 'chat-'+x.id===id); S.leidos[c.id] = true; html = cab(id,'uni',c.t,`${c.n} personas · chat de ejemplo`) + chatHTML(c.id,'tarj'); }
+  else if (id.startsWith('chat-')){ const c = CHATS.find(x => 'chat-'+x.id===id); S.leidos[c.id] = true; guardar(); html = cab(id,'uni',c.t,`${c.n} personas · chat de ejemplo`) + chatHTML(c.id,'tarj'); }
   else if (id.startsWith('asig-')) html = tarjetaAsig(subj(id.slice(5)));
   return `<section class="tarj accion ancho" id="a-${id}">${html}</section>`;
 }
@@ -88,10 +90,10 @@ function asistencia(id, soloFalta){
   return `<div class="asis">${l.filter(x => !soloFalta || !x.v).map(x => {
     const fecha = fmtDia.format(haceDias(x.dias)), nombre = soloFalta ? ' · ' + corto(subj(id)) : '';
     if (x.v) return `<div class="ses"><div><time>${fecha}</time><small>Asistencia registrada</small></div><span class="nota-a">1</span></div>`;
-    if (S.justificado) return `<div class="ses enviado"><div><time>${fecha}${nombre}</time><small>Justificante enviado: <b>${S.archivo}</b> · pendiente de revisión</small></div><span class="nota-a">0</span></div>`;
+    if (S.justificado) return `<div class="ses enviado"><div><time>${fecha}${nombre}</time><small>Justificante enviado: <b>${esc(S.archivo)}</b> · pendiente de revisión</small></div><span class="nota-a">0</span></div>`;
     return `<div class="ses falta fila-falta"><div><time>${fecha}${nombre}</time><small style="color:var(--late);font-weight:700">Falta sin justificar</small></div><span class="nota-a" aria-label="Asistencia: 0">0</span>
       <div class="just">
-        <label class="drop ${S.archivo?'has':''}"><input type="file" class="j-file" accept=".pdf,image/*"><span class="ico" aria-hidden="true">↑</span><span><b>${S.archivo || 'Sube el justificante'}</b><small>${S.archivo ? 'Listo para enviar · toca para cambiarlo' : 'PDF o foto · aquí mismo, sin ir a Trámites'}</small></span></label>
+        <label class="drop ${S.archivo?'has':''}"><input type="file" class="j-file" accept=".pdf,image/*"><span class="ico" aria-hidden="true">↑</span><span><b>${S.archivo ? esc(S.archivo) : 'Sube el justificante'}</b><small>${S.archivo ? 'Listo para enviar · toca para cambiarlo' : 'PDF o foto · aquí mismo, sin ir a Trámites'}</small></span></label>
         <div class="fila-b"><button class="btn enviar" ${S.archivo?'':'disabled'} onclick="enviarJust()">Enviar justificante</button>${S.archivo?'':'<button class="linkbtn" onclick="ejemplo()">Usar un justificante de ejemplo</button>'}</div>
       </div></div>`;
   }).join('')}</div>`;
@@ -173,7 +175,7 @@ V.asig = (id, sub) => {
     const falta = id===ASIS_ID && !S.justificado;
     if (!SUBTABS.some(([k]) => k===sub)) sub = falta ? 'asistencia' : 'contenido';
     const chat = CHATS.find(c => c.id===id);
-    if (sub==='chat' && chat){ S.leidos[chat.id] = true; guardar(); }
+    if (sub==='chat'){ S.leidos[chat.id] = true; guardar(); }
     const tabs = `<nav class="subnav" aria-label="Secciones de la asignatura">${SUBTABS.map(([k,t]) => `<a href="#/asig/${id}/${k}" ${sub===k?'aria-current="page"':''}>${t}${k==='asistencia'&&falta?' <span class="pill late">0</span>':''}${k==='notas'&&(NOTAS[id]||[]).some(x=>x.nuevo)?' <span class="pill ok">nueva</span>':''}</a>`).join('')}</nav>`;
     let cuerpo = '';
     if (sub==='contenido') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Contenido</h3><span class="demo-flag">contenido de ejemplo · por temas</span></div><div class="temas">${contenido(id)}</div>`;
@@ -181,8 +183,7 @@ V.asig = (id, sub) => {
     else if (sub==='asistencia') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Asistencia</h3><span class="demo-flag">asistencia de ejemplo</span></div>
       <p><span class="pill ${pres===l.length?'ok':'late'}">${pres} de ${l.length} sesiones</span></p>${asistencia(id, false)}`;
     else if (sub==='entregas') cuerpo = `<h3 class="sub">Entregas</h3><div class="tarj">${DUE.some(x => x.s===id) ? entregas(DUE.filter(x => x.s===id)) : '<p class="note" style="margin:0">No hay entregas publicadas.</p>'}</div>`;
-    else cuerpo = chat ? `<div class="row"><h3 class="sub" style="margin:0">${esc(chat.t)}</h3><span class="note">${chat.n} personas</span></div><div class="tarj" style="margin-top:10px">${chatHTML(chat.id,'asig')}</div>`
-                       : `<p class="note">Esta asignatura todavía no tiene chat de clase.</p>`;
+    else cuerpo = `<div class="row"><h3 class="sub" style="margin:0">${esc(chat.t)}</h3><span class="note">${chat.n} personas</span></div><div class="tarj" style="margin-top:10px">${chatHTML(chat.id,'asig')}</div>`;
     return `<a class="atras" href="#/asig">‹ Mis asignaturas</a>
     <div class="ficha"><h3>${s.n}</h3><div class="code">${s.c}</div>${s.p?`<p class="note" style="margin:0">Profesor: ${s.p}</p>`:''}</div>
     ${REAL ? `<h3 class="sub">Próximas clases</h3><div class="tarj">${proximas(s.id)}</div>` : ''}
@@ -217,7 +218,7 @@ V.com = () => `<div class="row"><h3>Comunidad</h3><span class="demo-flag">compa�
 
 /* ---------- Acciones ---------- */
 function enviarJust(){ if(!S.archivo) return; S.justificado = true; guardar(); pintar(); toast('Justificante enviado. La falta queda pendiente de revisión.'); }
-function reservarPadel(){ const p = S.padel; if (!p.hora) return; p.hecho = `${diaTxt(p.dia)} · ${p.hora} · Pista ${1 + PADEL_HORAS.indexOf(p.hora) % 2}`; guardar(); pintar(); toast('Pista reservada (demo)'); }
+function reservarPadel(){ const p = S.padel; if (!p.hora || padelOcupada(p.dia, p.hora)) return; p.hecho = `${diaTxt(p.dia)} · ${p.hora} · Pista ${1 + PADEL_HORAS.indexOf(p.hora) % 2}`; guardar(); pintar(); toast('Pista reservada (demo)'); }
 function ejemplo(){ S.archivo = 'justificante-medico.pdf'; guardar(); pintar(); }
 function comAccion(id){ S.com[id] = true; guardar(); pintar(); toast(id==='apuntes' ? 'Solicitud enviada (demo)' : 'Apuntado (demo)'); }
 
@@ -225,7 +226,7 @@ function comAccion(id){ S.com[id] = true; guardar(); pintar(); toast(id==='apunt
 function paso(){
   const r = ruta();
   if (!S.justificado){
-    if (r!=='inicio' && !r.startsWith('asig/'+ASIS_ID)) return {n:1, ir:'#/inicio'};
+    if (r!=='inicio' && r!=='asig/'+ASIS_ID && r!=='asig/'+ASIS_ID+'/asistencia') return {n:1, ir: r.startsWith('asig/'+ASIS_ID) ? '#/asig/'+ASIS_ID+'/asistencia' : '#/inicio'};
     if (!S.archivo) return {n:1, t:'Inicio: el aula nueva ya está en el horario. Y un 0 en rojo: sube el justificante ahí mismo.', obj:'.fila-falta'};
     return {n:1, t:'Justificante listo. Envíalo.', obj:'.enviar'};
   }
