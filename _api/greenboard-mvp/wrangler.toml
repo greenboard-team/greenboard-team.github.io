@@ -9,15 +9,30 @@ compatibility_date = "2026-09-01"
 name = "LISTA"
 class_name = "Lista"
 
+[[durable_objects.bindings]]
+name = "CUENTAS"
+class_name = "Cuentas"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Lista"]
+
+# Cuentas y sesiones del prototipo con datos reales (/app/*, src/cuentas.js).
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Cuentas"]
 
 [vars]
 # Cuándo se abre la lista para apuntarse (antes, la API responde "cerrado"). ISO 8601 con zona: 15:00 de Madrid.
 APERTURA = "2026-11-10T15:00:00+01:00"
 # Nombre del objeto que guarda la lista y la foto. Cambiarlo = empezar de cero con código nuevo.
 OBJETO = "sprint2-presentacion"
+# Correos que pueden entrar al prototipo con datos reales: los de alumno de U-tad.
+DOMINIOS = "live.u-tad.com"
+# Secretos del prototipo con datos reales (wrangler secret put …):
+#   DATA_BASE     https://gist.githubusercontent.com/<usuario>/<gist>/raw   (groups.json y rooms.json del pipeline)
+#   INVITE_CODES  códigos de invitación separados por comas; cada uno vale para un solo correo
+#   RESEND_API_KEY + MAIL_FROM  solo si se activa el enlace mágico por correo
 
 [observability]
 enabled = true

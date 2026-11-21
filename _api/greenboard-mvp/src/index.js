@@ -10,6 +10,9 @@
 //   GET  /foto                  -> la imagen tal cual (o 404). GET /foto/meta -> { hay, ts, tipo, bytes }
 //   DELETE /foto                -> la quita. Authorization: Bearer <ADMIN_TOKEN>.
 
+import { Cuentas } from "./cuentas.js";
+export { Cuentas };
+
 const PLAZAS = 5;
 const MAX_PERSONAS = 80;
 const AVATARES = 10;
@@ -25,7 +28,7 @@ function cors(req) {
   const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
   return {
     "Access-Control-Allow-Origin": ok ? origin : ORIGENES[0],
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Equipo",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
@@ -151,6 +154,13 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/" ) {
       return new Response("greenboard-mvp: GET /lista · POST /apuntarse · GET/POST /foto", { headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" } });
+    }
+    // Datos reales del prototipo, solo con sesión de alumno de U-tad (src/cuentas.js).
+    if (url.pathname.startsWith("/app/")) {
+      const res = await env.CUENTAS.get(env.CUENTAS.idFromName("cuentas")).fetch(req);
+      const out = new Response(res.body, res);
+      for (const [k, v] of Object.entries(headers)) out.headers.set(k, v);
+      return out;
     }
     // Credenciales: se comprueban aquí, con los secretos actuales, y se pasan al objeto como cabeceras internas.
     const admin = !!env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`;

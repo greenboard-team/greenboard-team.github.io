@@ -18,6 +18,41 @@ URL: `https://greenboard-mvp.utad-study-connector.workers.dev`
 
 Los 5 primeros tienen plaza; el resto sale como lista de espera. El orden es el de llegada al servidor.
 
+## Datos reales del prototipo (`/mvp/app/`, solo alumnos de U-tad)
+
+`src/cuentas.js`, en el mismo Worker, con su propio Durable Object (`Cuentas`). Todo va bajo `/app/` y pide la
+cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesión, la página pública no ve nada real.
+
+| Método y ruta | Qué hace |
+|---|---|
+| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
+| `POST /app/verificar` | `{enlace}` del correo mágico -> `{token}`. |
+| `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos y si tienes Blackboard conectado · cerrar sesión. |
+| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-3; doble grado = dos). |
+| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. |
+| `GET /app/aulas?dia=AAAA-MM-DD&desde=HH:MM&hasta=HH:MM` | Aulas sin clase en ese hueco, y hasta qué hora siguen libres. |
+| `PUT /app/blackboard` · `DELETE` | `{url}` del calendario de Blackboard (Calendario -> ⚙ -> Compartir calendario). Solo `https://u-tad.blackboard.com/webapps/calendar/calendarFeed/<token>/learn.ics`; se prueba antes de guardarlo. Es un secreto de cada alumno: no se registra en logs ni se devuelve nunca. |
+| `GET /app/entregas` | Tu calendario de Blackboard leído en el momento, partido en entregas y eventos. |
+
+Los datos salen del pipeline de Dmitrii (repo privado *Estudios U-tad*): `python -m utad fetch-groups` exporta cada
+día el horario de **todos** los grupos de WebUntis (3 semanas, con los cambios respecto a la exportación anterior)
+a `groups.json`, y `rooms.json` ya tenía la ocupación de las aulas. Los dos se publican en su gist secreto, que el
+Worker lee con el secreto `DATA_BASE`.
+
+Secretos nuevos (una vez, antes del primer `wrangler deploy` con esto):
+
+```bash
+npx wrangler secret put DATA_BASE       # https://gist.githubusercontent.com/<usuario>/<gist>/raw (el GIST_BASE del conector)
+npx wrangler secret put INVITE_CODES    # p. ej. 5 códigos, uno por persona de la prueba, separados por comas
+# Solo si se activa el enlace mágico por correo (hace falta una cuenta de envío y un dominio verificado):
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put MAIL_FROM       # "Greenboard <hola@dominio-verificado>"
+```
+
+Probar en local: `.dev.vars` (no se sube) con `DATA_BASE=http://127.0.0.1:8790`, `INVITE_CODES=…` y
+`BB_HOSTS=127.0.0.1:8790`, `npx wrangler dev --port 8787`, y abrir la página con `?api=http://127.0.0.1:8787`.
+Tests de las funciones puras: `node --test test/cuentas.test.mjs`.
+
 ## Operar
 
 Desde esta carpeta, con el `wrangler` del conector (`..\..\..\..\Desktop\Estudios U-tad\connector\node_modules\.bin\wrangler`)
