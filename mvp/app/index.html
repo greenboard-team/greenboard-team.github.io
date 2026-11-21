@@ -3,435 +3,341 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Greenboard · prototipo navegable del MVP (issue #42). Recorre el Happy Path de la demo
-     (greenboard: mvp/happy-path.md). Una sola página, datos de ejemplo, sin servidor ni portales reales.
-     Rutas con #/ para que el botón «atrás» del móvil funcione. -->
+<!-- Greenboard · prototipo navegable del MVP (issue #42).
+     Sigue el mock-up de Gonzalo (PR #25, «Así se ve el Greenboard de Gonzalo»): mismas pantallas y mismo aspecto.
+     Único cambio pedido: el justificante de una falta se sube en Asistencia, en la misma fila del 0 rojo, no en Trámites.
+     Happy Path: greenboard/mvp/happy-path.md. Una sola página, sin servidor; rutas con #/ para que «atrás» funcione. -->
 <title>Greenboard · prototipo</title>
 <meta name="theme-color" content="#123B2C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
+/* Colores, tipos y piezas copiados del mock-up de Gonzalo (web/index.html de la PR #25) */
 :root{
   --bg:#F3F6F1; --surface:#FFFFFF; --ink:#13241C; --muted:#56685E; --line:#D5DED7;
   --board:#123B2C; --board-2:#1A4D3A; --chalk:#E9F2E4; --lime:#9BE15D; --accent:#1F8F5F;
-  --warn:#B4541A; --warn-bg:#FCEBDD; --ok-bg:#E2F3E8; --info:#2F5FA8; --info-bg:#E3ECF8;
+  --warn:#B4541A; --warn-bg:#FCEBDD; --ok-bg:#E2F3E8; --late:#B3261E; --late-bg:#FBE4E2;
   --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
-  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A;
-  --info:#8FB4EE; --info-bg:#1B2A40; color-scheme:dark}}
+  --board:#0B2A1F; --board-2:#123628; --chalk:#E9F2E4; --lime:#A8E86F; --accent:#4CC28B;
+  --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A; --late:#FF8A80; --late-bg:#3B1A18; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E1713; --surface:#16231D; --ink:#E6EFE8; --muted:#9DB0A5; --line:#2A3B33;
-  --board:#0B2A1F; --board-2:#123628; --lime:#A8E86F; --accent:#4CC28B; --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A;
-  --info:#8FB4EE; --info-bg:#1B2A40; color-scheme:dark}
+  --board:#0B2A1F; --board-2:#123628; --chalk:#E9F2E4; --lime:#A8E86F; --accent:#4CC28B;
+  --warn:#F0A066; --warn-bg:#3A2616; --ok-bg:#16352A; --late:#FF8A80; --late-bg:#3B1A18; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit}
-a{color:inherit}
-h1,h2,h3{font-family:var(--f-display);line-height:1.1;margin:0;text-wrap:balance}
-svg.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0}
+h1,h2,h3,h4{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--lime);outline-offset:2px;border-radius:6px}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:12px 20px;font-weight:700;background:var(--lime);color:#10301F;text-decoration:none}
+.btn:disabled{background:var(--ok-bg);color:var(--accent);cursor:default}
+.btn.dark{background:var(--board);color:var(--chalk)}
+.note{font-size:13px;color:var(--muted)}
 
-/* Marco: en el móvil ocupa toda la pantalla; en el ordenador se ve como un teléfono */
-.app{max-width:430px;min-height:100%;margin:0 auto;background:var(--bg);position:relative;display:flex;flex-direction:column}
-@media (min-width:700px){
-  body{background:var(--board);padding-top:24px}
-  .app{min-height:calc(100vh - 24px);border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+/* Marco de la app: barra lateral verde + contenido (como el mock-up). En el móvil, la barra pasa arriba */
+.app{min-height:100vh;display:grid;grid-template-columns:240px minmax(0,1fr);background:var(--surface)}
+.side{min-width:0}
+.side{background:var(--board);color:var(--chalk);padding:18px 14px;display:flex;flex-direction:column;gap:4px;position:relative}
+.side::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;
+  background-image:radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,#fff 0 1px,transparent 1.5px);background-size:23px 29px,31px 37px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:18px;margin-bottom:16px}
+.brand i{width:28px;height:28px;border-radius:8px;background:var(--lime);display:grid;place-items:center;color:#10301F;font-style:normal;font-size:16px}
+.who{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--lime);color:#10301F;display:grid;place-items:center;font-weight:700;flex:none}
+.who small{display:block;color:#A9C4AE;font-size:12px}
+.tabs{display:flex;flex-direction:column;gap:4px;position:relative;z-index:1}
+.tab{background:transparent;border:0;color:var(--chalk);text-align:left;padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;white-space:nowrap}
+.tab[aria-current="page"]{background:var(--board-2);box-shadow:inset 3px 0 0 var(--lime)}
+.tab .count{font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,.12);border-radius:999px;padding:1px 8px}
+.tab .count.rojo{background:var(--late);color:#fff}
+.main{padding:22px;min-width:0;padding-bottom:110px;max-width:860px}
+.main h3{font-size:24px}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between}
+.demo-flag{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:2px 6px}
+.atras{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;margin-bottom:12px}
+
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}
+  .side{padding:14px 16px 10px}
+  .brand{margin-bottom:10px}
+  .who{margin-bottom:10px}
+  .tabs{flex-direction:row;overflow-x:auto;gap:6px;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:8px 12px}
+  .tab[aria-current="page"]{box-shadow:inset 0 -3px 0 var(--lime)}
+  .main{padding:18px 16px 120px}
+  .main h3{font-size:22px}
+  .item{grid-template-columns:62px 1fr auto}
 }
 
-/* Guía de la demo */
-.guia{background:var(--lime);color:#10301F;font-size:14px;padding:8px 14px;display:flex;gap:10px;align-items:center}
-.guia b{font-family:var(--f-mono);font-weight:500;font-size:12px;background:rgba(16,48,31,.12);border-radius:999px;padding:2px 8px;white-space:nowrap}
-.guia span{flex:1;min-width:0}
-.guia a{font-weight:700}
-.guia button{border:0;background:transparent;padding:4px;cursor:pointer;color:#10301F;font-size:13px;text-decoration:underline}
-.guia-off{position:fixed;right:12px;bottom:84px;z-index:30;border:0;border-radius:999px;background:var(--lime);color:#10301F;font-weight:700;font-size:13px;padding:8px 12px;box-shadow:0 4px 14px rgba(0,0,0,.2);cursor:pointer}
-.pulso{position:relative;z-index:1;animation:pulso 1.6s ease-out infinite;border-radius:16px}
-@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(155,225,93,.9)}70%{box-shadow:0 0 0 12px rgba(155,225,93,0)}100%{box-shadow:0 0 0 0 rgba(155,225,93,0)}}
-@media (prefers-reduced-motion:reduce){.pulso{animation:none;outline:3px solid var(--lime);outline-offset:2px}}
+/* Listas, tarjetas y pastillas del mock-up */
+.list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.item{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:inherit;text-decoration:none}
+a.item:hover,a.card:hover{border-color:var(--accent)}
+.item time{font-family:var(--f-mono);font-size:13px}
+.item .what{min-width:0;font-weight:700}
+.item .what small{display:block;color:var(--muted);font-weight:400}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg);min-width:0;color:inherit;text-decoration:none;display:block}
+.card h4{margin:0 0 4px;font-size:15px}
+.card.act{display:flex;flex-direction:column;gap:4px}
+.card.act .note{margin:0 0 14px}
+.card.act .btn{margin-top:auto;align-self:flex-start;min-width:150px}
+.code{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.pill.late{background:var(--late-bg);color:var(--late)}
+.pill.soon{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--accent)}
+.banner{display:flex;gap:12px;align-items:center;background:var(--ok-bg);border-radius:12px;padding:12px 14px;margin-top:14px}
+.banner b{color:var(--accent)}
+.sub{font-size:18px;margin-top:24px}
+.doc{border:1px solid var(--line);border-radius:12px;padding:18px;background:var(--surface);font-size:14px;max-width:520px;margin-top:12px}
+.doc h5{margin:0 0 8px;font-family:var(--f-display);font-size:18px}
+.ficha{display:grid;gap:4px;margin:6px 0 4px}
+.ficha h3{font-size:26px}
 
-/* Cabeceras */
-.top{background:var(--board);color:var(--chalk);padding:18px 16px 22px}
-.top .fila1{display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:17px}
-.brand i{width:28px;height:28px;border-radius:8px;background:var(--lime);display:grid;place-items:center;color:#10301F;font-style:normal;font-size:16px}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--board-2);border:2px solid var(--lime);display:grid;place-items:center;font-weight:700;font-size:14px}
-.top h1{font-size:28px;font-weight:800;margin-top:18px}
-.top p{margin:4px 0 0;color:#B9D1BE;font-size:15px}
-.barra{display:flex;align-items:center;gap:6px;padding:12px 8px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
-.barra h1{font-size:18px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.atras{border:0;background:transparent;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
-.atras:hover{background:var(--bg)}
+/* Asistencia: 1 en verde, 0 en rojo; el justificante se sube en la misma fila */
+.asis{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.ses{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.ses time{font-family:var(--f-mono);font-size:13px}
+.ses small{display:block;color:var(--muted);font-size:13px}
+.nota-a{font-family:var(--f-display);font-weight:800;font-size:28px;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ok-bg);color:var(--accent)}
+.ses.falta{border-color:var(--late);background:var(--late-bg)}
+.ses.falta .nota-a{background:var(--late);color:#fff}
+.ses.enviado{border-color:var(--warn)}
+.ses.enviado .nota-a{background:var(--late);color:#fff}
+.ses .just{grid-column:1/-1;display:grid;gap:8px}
+.resumen{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.drop{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px dashed var(--late);border-radius:12px;background:var(--surface);cursor:pointer;position:relative}
+.drop:hover,.drop:focus-within{border-color:var(--accent)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.drop .ico{width:38px;height:38px;flex:none;border-radius:10px;background:var(--board);color:var(--lime);display:grid;place-items:center;font-weight:700}
+.drop b{display:block;font-size:14px}
+.drop small{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.drop.has{border-style:solid;border-color:var(--accent);background:var(--ok-bg)}
+.just .fila-b{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;font-size:13px}
 
-.vista{flex:1;display:flex;flex-direction:column}
-.cont{padding:16px;display:grid;gap:18px;padding-bottom:96px}
-.sec h2{font-size:17px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px}
-.sec h2 .n{font-family:var(--f-mono);font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:2px 8px;font-weight:500}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
-.lista{display:grid}
-.item{display:flex;gap:12px;align-items:center;padding:12px 14px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.item:hover{background:color-mix(in srgb,var(--bg) 60%,transparent)}
-.item .txt{flex:1;min-width:0}
-.item .t{font-weight:700;display:block}
-.item .s{color:var(--muted);font-size:14px;display:block}
-.item .chev{color:var(--muted)}
-.ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}
-.ico.warn{background:var(--warn-bg);color:var(--warn)}
-.ico.ok{background:var(--ok-bg);color:var(--accent)}
-.ico.info{background:var(--info-bg);color:var(--info)}
-.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
-.tag.warn{background:var(--warn-bg);color:var(--warn)}
-.tag.ok{background:var(--ok-bg);color:var(--accent)}
-.tag.info{background:var(--info-bg);color:var(--info)}
-.tag.gris{background:var(--bg);color:var(--muted)}
-
-/* Clases del día */
-.clase{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:0;border-top:1px solid var(--line);background:transparent;width:100%;text-align:left;cursor:pointer}
-.clase:first-child{border-top:0}
-.clase .h{font-family:var(--f-mono);font-size:13px;color:var(--muted);line-height:1.3}
-.clase .h b{display:block;color:var(--ink);font-weight:500;font-size:14px}
-.clase .t{font-weight:700;display:block}
-.clase .aula{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.clase .aula s{opacity:.7}
-.clase .aula strong{color:var(--accent)}
-.clase.cambio{background:linear-gradient(90deg,var(--ok-bg),transparent 70%);box-shadow:inset 4px 0 0 var(--accent)}
-.clase.nueva{box-shadow:inset 4px 0 0 var(--info)}
-a.item,a.clase,a.uni{text-decoration:none}
-.hueco{padding:8px 14px 8px 84px;font-size:13px;color:var(--muted);border-top:1px dashed var(--line)}
-
-/* Tarjeta comunidad */
-.uni{display:flex;gap:12px;align-items:center;padding:14px;border-radius:16px;border:0;width:100%;text-align:left;cursor:pointer;background:var(--board);color:var(--chalk)}
-.uni .ico{background:var(--lime);color:#10301F}
-.uni .s{color:#B9D1BE;font-size:14px;display:block}
-.uni .t{font-weight:700;display:block}
-
-/* Detalle */
-.hero{padding:18px 16px;background:var(--surface);border-bottom:1px solid var(--line);display:grid;gap:8px}
-.hero h2{font-size:26px;font-weight:800}
-.dato{display:flex;gap:10px;align-items:center;font-size:16px}
-.dato svg{color:var(--muted)}
-.aula-grande{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.aula-grande strong{font-family:var(--f-display);font-size:34px;color:var(--accent);font-weight:800}
-.aula-grande s{color:var(--muted)}
-.nota{font-size:13.5px;color:var(--muted);margin:0}
-.btn{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;border:0;border-radius:999px;padding:14px 18px;font-weight:700;font-size:17px;background:var(--lime);color:#10301F;cursor:pointer;text-decoration:none}
-.btn.sec2{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-
-/* Formulario del trámite */
-.campo{display:grid;gap:6px}
-.campo>label,.campo>.lab{font-weight:700;font-size:15px}
-.fijo{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
-.fijo small{color:var(--accent);font-weight:700;font-size:12px}
-select{font:inherit;font-size:16px;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%}
-.opc{display:flex;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;background:var(--surface)}
-.opc:has(input:checked){border-color:var(--accent);background:var(--ok-bg)}
-.opc input{accent-color:var(--accent);width:18px;height:18px}
-.adj{display:flex;gap:10px;align-items:center;border:1.5px dashed var(--line);border-radius:12px;padding:14px;cursor:pointer;background:transparent;width:100%;text-align:left}
-.adj.hecho{border-style:solid;border-color:var(--accent);background:var(--ok-bg)}
-.origen{display:flex;gap:10px;align-items:flex-start;background:var(--info-bg);color:var(--info);border-radius:12px;padding:12px 14px;font-size:14px}
-:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
-
-/* Confirmación */
-.ok-hero{text-align:center;display:grid;justify-items:center;gap:10px;padding:36px 16px 10px}
-.ok-hero .big{width:84px;height:84px;border-radius:50%;background:var(--ok-bg);color:var(--accent);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
-.ok-hero .big svg{width:42px;height:42px;stroke-width:2.5}
-@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
-.ok-hero h2{font-size:26px;font-weight:800}
-
-/* Pantalla de bloqueo (paso 1) */
-.bloqueo{flex:1;background:radial-gradient(120% 80% at 50% 0%,#2A6B4F 0%,var(--board) 55%,#08160F 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:56px 16px 24px;gap:6px}
-.bloqueo .hora{font-family:var(--f-display);font-size:76px;font-weight:500;letter-spacing:-.02em;line-height:1}
-.bloqueo .fecha{font-size:17px;opacity:.85;margin-bottom:36px}
-.notif{width:100%;max-width:390px;border:0;text-align:left;cursor:pointer;background:rgba(255,255,255,.88);color:#13241C;border-radius:20px;padding:12px 14px;display:grid;gap:4px;backdrop-filter:blur(12px);animation:baja .6s cubic-bezier(.2,1.2,.4,1)}
-@keyframes baja{from{transform:translateY(-24px)}}
-.notif .cab{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#56685E}
-.notif .cab i{width:20px;height:20px;border-radius:6px;background:#9BE15D;display:grid;place-items:center;color:#10301F;font-style:normal;font-size:12px;font-weight:800}
-.notif .cab span{margin-left:auto;text-transform:none;letter-spacing:0}
-.notif b{font-size:16px}
-.bloqueo .pie{margin-top:auto;font-size:13px;opacity:.7;text-align:center}
-.bloqueo .pie a{color:#fff}
-
-/* Navegación inferior */
-.nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:15}
-@media (min-width:700px){.nav{border-radius:20px 20px 0 0}}
-.nav a{display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--muted);text-decoration:none;padding:6px 0;border-radius:12px}
-.nav a[aria-current="page"]{color:var(--accent);font-weight:700}
-.nav a[aria-current="page"] svg{background:var(--ok-bg);border-radius:999px;width:44px;padding:0 10px}
-.ejemplo{font-size:12px;color:var(--muted);text-align:center;margin:0}
-.ejemplo a{color:var(--muted)}
-
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25);animation:sube .25s ease-out}
-@keyframes sube{from{transform:translate(-50%,10px);opacity:0}}
+/* Guía de la demo: barra verde oscura abajo, como la «demo guiada» del mock-up */
+.guide{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;width:min(560px,calc(100% - 24px));background:var(--board);color:var(--chalk);border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.guide b{font-family:var(--f-mono);font-weight:500;font-size:12px;color:var(--lime);white-space:nowrap}
+.guide p{margin:0;flex:1;min-width:0;font-size:14px}
+.guide a{color:var(--lime)}
+.guide button{border:0;background:none;color:#A9C4AE;font-size:13px;text-decoration:underline;padding:4px}
+.guide-on{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20}
+.spot{outline:3px solid var(--lime);outline-offset:3px;border-radius:12px}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+.pie{margin-top:28px}
+@media (max-width:760px){.item{grid-template-columns:64px minmax(0,1fr) auto;gap:10px}}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div class="app">
+  <aside class="side">
+    <span class="brand"><i>G</i>Greenboard</span>
+    <div class="who"><span class="avatar">GM</span><span>Gonzalo Martínez<small>4.º MAIS · U-tad</small></span></div>
+    <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
+  </aside>
+  <main class="main" id="view" aria-live="polite"></main>
+</div>
+<div id="guia"></div>
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
-/* ---------- Iconos (trazo, 24×24) ---------- */
-const P = {
-  atras:'<path d="M15 18l-6-6 6-6"/>', chev:'<path d="M9 18l6-6-6-6"/>',
-  hoy:'<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/>',
-  entregas:'<path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 13l2 2 4-4"/>',
-  tramites:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
-  uni:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/>',
-  aula:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
-  reloj:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  cambio:'<path d="M4 7h13l-3-3M20 17H7l3 3"/>', mas:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
-  mover:'<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M10 15h6l-2-2M14 17l2-2"/>',
-  profe:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
-  clip:'<path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',
-  check:'<path d="M5 12l5 5 9-10"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
-  falta:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
-  evento:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z"/>',
-  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>'
-};
-const ic = (n, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
-
-/* ---------- Datos de ejemplo (no son datos de U-tad) ---------- */
-const HOY = 'Martes 24 de noviembre';
-const ASIG = {
-  prog:{nombre:'Programación', profe:'Prof. Ruiz'},
-  disc:{nombre:'Matemática Discreta', profe:'Prof. Ortega'},
-  bd:{nombre:'Bases de Datos', profe:'Prof. Navarro'},
-  calc:{nombre:'Cálculo', profe:'Prof. Serrano'},
-};
-const CLASES_HOY = [
-  {id:'disc', ini:'09:00', fin:'10:30', aula:'A-105', ahora:true},
-  {id:'prog', ini:'10:45', fin:'12:15', aula:'B-204', antes:'A-108', cambio:'aula'},
-  {id:'bd',   ini:'12:30', fin:'14:00', aula:'C-301'},
-  {id:'calc', ini:'15:00', fin:'16:30', aula:'A-210', cambio:'recuperacion'},
+/* ---------- Datos ----------
+   Asignaturas, códigos y entregas: los reales de Blackboard que usa el mock-up (26/10/2026).
+   Horario, aulas, asistencia, compañeros y trámites: de ejemplo, como en el mock-up. */
+const SUBJECTS = [
+  {id:'opti', n:"Optimización", c:"2609_MAIS4_OPTI_A"},
+  {id:'psdi', n:"Programación de Sistemas Distribuidos", c:"2609_MAIS3_PSDI_A_FIIS3_A"},
+  {id:'aaui', n:"Aprendizaje Automático I", c:"2609_MAIS4_AAUI_A_FIIS4_A"},
+  {id:'pro3', n:"Proyectos III: Desarrollo Web y Apps", c:"2609_MAIS4_PRO3_A_FIIS4_A", p:"Alberto León Martín"},
+  {id:'esal', n:"Estructuras Algebraicas", c:"2609_MAIS4_ESAL_A", last:"Nuevo: Grupos 7 · Homomorfismos.pdf"},
+  {id:'aiii', n:"Análisis Matemático III", c:"2609_MAIS4_AIII_A", last:"Calificación publicada: Asistencia"},
+  {id:'isof', n:"Ingeniería del Software", c:"2609_MAIS4_ISOF_A_FIIS4_A_INSG_A", last:"Nuevo contenido añadido"}
 ];
-const CAMBIOS = [
-  {ico:'cambio', tono:'ok', t:'Programación cambia de aula', s:'Hoy 10:45 · ahora en B-204 (antes A-108)', ir:'#/clase/prog', k:'cambio-prog'},
-  {ico:'mas', tono:'info', t:'Clase de recuperación de Cálculo', s:'Hoy 15:00 · Aula A-210 · nueva', ir:'#/clase/calc'},
-  {ico:'mover', tono:'warn', t:'Bases de Datos se mueve', s:'Del jueves 26 al viernes 27, 10:45', ir:'#/asignatura/bd'},
+const DUE = [
+  {t:"Entregables 1", s:'opti', d:"2026-10-23T10:48"},
+  {t:"Práctica 1", s:'psdi', d:"2026-10-28T23:59"},
+  {t:"Proyecto I: Gemstone prices", s:'aaui', d:"2026-11-09T23:59"},
+  {t:"SPRINT 2 · Presentación de 7 min", s:'pro3', d:"2026-11-10T23:59"},
+  {t:"Participación", s:'esal', d:"2026-12-22T11:01"}
 ];
-const ENTREGAS = [
-  {id:'grafos', asig:'disc', t:'Ejercicios de grafos', dia:'Jue 26 nov', falta:'en 2 días'},
-  {id:'p3', asig:'prog', t:'Práctica 3: listas enlazadas', dia:'Vie 27 nov · 23:59', falta:'en 3 días'},
-  {id:'hoja5', asig:'calc', t:'Hoja 5: integrales', dia:'Lun 30 nov', falta:'en 6 días'},
-  {id:'er', asig:'bd', t:'Modelo entidad-relación', dia:'Mar 1 dic', falta:'en 7 días'},
-  {id:'pf', asig:'prog', t:'Proyecto final: entrega parcial', dia:'Vie 4 dic · 23:59', falta:'en 10 días'},
+/* Horario de ejemplo (no viene de WebUntis). El cambio de aula es el aviso del mock-up */
+const TODAY = [
+  {h:"09:00", s:'aiii', a:"Aula 201"},
+  {h:"11:00", s:'pro3', a:"Aula 112", antes:"Aula 003", changed:true},
+  {h:"15:00", s:'opti', a:"Aula 104"}
 ];
-const PROXIMAS = {
-  prog:[{d:'Hoy', h:'10:45', aula:'B-204', cambio:true},{d:'Jue 26', h:'10:45', aula:'A-108'}],
-  disc:[{d:'Hoy', h:'09:00', aula:'A-105'},{d:'Mié 25', h:'12:30', aula:'A-105'}],
-  bd:[{d:'Hoy', h:'12:30', aula:'C-301'},{d:'Vie 27', h:'10:45', aula:'C-301', cambio:true, nota:'antes jueves 26'}],
-  calc:[{d:'Hoy', h:'15:00', aula:'A-210', cambio:true, nota:'recuperación'},{d:'Mié 25', h:'09:00', aula:'A-210'}],
+/* Asistencia de ejemplo: sesiones pasadas (días antes de hoy). La falta es la de Análisis Matemático III */
+const ASIS = {
+  aiii:[{dias:1,v:0},{dias:3,v:1},{dias:8,v:1},{dias:10,v:1},{dias:15,v:1}],
 };
-const FALTA = {asig:'prog', d:'Lunes 23 nov', h:'10:45–12:15'};
-const EVENTO = {t:'Charla: cómo conseguir tus primeras prácticas', d:'Hoy', h:'17:00–18:00', lugar:'Auditorio', quien:'Organiza: Delegación de estudiantes', plazas:'34 plazas libres'};
-const TRAMITES = ['Modificación de matrícula','Certificado general','Evaluación única'];
+const ASIS_DEF = [{dias:2,v:1},{dias:7,v:1},{dias:9,v:1},{dias:14,v:1}];
+const COMUNIDAD = [
+  {id:'apuntes', t:"Apuntes de Análisis Matemático III", s:"Compartidos por un alumno de 5.º · curso 2025/26", accion:"Pedir acceso", hecho:"Solicitud enviada",
+   det:["Tema 1 · Sucesiones y series de funciones","Tema 2 · Integrales de línea","Tema 3 · Integrales de superficie","Exámenes resueltos 2025/26"]},
+  {id:'repaso', t:"Repaso de Optimización", s:"Sesión de apoyo en grupo · jueves 18:00", accion:"Apuntarme", hecho:"Apuntado",
+   det:["Jueves, 18:00 – 19:30","Lo da un alumno que ya aprobó la asignatura","Grupo pequeño: trae tus dudas de la hoja de ejercicios"]}
+];
+const subj = id => SUBJECTS.find(s => s.id===id);
 
-/* ---------- Estado (se guarda en la sesión del navegador, si se puede) ---------- */
-const INI = {abierta:false, vioClase:false, vioAsig:false, adjunto:false, justificado:false, apuntada:false, guia:true};
-let S = {...INI};
-try{ Object.assign(S, JSON.parse(sessionStorage.getItem('gb-demo')||'{}')); }catch(e){}
-const guardar = () => { try{ sessionStorage.setItem('gb-demo', JSON.stringify(S)); }catch(e){} };
-function reiniciar(){ S = {...INI}; guardar(); location.hash = '#/aviso'; render(); }
+/* ---------- Estado de la demo (en la sesión del navegador, si se puede) ---------- */
+const INI = {vioAsig:false, archivo:null, justificado:false, com:{}, mat:false, guia:true};
+let S = JSON.parse(JSON.stringify(INI));
+try{ Object.assign(S, JSON.parse(sessionStorage.getItem('gb-mvp')||'{}')); }catch(e){}
+const guardar = () => { try{ sessionStorage.setItem('gb-mvp', JSON.stringify(S)); }catch(e){} };
+function reiniciar(){ S = JSON.parse(JSON.stringify(INI)); guardar(); location.hash = '#/hoy'; render(); }
 
-/* ---------- Guía del Happy Path: qué paso toca según lo que ya se ha hecho ---------- */
-function pasoGuia(){
-  if(!S.abierta)     return {n:1, txt:'Llega un aviso al móvil. Tócalo.', rutas:['aviso'], obj:'#notif'};
-  if(!S.vioClase)    return {n:2, txt:'Mira «Lo que ha cambiado» y toca la clase de Programación.', rutas:['hoy'], obj:'[data-k="clase-prog"]'};
-  if(!S.vioAsig)     return {n:3, txt:'Aula nueva y sus entregas, juntas. Toca «Ver asignatura».', rutas:['clase/prog'], obj:'#ver-asig'};
-  if(!S.justificado){
-    if(ruta()==='justificar/prog') return {n:5, txt: S.adjunto ? 'Ya está todo. Envía el trámite.' : 'Sale ya rellenado. Adjunta el justificante.', rutas:['justificar/prog'], obj: S.adjunto ? '#enviar' : '#adjuntar'};
-    return {n:4, txt:'Ayer faltó. Toca «Justificar falta».', rutas:['asignatura/prog'], obj:'#btn-just'};
-  }
-  if(ruta()==='justificado') return {n:5, txt:'Trámite enviado. Vuelve a Hoy.', rutas:['justificado'], obj:'#volver-hoy'};
-  if(!S.apuntada){
-    if(ruta()==='evento') return {n:6, txt:'Encaja en su hueco libre. Toca «Me apunto».', rutas:['evento'], obj:'#apuntarse'};
-    return {n:6, txt:'La sorpresa: toca «Hoy en la uni».', rutas:['hoy'], obj:'#evento-card'};
-  }
-  return {n:7, txt:'Fin del recorrido: cambios, clases, entregas, un trámite y la uni, en una pantalla.', rutas:[], obj:null};
+/* ---------- Utilidades de fecha (las pastillas se calculan con la fecha real, como en el mock-up) ---------- */
+const fmt = new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short'});
+const fmtH = new Intl.DateTimeFormat('es-ES',{hour:'2-digit',minute:'2-digit'});
+const fmtDia = new Intl.DateTimeFormat('es-ES',{weekday:'short',day:'numeric',month:'short'});
+const haceDias = n => { const d = new Date(); d.setDate(d.getDate()-n); return d; };
+function daysLeft(iso){ return Math.ceil((new Date(iso) - new Date())/864e5); }
+function pill(iso){
+  const d = daysLeft(iso);
+  if (new Date(iso) < new Date()) return '<span class="pill late">vencida</span>';
+  if (d <= 2) return `<span class="pill soon">${d<=1?'mañana':'en '+d+' días'}</span>`;
+  return `<span class="pill ok">en ${d} días</span>`;
 }
-const RUTA_DE = {1:'#/aviso',2:'#/hoy',3:'#/clase/prog',4:'#/asignatura/prog',5:'#/justificar/prog',6:'#/hoy'};
-
-function guiaHTML(){
-  if(!S.guia) return '';
-  const p = pasoGuia();
-  if(p.n===7) return `<div class="guia" role="status"><b>Demo ✓</b><span>${p.txt}</span><button onclick="reiniciar()">Reiniciar</button></div>`;
-  const fuera = !p.rutas.includes(ruta());
-  return `<div class="guia" role="status"><b>Paso ${p.n}/6</b><span>${fuera ? `Fuera del recorrido. <a href="${RUTA_DE[p.n]}">Volver al paso ${p.n}</a>` : p.txt}</span><button onclick="S.guia=false;guardar();render()" aria-label="Ocultar guía">Ocultar</button></div>`;
-}
-
-/* ---------- Piezas comunes ---------- */
-const ruta = () => (location.hash.replace(/^#\/?/,'') || 'aviso');
-const barra = (titulo, atras='#/hoy') => `<header class="barra"><a class="atras" href="${atras}" aria-label="Atrás" onclick="if(history.length>1){history.back();return false}">${ic('atras')}</a><h1>${titulo}</h1></header>`;
-const nav = (act) => `<nav class="nav" aria-label="Secciones">${[
-  ['hoy','Hoy','hoy'],['entregas','Entregas','entregas'],['tramites','Trámites','tramites'],['comunidad','Comunidad','uni']
-].map(([r,t,i]) => `<a href="#/${r}" ${act===r?'aria-current="page"':''}>${ic(i)}${t}</a>`).join('')}</nav>`;
-const pie = `<p class="ejemplo">Prototipo · datos de ejemplo · no se conecta a ningún portal<br><a href="#" onclick="reiniciar();return false">Reiniciar demo</a> · <a href="../">Volver a la web</a></p>`;
-const itemEntrega = e => `<a class="item" href="#/entrega/${e.id}"><span class="ico info">${ic('entregas')}</span><span class="txt"><span class="t">${e.t}</span><span class="s">${ASIG[e.asig].nombre} · ${e.dia}</span></span><span class="tag ${e.falta.match(/[23] días/)?'warn':'gris'}">${e.falta}</span></a>`;
-const filaClase = c => {
-  const a = ASIG[c.id];
-  const cls = ['clase', c.cambio==='aula'?'cambio':'', c.cambio==='recuperacion'?'nueva':'', c.ahora?'ahora':''].join(' ');
-  const aula = c.antes ? `${ic('aula')}<s>${c.antes}</s> → <strong>${c.aula}</strong>` : `${ic('aula')}Aula ${c.aula}`;
-  const tag = c.cambio==='aula' ? '<span class="tag ok">Aula nueva</span>' : c.cambio==='recuperacion' ? '<span class="tag info">Recuperación</span>' : c.ahora ? '<span class="tag gris">Ahora</span>' : '';
-  return `<a class="${cls}" href="#/clase/${c.id}" data-k="clase-${c.id}"><span class="h"><b>${c.ini}</b>${c.fin}</span><span><span class="t">${a.nombre}</span><span class="aula">${aula}</span></span>${tag}</a>`;
-};
+const ses = id => ASIS[id] || ASIS_DEF;
+const faltasPend = () => S.justificado ? 0 : 1;
 
 /* ---------- Pantallas ---------- */
+const ruta = () => location.hash.replace(/^#\/?/,'') || 'hoy';
 const V = {};
 
-V.aviso = () => `<div class="bloqueo">
-  <div class="hora">10:05</div><div class="fecha">${HOY}</div>
-  <button class="notif" id="notif" onclick="S.abierta=true;guardar();location.hash='#/hoy'">
-    <span class="cab"><i>G</i>Greenboard<span>ahora</span></span>
-    <b>Programación cambia de aula hoy</b>
-    <span>10:45 · ahora en B-204 (antes A-108)</span>
-  </button>
-  <p class="pie">Toca el aviso para abrir Greenboard<br><a href="#/hoy" onclick="S.abierta=true;guardar()">o entra directamente</a></p>
-</div>`;
-
 V.hoy = () => {
-  const tarde = S.apuntada
-    ? `<a class="clase nueva" href="#/evento"><span class="h"><b>17:00</b>18:00</span><span><span class="t">Charla de prácticas</span><span class="aula">${ic('aula')}${EVENTO.lugar}</span></span><span class="tag ok">Apuntada</span></a>`
-    : `<div class="hueco">16:30 · Tarde libre</div>`;
-  const clases = CLASES_HOY.map(filaClase).join('') + tarde;
-  return `<div class="top"><div class="fila1"><span class="brand"><i>G</i>Greenboard</span><span class="avatar" aria-label="Lucía">L</span></div>
-    <h1>Hola, Lucía</h1><p>${HOY} · doble grado</p></div>
-  <div class="cont">
-    <section class="sec"><h2>Lo que ha cambiado <span class="n">${CAMBIOS.length}</span></h2>
-      <div class="card lista">${CAMBIOS.map(c => `<a class="item" href="${c.ir}"><span class="ico ${c.tono}">${ic(c.ico)}</span><span class="txt"><span class="t">${c.t}</span><span class="s">${c.s}</span></span>${ic('chev','i chev')}</a>`).join('')}</div>
-    </section>
-    <section class="sec"><h2>Tus clases de hoy</h2><div class="card">${clases}</div></section>
-    <section class="sec"><h2>Hoy en la uni</h2>
-      <a class="uni" id="evento-card" href="#/evento"><span class="ico">${ic('evento')}</span><span class="txt"><span class="t">${EVENTO.t}</span><span class="s">${EVENTO.h} · ${EVENTO.lugar} · encaja en tu tarde libre</span></span>${S.apuntada?'<span class="tag ok">Apuntada</span>':ic('chev','i')}</a>
-    </section>
-    <section class="sec"><h2>Próximas entregas</h2><div class="card lista">${ENTREGAS.slice(0,3).map(itemEntrega).join('')}</div></section>
-    ${pie}
-  </div>${nav('hoy')}`;
+  const next = DUE.filter(x => new Date(x.d) > new Date()).slice(0,2);
+  return `<div class="row"><h3>Hoy</h3><span class="demo-flag">horario y aulas de ejemplo</span></div>
+  <div class="banner" id="spot-push"><b>Aviso</b><span>Proyectos III cambia al <b>aula 112</b>. Ya está actualizado en tu horario.</span></div>
+  <div class="list" id="spot-horario">${TODAY.map(c => `<a class="item" href="#/asig/${c.s}"><time>${c.h}</time><div class="what">${subj(c.s).n.split(':')[0]}<small>${c.a}${c.changed?' · antes en el '+c.antes.toLowerCase():''}</small></div>${c.changed?'<span class="pill ok">cambiado</span>':''}</a>`).join('')}</div>
+  <h3 class="sub">Lo próximo que entregas</h3>
+  <div class="list" id="spot-next">${next.length ? next.map(x => `<a class="item" href="#/asig/${x.s}"><time>${fmt.format(new Date(x.d))}</time><div class="what">${x.t}<small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('') : '<p class="note">No tienes entregas pendientes.</p>'}</div>`;
 };
 
-V.clase = (id) => {
-  const c = CLASES_HOY.find(x => x.id===id); const a = ASIG[id];
-  if(!c) return V.hoy();
-  if(id==='prog'){ S.vioClase = true; guardar(); }
-  const ents = ENTREGAS.filter(e => e.asig===id);
-  const aviso = c.cambio==='aula' ? `<span class="tag ok">${ic('cambio','i')} Cambio de aula · avisado hoy 10:05</span>` :
-                c.cambio==='recuperacion' ? `<span class="tag info">${ic('mas','i')} Clase de recuperación · nueva</span>` : '';
-  return `${barra(a.nombre)}
-  <div class="hero">${aviso}<h2>${a.nombre}</h2>
-    <div class="dato">${ic('reloj')}Hoy, ${c.ini} – ${c.fin}</div>
-    <div class="aula-grande"><strong>Aula ${c.aula}</strong>${c.antes?`<s>antes ${c.antes}</s>`:''}</div>
-    <div class="dato">${ic('profe')}${a.profe}</div>
-  </div>
-  <div class="cont">
-    <section class="sec"><h2>Próximas entregas de ${a.nombre}</h2>
-      <div class="card lista">${ents.length ? ents.map(itemEntrega).join('') : '<p class="item s">No tienes entregas pendientes.</p>'}</div></section>
-    <a class="btn sec2" id="ver-asig" href="#/asignatura/${id}">Ver asignatura ${ic('chev')}</a>
-  </div>${nav('hoy')}`;
+V.asig = (id) => {
+  if (id) return V.asignatura(id);
+  return `<div class="row"><h3>Mis asignaturas</h3><span class="note">7 asignaturas · datos de Blackboard</span></div>
+  <div class="cards">${SUBJECTS.map(s => {
+    const falta = s.id==='aiii' && !S.justificado;
+    return `<a class="card" href="#/asig/${s.id}" id="card-${s.id}"><h4>${s.n}</h4><div class="code">${s.c}</div>${s.p?`<p class="note" style="margin:8px 0 0">Profesor: ${s.p}</p>`:''}${s.last?`<p class="note" style="margin:8px 0 0">${s.last}</p>`:''}${falta?'<p style="margin:8px 0 0"><span class="pill late">1 falta sin justificar</span></p>':''}</a>`;
+  }).join('')}</div>`;
 };
 
 V.asignatura = (id) => {
-  const a = ASIG[id]; if(!a) return V.hoy();
-  if(id==='prog'){ S.vioAsig = true; guardar(); }
-  const prox = PROXIMAS[id].map(p => `<div class="item" style="cursor:default"><span class="ico ${p.cambio?'ok':'info'}">${ic('hoy')}</span><span class="txt"><span class="t">${p.d}, ${p.h}</span><span class="s">Aula ${p.aula}${p.nota?' · '+p.nota:''}</span></span>${p.cambio?'<span class="tag ok">Cambio</span>':''}</div>`).join('');
-  const ents = ENTREGAS.filter(e => e.asig===id).map(itemEntrega).join('');
-  let asist = '<p class="nota" style="padding:14px">Sin faltas este mes.</p>';
-  if(FALTA.asig===id){
-    asist = `<div class="item" style="cursor:default"><span class="ico ${S.justificado?'ok':'warn'}">${ic(S.justificado?'check':'falta')}</span><span class="txt"><span class="t">${FALTA.d} · ${FALTA.h}</span><span class="s">${S.justificado?'Justificante enviado':'Falta sin justificar'}</span></span></div>
-    ${S.justificado?'':`<div style="padding:0 14px 14px"><a class="btn" id="btn-just" href="#/justificar/${id}">${ic('tramites')} Justificar falta</a></div>`}`;
+  const s = subj(id); if (!s) return V.asig();
+  if (id==='aiii'){ S.vioAsig = true; guardar(); }
+  const ents = DUE.filter(x => x.s===id);
+  const lista = ses(id);
+  const pres = lista.filter(x => x.v).length;
+  const filas = lista.map((x,i) => {
+    const fecha = fmtDia.format(haceDias(x.dias));
+    if (x.v) return `<div class="ses"><div><time>${fecha}</time><small>Asistencia registrada</small></div><span class="nota-a">1</span></div>`;
+    if (S.justificado) return `<div class="ses enviado"><div><time>${fecha}</time><small>Justificante enviado: <b>${S.archivo}</b> · pendiente de revisión</small></div><span class="nota-a">0</span></div>`;
+    return `<div class="ses falta" id="fila-falta"><div><time>${fecha}</time><small style="color:var(--late);font-weight:700">Falta sin justificar</small></div><span class="nota-a" aria-label="Asistencia: 0">0</span>
+      <div class="just">
+        <label class="drop ${S.archivo?'has':''}" id="drop" for="j-file"><input type="file" id="j-file" accept=".pdf,image/*"><span class="ico" aria-hidden="true">↑</span><span><b>${S.archivo || 'Sube el justificante'}</b><small>${S.archivo ? 'Listo para enviar · toca para cambiarlo' : 'PDF o foto · aquí mismo, sin ir a Trámites'}</small></span></label>
+        <div class="fila-b"><button class="btn" id="enviar" ${S.archivo?'':'disabled'} onclick="enviarJust()">Enviar justificante</button>${S.archivo?'':'<button class="linkbtn" onclick="ejemplo()">Usar un justificante de ejemplo</button>'}</div>
+      </div></div>`;
+  }).join('');
+  return `<a class="atras" href="#/asig">‹ Mis asignaturas</a>
+  <div class="ficha"><h3>${s.n}</h3><div class="code">${s.c}</div>${s.p?`<p class="note" style="margin:0">Profesor: ${s.p}</p>`:''}</div>
+  <div class="row"><h3 class="sub">Asistencia</h3><span class="demo-flag">asistencia de ejemplo</span></div>
+  <div class="resumen"><span class="pill ${pres===lista.length?'ok':'late'}">${pres} de ${lista.length} sesiones</span><span class="note">Últimas sesiones, de la más reciente a la más antigua</span></div>
+  <div class="asis">${filas}</div>
+  <h3 class="sub">Entregas</h3>
+  <div class="list">${ents.length ? ents.map(x => `<div class="item"><time>${fmt.format(new Date(x.d))} · ${fmtH.format(new Date(x.d))}</time><div class="what">${x.t}<small>${s.n}</small></div>${pill(x.d)}</div>`).join('') : '<p class="note" style="margin:0">No hay entregas publicadas.</p>'}</div>`;
+};
+
+V.ent = () => `<div class="row"><h3>Entregas</h3><span class="note">Todas tus asignaturas, por fecha</span></div>
+  <div class="list">${DUE.map(x => `<a class="item" href="#/asig/${x.s}"><time>${fmt.format(new Date(x.d))} · ${fmtH.format(new Date(x.d))}</time><div class="what">${x.t}<small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('')}</div>`;
+
+V.tram = () => `<div class="row"><h3>Trámites</h3><span class="demo-flag">simulado: no se envía nada</span></div>
+  <div class="banner"><span>Los justificantes de faltas ya no van aquí: se suben en <b>Asistencia</b>, junto a la falta. <a href="#/asig/aiii">Ver mi asistencia</a></span></div>
+  <h3 class="sub">Matrícula firmada</h3>
+  <button class="btn dark" type="button" style="margin-top:10px" onclick="S.mat=!S.mat;guardar();render()">${S.mat?'Ocultar':'Ver'} matrícula 2026/27</button>
+  ${S.mat ? `<div class="doc"><h5>Matrícula 2026/27 · ejemplo</h5>Alumno: Gonzalo Martínez Fernández<br>Titulación: Doble Grado MAIS, 4.º curso<br>Asignaturas: ${SUBJECTS.length}<br><span class="note">Documento de muestra. En la app real sería el PDF firmado de Secretaría.</span></div>` : ''}`;
+
+V.com = (id) => {
+  if (id) return V.comItem(id);
+  return `<div class="row"><h3>Comunidad</h3><span class="demo-flag">compañeros de ejemplo</span></div>
+  <p class="note">Apuntes y clases de apoyo de alumnos que ya aprobaron la asignatura.</p>
+  <div class="cards">${COMUNIDAD.map(c => `<div class="card act" id="com-${c.id}"><h4><a href="#/com/${c.id}" style="color:inherit">${c.t}</a></h4><p class="note">${c.s}</p><button class="btn" type="button" id="btn-${c.id}" ${S.com[c.id]?'disabled':''} onclick="comAccion('${c.id}')">${S.com[c.id]?'✓ '+c.hecho:c.accion}</button></div>`).join('')}</div>`;
+};
+
+V.comItem = (id) => {
+  const c = COMUNIDAD.find(x => x.id===id); if (!c) return V.com();
+  const bloqueado = c.id==='apuntes';
+  return `<a class="atras" href="#/com">‹ Comunidad</a>
+  <div class="ficha"><h3>${c.t}</h3><p class="note" style="margin:0">${c.s}</p></div>
+  <div class="list">${c.det.map(d => `<div class="item" style="grid-template-columns:1fr auto"><div class="what">${d}</div>${bloqueado?`<span class="pill ${S.com[id]?'soon':'late'}">${S.com[id]?'pendiente':'sin acceso'}</span>`:''}</div>`).join('')}</div>
+  <p style="margin-top:16px"><button class="btn" type="button" id="btn-${c.id}" ${S.com[c.id]?'disabled':''} onclick="comAccion('${c.id}')">${S.com[c.id]?'✓ '+c.hecho:c.accion}</button></p>
+  ${S.com[id] ? `<p class="note">${bloqueado ? 'Te avisaremos cuando acepte la solicitud.' : 'Te lo recordaremos el jueves.'} En la demo no se envía nada.</p>` : ''}`;
+};
+
+/* ---------- Acciones ---------- */
+function enviarJust(){ if(!S.archivo) return; S.justificado = true; guardar(); render(); toast('Justificante enviado. La falta queda pendiente de revisión.'); }
+function ejemplo(){ S.archivo = 'justificante-medico.pdf'; guardar(); render(); }
+function comAccion(id){ S.com[id] = true; guardar(); render(); toast(id==='apuntes' ? 'Solicitud enviada (demo)' : 'Apuntado (demo)'); }
+
+/* ---------- Guía del Happy Path: qué toca según lo que ya se ha hecho ---------- */
+function paso(){
+  const r = ruta();
+  if (!S.vioAsig){
+    if (r==='hoy') return {n:1, t:'Aviso: Proyectos III cambia de aula y el horario ya está cambiado. Abre «Asignaturas».', obj:'#tab-asig'};
+    if (r==='asig') return {n:2, t:'Análisis Matemático III ha publicado la asistencia. Tócala.', obj:'#card-aiii'};
+    return {n:1, t:'', ir:'#/hoy'};
   }
-  // Una falta sin justificar sube arriba del todo: es lo primero que Lucía tiene que resolver
-  const secAsist = `<section class="sec"><h2>Asistencia</h2><div class="card">${asist}</div></section>`;
-  const pendiente = FALTA.asig===id && !S.justificado;
-  return `${barra(a.nombre)}
-  <div class="hero"><h2>${a.nombre}</h2><div class="dato">${ic('profe')}${a.profe}</div></div>
-  <div class="cont">
-    ${pendiente ? secAsist : ''}
-    <section class="sec"><h2>Próximas clases</h2><div class="card lista">${prox}</div></section>
-    <section class="sec"><h2>Entregas</h2><div class="card lista">${ents || '<p class="nota" style="padding:14px">No tienes entregas pendientes.</p>'}</div></section>
-    ${pendiente ? '' : secAsist}
-  </div>${nav('hoy')}`;
-};
-
-V.entrega = (id) => {
-  const e = ENTREGAS.find(x => x.id===id); if(!e) return V.entregas();
-  const a = ASIG[e.asig];
-  return `${barra('Entrega')}
-  <div class="hero"><span class="tag warn">${ic('reloj','i')} ${e.falta}</span><h2>${e.t}</h2>
-    <div class="dato">${ic('hoy')}${e.dia}</div><div class="dato">${ic('profe')}${a.nombre} · ${a.profe}</div></div>
-  <div class="cont">
-    <div class="origen">${ic('info')}<span>La entrega se sube en Blackboard. Greenboard te avisa de la fecha y te lleva allí.</span></div>
-    <button class="btn" onclick="toast('En el prototipo no se abre Blackboard.')">Abrir en Blackboard ${ic('ext')}</button>
-    <a class="btn sec2" href="#/asignatura/${e.asig}">Ver ${a.nombre}</a>
-  </div>${nav('entregas')}`;
-};
-
-V.justificar = (id) => {
-  const a = ASIG[id] || ASIG.prog;
-  return `${barra('Justificar falta')}
-  <div class="cont">
-    <div class="origen">${ic('info')}<span>Es el trámite <b>«Justificación de faltas de asistencia»</b> de Classlife. Greenboard lo abre ya rellenado con tu asignatura y la clase.</span></div>
-    <div class="campo"><span class="lab">Asignatura</span><div class="fijo">${a.nombre}<small>Rellenado</small></div></div>
-    <div class="campo"><span class="lab">Clase a la que faltaste</span>
-      <label class="opc"><input type="radio" name="cl" checked> ${FALTA.d} · ${FALTA.h}</label></div>
-    <div class="campo"><label for="motivo">Motivo</label>
-      <select id="motivo"><option>Cita médica</option><option>Enfermedad</option><option>Deber inexcusable</option><option>Otro</option></select></div>
-    <div class="campo"><span class="lab">Justificante</span>
-      <button class="adj ${S.adjunto?'hecho':''}" id="adjuntar" onclick="S.adjunto=true;guardar();render()">${ic(S.adjunto?'check':'clip')}<span>${S.adjunto?'<b>justificante-medico.pdf</b> · 182 KB':'Adjuntar foto o PDF'}</span></button></div>
-    <button class="btn" id="enviar" ${S.adjunto?'':'disabled'} onclick="S.justificado=true;guardar();location.hash='#/justificado'">Enviar justificante</button>
-    <p class="nota">En el prototipo no se envía nada a Classlife.</p>
-  </div>`;
-};
-
-V.justificado = () => `<div class="ok-hero"><div class="big">${ic('check')}</div><h2>Justificante enviado</h2>
-    <p class="nota" style="font-size:16px">${ASIG[FALTA.asig].nombre} · ${FALTA.d}<br>Te avisaremos cuando lo revisen.</p></div>
-  <div class="cont"><a class="btn" id="volver-hoy" href="#/hoy">Volver a Hoy</a>
-    <p class="nota" style="text-align:center">Sin correos a Secretaría y sin buscar el trámite en otro portal.</p></div>`;
-
-V.evento = () => `${barra('Hoy en la uni')}
-  <div class="hero"><span class="tag ok">${ic('evento','i')} Encaja en tu tarde libre</span><h2>${EVENTO.t}</h2>
-    <div class="dato">${ic('reloj')}${EVENTO.d}, ${EVENTO.h}</div><div class="dato">${ic('aula')}${EVENTO.lugar}</div>
-    <div class="dato">${ic('uni')}${EVENTO.quien}</div></div>
-  <div class="cont">
-    <p style="margin:0">Charla de 1 hora con estudiantes de último curso que ya han hecho prácticas: cómo buscarlas, qué piden y cómo preparar la entrevista.</p>
-    <p class="nota">${EVENTO.plazas} · evento de ejemplo</p>
-    ${S.apuntada ? `<div class="btn sec2" style="cursor:default">${ic('check')} Apuntada · está en tu horario de hoy</div>`
-      : `<button class="btn" id="apuntarse" onclick="S.apuntada=true;guardar();render();toast('Apuntada. Lo verás en tu horario de hoy.')">Me apunto</button>`}
-  </div>${nav('comunidad')}`;
-
-V.entregas = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Entregas</h1><p>Todas tus entregas, por fecha</p></div>
-  <div class="cont"><div class="card lista">${ENTREGAS.map(itemEntrega).join('')}</div>${pie}</div>${nav('entregas')}`;
-
-V.tramites = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Trámites</h1><p>Los trámites de Classlife, a un toque</p></div>
-  <div class="cont"><div class="card lista">
-    <a class="item" href="#/justificar/prog"><span class="ico warn">${ic('tramites')}</span><span class="txt"><span class="t">Justificación de faltas de asistencia</span><span class="s">${S.justificado ? 'Justificante enviado' : 'Tienes 1 falta sin justificar'}</span></span>${ic('chev','i chev')}</a>
-    ${TRAMITES.map(t => `<button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('tramites')}</span><span class="txt"><span class="t">${t}</span></span>${ic('chev','i chev')}</button>`).join('')}
-  </div>${pie}</div>${nav('tramites')}`;
-
-V.comunidad = () => `<div class="top"><span class="brand"><i>G</i>Greenboard</span><h1>Comunidad</h1><p>Lo que pasa en la uni, según tus huecos</p></div>
-  <div class="cont">
-    <a class="uni" href="#/evento"><span class="ico">${ic('evento')}</span><span class="txt"><span class="t">${EVENTO.t}</span><span class="s">Hoy ${EVENTO.h} · ${EVENTO.lugar}</span></span>${S.apuntada?'<span class="tag ok">Apuntada</span>':ic('chev','i')}</a>
-    <div class="card lista">
-      <button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('uni')}</span><span class="txt"><span class="t">Torneo de ajedrez entre grados</span><span class="s">Jue 26 · 13:30 · Cafetería · ejemplo</span></span></button>
-      <button class="item" onclick="toast('Fuera del recorrido de la demo.')"><span class="ico info">${ic('uni')}</span><span class="txt"><span class="t">Grupo de estudio de Cálculo</span><span class="s">Mié 25 · 16:30 · Biblioteca · ejemplo</span></span></button>
-    </div>${pie}
-  </div>${nav('comunidad')}`;
+  if (!S.justificado){
+    if (r==='asig/aiii') return {n:3, t: S.archivo ? 'Justificante listo. Envíalo.' : 'Un 0 en rojo: faltó. Sube el justificante ahí mismo.', obj: S.archivo ? '#enviar' : '#fila-falta'};
+    return {n:3, t:'', ir:'#/asig/aiii'};
+  }
+  if (!S.com.apuntes){
+    if (r==='asig/aiii') return {n:4, t:'Hecho, sin pasar por Trámites. Ahora abre «Comunidad».', obj:'#tab-com'};
+    if (r==='com' || r==='com/apuntes') return {n:4, t:'Pide los apuntes de Análisis III a un alumno de 5.º.', obj:'#btn-apuntes'};
+    return {n:4, t:'', ir:'#/com'};
+  }
+  return {n:5, t:'Fin del recorrido: horario con cambios, entregas, asistencia con su justificante y comunidad.'};
+}
+function guiaHTML(){
+  if (!S.guia) return `<button class="btn guide-on" onclick="S.guia=true;guardar();render()">Guía de la demo</button>`;
+  const p = paso();
+  const txt = p.n===5 ? `${p.t} <a href="#" onclick="reiniciar();return false">Reiniciar</a>`
+            : p.t || `Fuera del recorrido. <a href="${p.ir}">Volver al paso ${p.n}</a>`;
+  return `<div class="guide" role="status"><b>${p.n===5?'Demo ✓':'Paso '+p.n+'/4'}</b><p>${txt}</p><button onclick="S.guia=false;guardar();render()">Ocultar</button></div>`;
+}
 
 /* ---------- Pintar ---------- */
 let toastT;
-function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
 
 function render(){
   const [r, arg] = ruta().split('/');
-  if(r!=='aviso' && !S.abierta){ S.abierta = true; guardar(); }   // entrar por un enlace directo cuenta como abrir la app
-  // La vista se pinta antes que la guía porque algunas vistas marcan progreso (vioClase, vioAsig)
-  const vista = (V[r] || V.hoy)(arg);
-  const app = document.getElementById('app');
-  app.innerHTML = guiaHTML() + `<div class="vista">${vista}</div>` + (S.guia ? '' : `<button class="guia-off" onclick="S.guia=true;guardar();render()">Guía de la demo</button>`);
-  if(S.guia){ const p = pasoGuia(); if(p.obj && p.rutas.includes(ruta())){ const el = app.querySelector(p.obj); if(el) el.classList.add('pulso'); } }
+  const vista = (V[r] || V.hoy)(arg);            // primero la vista: algunas marcan progreso
+  const act = V[r] ? r : 'hoy';
+  const vivas = DUE.filter(x => new Date(x.d) > new Date()).length;
+  document.getElementById('tabs').innerHTML = [
+    ['hoy','Hoy', `<span class="count">${TODAY.length}</span>`],
+    ['asig','Asignaturas', faltasPend() ? `<span class="count rojo" title="Faltas sin justificar">${faltasPend()}</span>` : `<span class="count">${SUBJECTS.length}</span>`],
+    ['ent','Entregas', `<span class="count">${vivas}</span>`],
+    ['tram','Trámites',''],
+    ['com','Comunidad','']
+  ].map(([k,t,c]) => `<a class="tab" id="tab-${k}" href="#/${k}" ${act===k?'aria-current="page"':''}>${t} ${c}</a>`).join('');
+  document.getElementById('view').innerHTML = vista + `<p class="note pie">Prototipo del MVP · asignaturas y entregas reales de Blackboard (26/10/2026); horario, aulas, asistencia y compañeros de ejemplo · no se conecta a ningún portal · <a href="#" onclick="reiniciar();return false">Reiniciar demo</a></p>`;
+  document.getElementById('guia').innerHTML = guiaHTML();
+  if (S.guia){ const p = paso(); if (p.obj){ const el = document.querySelector(p.obj); if (el){ el.classList.add('spot'); if (el.classList.contains('tab')) el.scrollIntoView({inline:'center', block:'nearest'}); } } }
+  const jf = document.getElementById('j-file');
+  if (jf) jf.addEventListener('change', () => { const f = jf.files[0]; if (f){ S.archivo = f.name; guardar(); render(); } });
 }
 window.addEventListener('hashchange', () => { render(); window.scrollTo(0,0); });
 render();
