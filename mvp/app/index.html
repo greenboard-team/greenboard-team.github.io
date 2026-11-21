@@ -8,6 +8,8 @@
      Inicio es un panel que no hace falta abandonar: barra inteligente (Ctrl+K o «/») con sugerencias en vivo,
      chips según la hora y tus datos, y los resultados se abren como tarjetas en el mismo Inicio.
      La falta sale como un 0 rojo en Asistencia y el justificante se sube en esa misma fila.
+     Asignaturas con pestañas (Contenido por temas y guía docente · Notas · Asistencia · Entregas · Chat),
+     Calificaciones (media ponderada) y Mensajes (chats de clase y de grupo, issue #43).
      Happy Path: greenboard/mvp/happy-path.md. Página estática, datos de ejemplo, no se conecta a ningún portal. -->
 <title>Greenboard · prototipo</title>
 <meta name="theme-color" content="#123B2C">
@@ -212,6 +214,53 @@ a.fila:hover{background:var(--bg)}
   .item{grid-template-columns:64px minmax(0,1fr) auto;gap:10px}
 }
 
+/* Pestañas dentro de una asignatura */
+.subnav{display:flex;gap:6px;overflow-x:auto;margin:4px 0 16px;padding-bottom:4px;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.subnav::-webkit-scrollbar{display:none}
+.subnav a{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:10px 12px;color:var(--muted);text-decoration:none;font-weight:700;font-size:15px;border-bottom:3px solid transparent;margin-bottom:-5px}
+.subnav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* Contenido por temas */
+.temas{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.tema{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tema summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-weight:700;list-style:none;min-height:48px}
+.tema summary::-webkit-details-marker{display:none}
+.tema summary>span:first-child{display:flex;align-items:center;gap:10px;min-width:0}
+.tema summary svg{color:var(--accent)}
+.tema summary::after{content:"›";color:var(--muted);font-size:20px;transition:transform .15s;margin-left:4px}
+.tema[open] summary::after{transform:rotate(90deg)}
+.tema[open] summary{border-bottom:1px solid var(--line)}
+.tema-c{padding:6px 10px 10px;display:flex;flex-direction:column;gap:2px}
+.mat{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;text-align:left;padding:10px 8px;border-radius:10px;font-size:15px;min-height:44px}
+.mat:hover{background:var(--bg)}
+.mat svg{color:var(--muted)}
+.mat span:first-of-type{flex:1;min-width:0}
+
+/* Calificaciones */
+.resumen-n{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.resumen-n .lbl{display:block;margin:0 0 4px}
+.media{font-family:var(--f-display);font-weight:800;font-size:36px;color:var(--accent);line-height:1}
+.media.sm{font-size:22px}
+.barra-n{height:8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin-top:6px}
+.barra-n span{display:block;height:100%;background:var(--accent);border-radius:999px}
+.fila-n{grid-template-columns:minmax(0,1fr) auto auto}
+.nota-n{font-family:var(--f-display);font-weight:800;font-size:20px;min-width:52px;text-align:right}
+.nota-n.pend{font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--muted)}
+.nota-n.baja{color:var(--late)}
+
+/* Mensajes */
+.fila-chat{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
+.fila-chat small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:min(50vh,380px);overflow-y:auto;padding:4px 2px 10px}
+.msg{max-width:85%;background:var(--bg);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px;align-self:flex-start}
+.msg b{display:block;font-size:13px;color:var(--accent)}
+.msg p{margin:2px 0}
+.msg small{display:block;font-size:11px;color:var(--muted);text-align:right}
+.msg.yo{align-self:flex-end;background:var(--ok-bg);border-color:transparent;border-radius:14px 14px 4px 14px}
+.enviarmsg{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.enviarmsg input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+.enviarmsg input:focus{outline:0;border-color:var(--accent)}
+
 /* Guía de la demo y avisos */
 .guide{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;width:min(560px,calc(100% - 24px));background:var(--board);color:var(--chalk);border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 1px rgba(233,242,228,.12)}
 .guide b{font-family:var(--f-mono);font-weight:500;font-size:12px;color:var(--lime);white-space:nowrap}
@@ -287,12 +336,69 @@ const COMUNIDAD = [
 const PADEL_HORAS = ["17:00","18:00","19:00","20:00"], PADEL_OCUPADAS = ["18:00"];
 const AULA_HORAS = ["10:00","12:00","14:00","16:00","18:00"];
 const AULAS_LIBRES = [{a:"Aula 104", cap:"30 plazas"},{a:"Aula 201", cap:"40 plazas"},{a:"Aula 003", cap:"12 plazas · con pizarra"}];
+/* Contenido de cada asignatura, ordenado por tema como en Blackboard pero limpio.
+   Reales: los títulos de Proyectos III (Proyecto Q1) y «Grupos 7 · Homomorfismos.pdf». El resto, de ejemplo.
+   La guía docente va siempre primero; su evaluación sale de NOTAS. */
+const CONTENIDO = {
+  opti:[{u:'Tema 1 · Programación lineal', items:[{t:'Apuntes · Tema 1.pdf'},{t:'Ejercicios · Tema 1.pdf'}]},
+        {u:'Tema 2 · Método símplex', items:[{t:'Apuntes · Tema 2.pdf'},{t:'Ejercicios · Tema 2.pdf'},{t:'Entregables 1 · enunciado', tipo:'enunciado'}]},
+        {u:'Tema 3 · Dualidad', items:[{t:'Apuntes · Tema 3.pdf', nuevo:true}]}],
+  psdi:[{u:'Tema 1 · Introducción a los sistemas distribuidos', items:[{t:'Transparencias · Tema 1.pdf'}]},
+        {u:'Tema 2 · Sockets y RPC', items:[{t:'Transparencias · Tema 2.pdf'},{t:'Código de ejemplo', tipo:'enlace'}]},
+        {u:'Prácticas', items:[{t:'Práctica 1 · enunciado', tipo:'enunciado'}]}],
+  aaui:[{u:'Tema 1 · Regresión', items:[{t:'Apuntes · Regresión.pdf'},{t:'Notebook · Regresión lineal', tipo:'enlace'}]},
+        {u:'Tema 2 · Clasificación', items:[{t:'Apuntes · Clasificación.pdf'}]},
+        {u:'Proyectos', items:[{t:'Proyecto I: Gemstone prices · enunciado', tipo:'enunciado'}]}],
+  pro3:[{u:'Proyecto Q1', items:[{t:'SPRINT 1 - Presentación 10 min', tipo:'enunciado'},{t:'SPRINT 2 - Presentación de 7 min', tipo:'enunciado'}]},
+        {u:'Recursos', items:[{t:'Normas de los sprints.pdf'}]}],
+  esal:[{u:'Tema 1 · Grupos', items:[{t:'Grupos 6 · Subgrupos normales.pdf'},{t:'Grupos 7 · Homomorfismos.pdf', nuevo:true}]},
+        {u:'Tema 2 · Anillos', items:[{t:'Disponible a partir del tema 2', tipo:'pronto'}]}],
+  aiii:[{u:'Tema 1 · Sucesiones y series de funciones', items:[{t:'Apuntes · Tema 1.pdf'},{t:'Hoja de problemas 1.pdf'}]},
+        {u:'Tema 2 · Integrales de línea', items:[{t:'Apuntes · Tema 2.pdf'},{t:'Hoja de problemas 2.pdf'}]},
+        {u:'Tema 3 · Integrales de superficie', items:[{t:'Apuntes · Tema 3.pdf', nuevo:true}]}],
+  isof:[{u:'Tema 1 · Procesos de desarrollo', items:[{t:'Transparencias · Tema 1.pdf'}]},
+        {u:'Tema 2 · Requisitos', items:[{t:'Transparencias · Tema 2.pdf', nuevo:true},{t:'Plantilla de requisitos.docx'}]}]
+};
+/* Calificaciones de ejemplo: cada asignatura con sus partes, su peso (%) y la nota si ya está publicada */
+const NOTAS = {
+  opti:[{t:'Entregables 1', p:20, n:7.8},{t:'Entregables 2', p:20, n:null},{t:'Examen parcial', p:20, n:6.5},{t:'Examen final', p:40, n:null}],
+  psdi:[{t:'Práctica 1', p:25, n:8.5},{t:'Práctica 2', p:25, n:null},{t:'Examen', p:50, n:null}],
+  aaui:[{t:'Proyecto I: Gemstone prices', p:30, n:9.0},{t:'Proyecto II', p:30, n:null},{t:'Examen', p:40, n:null}],
+  pro3:[{t:'SPRINT 1 · Presentación 10 min', p:15, n:8.0},{t:'SPRINT 2 · Presentación de 7 min', p:15, n:null},{t:'SPRINT 3', p:15, n:null},{t:'Proyecto final', p:55, n:null}],
+  esal:[{t:'Participación', p:10, n:null},{t:'Examen parcial', p:30, n:5.5},{t:'Examen final', p:60, n:null}],
+  aiii:[{t:'Asistencia', p:10, n:8.0, nuevo:true},{t:'Examen parcial', p:30, n:6.8},{t:'Examen final', p:60, n:null}],
+  isof:[{t:'Práctica 1', p:30, n:7.0},{t:'Examen', p:70, n:null}]
+};
+/* Chats de clase (idea del issue #43): uno por asignatura o por grupo. Personas y mensajes de ejemplo */
+const CHATS = [
+  {id:'pro3', s:'pro3', t:'Proyectos III · clase', n:28, sinLeer:2, msgs:[
+    {de:'Marta', h:'10:12', txt:'¿Alguien sabe si el Sprint 3 también es una presentación?'},
+    {de:'Álex', h:'10:15', txt:'Creo que sí, lo dijeron en clase el martes.'},
+    {de:'Marta', h:'10:16', txt:'Ok, gracias. Y el lunes estamos en el aula 112, no en la 003.'}]},
+  {id:'aiii', s:'aiii', t:'Análisis Matemático III · clase', n:41, sinLeer:1, msgs:[
+    {de:'Lucía', h:'ayer', txt:'¿Alguien tiene resuelto el ejercicio 4 de la hoja 2?'},
+    {de:'Iván', h:'09:40', txt:'Ya han subido los apuntes del tema 3.'}]},
+  {id:'psdi-g', s:'psdi', t:'Grupo de prácticas · PSDI', n:3, sinLeer:0, msgs:[
+    {de:'Sara', h:'jue', txt:'Yo hago la parte del servidor de la práctica 2.'},
+    {de:'Tú', h:'jue', txt:'Perfecto, yo el cliente.', yo:true}]},
+  {id:'repaso', t:'Repaso de Optimización', n:9, sinLeer:0, msgs:[
+    {de:'Organiza: alumno de 5.º', h:'lun', txt:'El jueves a las 18:00 repasamos el método símplex. Traed dudas.'}]}
+];
 const subj = id => SUBJECTS.find(s => s.id===id);
 const corto = s => s.n.split(':')[0];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Media de lo ya publicado (ponderada) y nota acumulada sobre 10 */
+function media(id){
+  const l = NOTAS[id] || [], hechas = l.filter(x => x.n!=null), peso = hechas.reduce((a,x) => a+x.p, 0);
+  return {media: peso ? hechas.reduce((a,x) => a+x.n*x.p, 0)/peso : null, evaluado: peso, acumulada: hechas.reduce((a,x) => a+x.n*x.p, 0)/100};
+}
+const num = n => n==null ? '–' : n.toLocaleString('es-ES',{minimumFractionDigits:1, maximumFractionDigits:1});
+const sinLeer = () => CHATS.reduce((a,c) => a + (S.leidos[c.id] ? 0 : c.sinLeer), 0);
 
 /* ---------- Estado de la demo (sesión del navegador, si se puede) ---------- */
 const INI = {archivo:null, justificado:false, com:{}, mat:false, guia:true, avisoCerrado:false,
-             abiertas:[], padel:{dia:null, hora:null, hecho:null}, aula:{dia:'hoy', hora:'16:00', hecho:null}, usoBarra:false};
+             abiertas:[], padel:{dia:null, hora:null, hecho:null}, aula:{dia:'hoy', hora:'16:00', hecho:null}, usoBarra:false,
+             chats:{}, leidos:{}};
 let S = JSON.parse(JSON.stringify(INI));
 try{ Object.assign(S, JSON.parse(sessionStorage.getItem('gb-mvp2')||'{}')); }catch(e){}
 const guardar = () => { try{ sessionStorage.setItem('gb-mvp2', JSON.stringify(S)); }catch(e){} };
@@ -338,15 +444,22 @@ const ACCIONES = [
   {id:'entregas', tipo:'Entregas', t:'Próximas entregas', s:'Todas tus asignaturas, por fecha', ico:'doc', k:'entregas entrega deberes practica tareas'},
   {id:'matricula', tipo:'Trámite', t:'Ver matrícula firmada', s:'Matrícula 2026/27', ico:'doc', k:'matricula certificado documento'},
   ...COMUNIDAD.map(c => ({id:'com-'+c.id, tipo:'Comunidad', t:c.t, s:c.s, ico:'uni', k:'comunidad apuntes repaso apoyo companeros ' + c.t})),
-  ...SUBJECTS.map(s => ({id:'asig-'+s.id, tipo:'Asignatura', t:s.n, s:s.c, ico:'libro', k:s.n + ' asignatura'}))
+  ...SUBJECTS.map(s => ({id:'asig-'+s.id, tipo:'Asignatura', t:s.n, s:s.c, ico:'libro', k:s.n + ' asignatura'})),
+  {id:'notas', tipo:'Notas', t:'Mis calificaciones', s:'Media de cada asignatura', ico:'asis', k:'notas calificaciones media nota examen aprobado', prio:12},
+  ...SUBJECTS.map(s => ({id:'notas-'+s.id, tipo:'Notas', t:'Notas de '+corto(s), s:'Media '+num(media(s.id).media)+' · evaluado '+media(s.id).evaluado+' %', ico:'asis', k:'notas calificaciones media '+s.n})),
+  {id:'mensajes', tipo:'Mensajes', t:'Mensajes', s:'Chats de clase y de grupo', ico:'uni', k:'mensajes chat chats clase grupo hablar escribir', prio:12},
+  ...CHATS.map(c => ({id:'chat-'+c.id, tipo:'Chat', t:c.t, s:c.n+' personas', ico:'uni', k:'chat mensajes '+c.t})),
+  ...SUBJECTS.map(s => ({id:'cont-'+s.id, tipo:'Contenido', t:'Guía docente de '+corto(s), s:'Contenido por temas', ico:'libro', k:'guia docente contenido temas materiales '+s.n})),
+  ...SUBJECTS.flatMap(s => (CONTENIDO[s.id]||[]).flatMap(u => u.items.filter(x => x.tipo!=='pronto').map(x => ({id:'cont-'+s.id, tipo:'Material', t:x.t, s:corto(s)+' · '+u.u, ico:'doc', k:'apuntes material pdf '+u.u+' '+x.t}))))
 ];
 const VACIAS = new Set(['el','la','los','las','de','del','a','al','un','una','para','me','mi','quiero','en','y','por','favor','reservar','reserva','ver','las','hoy','manana','viernes','lunes','martes','miercoles','jueves','sabado','domingo','tarde','manana']);
 /* Puntúa cada acción con las palabras escritas; entiende frases como «reservar pádel viernes a las 19» */
 function buscar(q){
-  const nq = norm(q).trim(); if (!nq) return [];
+  const limpia = s => norm(s).replace(/[·:]/g,' ').replace(/\s+/g,' ').trim();
+  const nq = limpia(q); if (!nq) return [];
   const palabras = nq.split(/\s+/).filter(w => w && !VACIAS.has(w) && !/^\d/.test(w));
   return ACCIONES.map(a => {
-    const nt = norm(a.t), nk = norm(a.k + ' ' + a.t);
+    const nt = limpia(a.t), nk = norm(a.k + ' ' + a.t);
     let p = 0;
     if (nt.startsWith(nq)) p += 6;
     if (nt.includes(nq)) p += 3;
@@ -354,7 +467,7 @@ function buscar(q){
     for (const w of palabras){ if (toks.some(t => t.startsWith(w))) p += 4; else if (nk.includes(w)) p += 2; }
     if (!palabras.length && /reserv/.test(nq) && a.tipo==='Reserva') p += 3;
     return {a, p};
-  }).filter(x => x.p > 0).sort((x,y) => y.p - x.p).slice(0,6).map(x => x.a);
+  }).filter(x => x.p > 0).map(x => ({a:x.a, p:x.p + (palabras.length <= 1 ? (x.a.prio||0) : 0)})).sort((x,y) => y.p - x.p).slice(0,6).map(x => x.a);
 }
 function parametros(q){
   const n = norm(q), r = {};
@@ -379,6 +492,8 @@ function chips(){
   out.push({id:'padel', t: vie && ahora.getHours() >= 12 ? 'Reservar pádel esta tarde' : 'Reservar pádel el viernes', ico:'padel', q: vie ? 'pádel hoy' : 'pádel viernes'});
   out.push({id:'aula', t:'Reservar aula para estudiar', ico:'aula'});
   if (!S.com.apuntes) out.push({id:'com-apuntes', t:'Apuntes de Análisis III', ico:'uni', por:'comunidad'});
+  if (sinLeer()) out.push({id:'mensajes', t:`Mensajes · ${sinLeer()} sin leer`, ico:'uni'});
+  out.push({id:'notas-aiii', t:'Nota nueva: Asistencia', ico:'asis', por:'Análisis III'});
   return out;
 }
 
@@ -440,10 +555,16 @@ function tarjetaAsig(s){
      <div class="lbl" style="margin-top:12px">Entregas</div>${ents.length ? entregas(ents) : '<p class="note" style="margin:4px 0 0">No hay entregas publicadas.</p>'}
      <p style="margin:10px 0 0"><a class="vermas" href="#/asig/${s.id}">Ver asignatura →</a></p>`;
 }
+T.notas = () => cab('notas','asis','Calificaciones','Media de lo publicado · notas de ejemplo') +
+  SUBJECTS.map(s => { const m = media(s.id); return `<a class="fila fila-e" href="#/asig/${s.id}/notas"><span class="ic">${ic('libro')}</span><div><b>${s.n}</b><small>Evaluado ${m.evaluado} %${(NOTAS[s.id]||[]).some(x=>x.nuevo)?' · nota nueva':''}</small></div><b class="media sm">${num(m.media)}</b></a>`; }).join('');
+T.mensajes = () => cab('mensajes','uni','Mensajes', sinLeer() ? `${sinLeer()} sin leer` : 'Chats de clase y de grupo') + listaChats(true);
 function tarjeta(id){
   let html = '';
   if (T[id]) html = T[id]();
   else if (id.startsWith('com-')) html = tarjetaCom(COMUNIDAD.find(c => 'com-'+c.id===id));
+  else if (id.startsWith('notas-')){ const s = subj(id.slice(6)); html = cab(id,'asis','Notas · '+corto(s), s.c) + notasTabla(s.id) + `<p style="margin:10px 0 0"><a class="vermas" href="#/asig/${s.id}/notas">Ver asignatura →</a></p>`; }
+  else if (id.startsWith('cont-')){ const s = subj(id.slice(5)); html = cab(id,'libro','Contenido · '+corto(s), 'Por temas, con la guía docente') + `<div class="temas">${contenido(s.id)}</div>`; }
+  else if (id.startsWith('chat-')){ const c = CHATS.find(x => 'chat-'+x.id===id); S.leidos[c.id] = true; html = cab(id,'uni',c.t,`${c.n} personas · chat de ejemplo`) + chatHTML(c.id,'tarj'); }
   else if (id.startsWith('asig-')) html = tarjetaAsig(subj(id.slice(5)));
   return `<section class="tarj accion ancho" id="a-${id}">${html}</section>`;
 }
@@ -468,6 +589,47 @@ function asistencia(id, soloFalta){
         <div class="fila-b"><button class="btn enviar" ${S.archivo?'':'disabled'} onclick="enviarJust()">Enviar justificante</button>${S.archivo?'':'<button class="linkbtn" onclick="ejemplo()">Usar un justificante de ejemplo</button>'}</div>
       </div></div>`;
   }).join('')}</div>`;
+}
+
+/* Contenido por temas: la guía docente primero (con su evaluación), luego cada tema plegable */
+const TIPO_IC = {enunciado:'doc', enlace:'chispa', pronto:'reloj'};
+function contenido(id){
+  const s = subj(id), evalua = (NOTAS[id]||[]).map(x => `${esc(x.t)} ${x.p} %`).join(' · ');
+  const guia = `<details class="tema" open><summary><span>${ic('libro')}Guía docente 2026/27</span><span class="note">evaluación</span></summary>
+    <div class="tema-c"><button class="mat" onclick="abrirDoc()">${ic('doc')}<span>Guía docente · ${esc(corto(s))}.pdf</span></button>
+    <p class="note" style="margin:6px 0 0"><b>Evaluación:</b> ${evalua}</p></div></details>`;
+  const abierto = Math.max(0, (CONTENIDO[id]||[]).findIndex(u => u.items.some(x => x.nuevo)));
+  return guia + (CONTENIDO[id]||[]).map((u,i) => `<details class="tema" ${i===abierto?'open':''}><summary><span>${ic('cal')}${esc(u.u)}</span><span class="note">${u.items.filter(x => x.tipo!=='pronto').length || ''}${u.items.some(x => x.nuevo)?' <span class="pill ok">nuevo</span>':''}</span></summary>
+    <div class="tema-c">${u.items.map(x => x.tipo==='pronto' ? `<p class="note" style="margin:4px 0">${esc(x.t)}</p>`
+      : `<button class="mat" onclick="abrirDoc()">${ic(TIPO_IC[x.tipo]||'doc')}<span>${esc(x.t)}</span>${x.nuevo?'<span class="pill ok">nuevo</span>':''}</button>`).join('')}</div></details>`).join('');
+}
+function abrirDoc(){ toast('En la app real se abre el archivo de Blackboard.'); }
+function notasTabla(id){
+  const l = NOTAS[id]||[], m = media(id);
+  return `<div class="resumen-n"><div><span class="lbl">Media actual</span><b class="media">${num(m.media)}</b></div>
+    <div style="flex:1;min-width:140px"><span class="lbl">Evaluado ${m.evaluado} % · acumulado ${num(m.acumulada)} / 10</span><div class="barra-n"><span style="width:${m.evaluado}%"></span></div></div></div>
+    ${l.map(x => `<div class="fila fila-n"><div><b>${esc(x.t)}</b><small>Peso ${x.p} %</small></div>${x.nuevo?'<span class="pill ok">nueva</span>':'<span></span>'}<span class="nota-n ${x.n==null?'pend':x.n<5?'baja':''}">${x.n==null?'pendiente':num(x.n)}</span></div>`).join('')}`;
+}
+function chatMsgs(c){
+  const todos = [...c.msgs, ...(S.chats[c.id]||[])];
+  return todos.map(m => `<div class="msg ${m.yo?'yo':''}">${m.yo?'':`<b>${esc(m.de)}</b>`}<p>${esc(m.txt)}</p><small>${esc(m.h)}</small></div>`).join('');
+}
+function chatHTML(id, donde){
+  const c = CHATS.find(x => x.id===id); if (!c) return '';
+  return `<div class="chat" id="chat-${donde}-${id}">${chatMsgs(c)}</div>
+    <form class="enviarmsg" onsubmit="enviarMsg('${id}','${donde}');return false"><input id="in-${donde}-${id}" autocomplete="off" placeholder="Escribe un mensaje" aria-label="Mensaje para ${esc(c.t)}"><button class="btn sm" aria-label="Enviar">Enviar</button></form>`;
+}
+function enviarMsg(id, donde){
+  const i = document.getElementById(`in-${donde}-${id}`); const txt = i && i.value.trim(); if (!txt) return;
+  const h = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  (S.chats[id] = S.chats[id] || []).push({de:'Tú', h, txt, yo:true}); S.leidos[id] = true; guardar(); pintar();
+  const n = document.getElementById(`in-${donde}-${id}`); if (n) n.focus();
+  const box = document.getElementById(`chat-${donde}-${id}`); if (box) box.scrollTop = box.scrollHeight;
+}
+function listaChats(enTarjeta){
+  return CHATS.map(c => { const nl = S.leidos[c.id] ? 0 : c.sinLeer, ult = [...c.msgs, ...(S.chats[c.id]||[])].slice(-1)[0];
+    const accion = enTarjeta ? `onclick="abrir('chat-${c.id}')"` : `onclick="location.hash='#/msg/${c.id}'"`;
+    return `<button class="fila fila-e fila-chat" ${accion}><span class="ic">${ic('uni')}</span><div><b>${esc(c.t)}</b><small>${ult.yo?'Tú: ':esc(ult.de)+': '}${esc(ult.txt)}</small></div>${nl?`<span class="pill late">${nl}</span>`:`<span class="note">${c.n} pers.</span>`}</button>`; }).join('');
 }
 
 /* ---------- Pantallas ---------- */
@@ -495,19 +657,44 @@ V.inicio = () => {
   </div>`;
 };
 
-V.asig = (id) => {
+/* Ficha de asignatura con pestañas: Contenido · Notas · Asistencia · Entregas · Chat (#/asig/<id>/<pestaña>) */
+const SUBTABS = [['contenido','Contenido'],['notas','Notas'],['asistencia','Asistencia'],['entregas','Entregas'],['chat','Chat']];
+V.asig = (id, sub) => {
   if (id){
     const s = subj(id); if (!s) return V.asig();
     const l = ses(id), pres = l.filter(x => x.v).length;
+    const falta = id==='aiii' && !S.justificado;
+    sub = sub || (falta ? 'asistencia' : 'contenido');
+    const chat = CHATS.find(c => c.s===id);
+    if (sub==='chat' && chat){ S.leidos[chat.id] = true; guardar(); }
+    const tabs = `<nav class="subnav" aria-label="Secciones de la asignatura">${SUBTABS.map(([k,t]) => `<a href="#/asig/${id}/${k}" ${sub===k?'aria-current="page"':''}>${t}${k==='asistencia'&&falta?' <span class="pill late">0</span>':''}${k==='notas'&&(NOTAS[id]||[]).some(x=>x.nuevo)?' <span class="pill ok">nueva</span>':''}</a>`).join('')}</nav>`;
+    let cuerpo = '';
+    if (sub==='contenido') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Contenido</h3><span class="demo-flag">ordenado por temas</span></div><div class="temas">${contenido(id)}</div>`;
+    else if (sub==='notas') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Calificaciones</h3><span class="demo-flag">notas de ejemplo</span></div><div class="tarj" style="margin-top:10px">${notasTabla(id)}</div>`;
+    else if (sub==='asistencia') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Asistencia</h3><span class="demo-flag">asistencia de ejemplo</span></div>
+      <p><span class="pill ${pres===l.length?'ok':'late'}">${pres} de ${l.length} sesiones</span></p>${asistencia(id, false)}`;
+    else if (sub==='entregas') cuerpo = `<h3 class="sub">Entregas</h3><div class="tarj">${DUE.some(x => x.s===id) ? entregas(DUE.filter(x => x.s===id)) : '<p class="note" style="margin:0">No hay entregas publicadas.</p>'}</div>`;
+    else cuerpo = chat ? `<div class="row"><h3 class="sub" style="margin:0">${esc(chat.t)}</h3><span class="note">${chat.n} personas</span></div><div class="tarj" style="margin-top:10px">${chatHTML(chat.id,'asig')}</div>`
+                       : `<p class="note">Esta asignatura todavía no tiene chat de clase.</p>`;
     return `<a class="atras" href="#/asig">‹ Mis asignaturas</a>
     <div class="ficha"><h3>${s.n}</h3><div class="code">${s.c}</div>${s.p?`<p class="note" style="margin:0">Profesor: ${s.p}</p>`:''}</div>
-    <div class="row"><h3 class="sub" style="margin:0">Asistencia</h3><span class="demo-flag">asistencia de ejemplo</span></div>
-    <p><span class="pill ${pres===l.length?'ok':'late'}">${pres} de ${l.length} sesiones</span></p>
-    ${asistencia(id, false)}
-    <h3 class="sub">Entregas</h3><div class="tarj">${DUE.some(x => x.s===id) ? entregas(DUE.filter(x => x.s===id)) : '<p class="note" style="margin:0">No hay entregas publicadas.</p>'}</div>`;
+    ${tabs}${cuerpo}`;
   }
   return `<div class="row"><h3>Mis asignaturas</h3><span class="note">7 asignaturas · datos de Blackboard</span></div>
   <div class="cards">${SUBJECTS.map(s => `<a class="card" href="#/asig/${s.id}"><h4>${s.n}</h4><div class="code">${s.c}</div>${s.p?`<p class="note" style="margin:8px 0 0">Profesor: ${s.p}</p>`:''}${s.last?`<p class="note" style="margin:8px 0 0">${s.last}</p>`:''}${s.id==='aiii'&&!S.justificado?'<p style="margin:8px 0 0"><span class="pill late">1 falta sin justificar</span></p>':''}</a>`).join('')}</div>`;
+};
+V.notas = () => `<div class="row"><h3>Calificaciones</h3><span class="demo-flag">notas de ejemplo</span></div>
+  <p class="note">Media de lo ya publicado, ponderada por el peso de cada parte en la guía docente.</p>
+  <div class="cards">${SUBJECTS.map(s => { const m = media(s.id), nueva = (NOTAS[s.id]||[]).some(x => x.nuevo);
+    return `<a class="card" href="#/asig/${s.id}/notas"><div class="row" style="align-items:center"><h4 style="flex:1">${s.n}</h4><b class="media sm">${num(m.media)}</b></div>
+      <div class="barra-n"><span style="width:${m.evaluado}%"></span></div><p class="note" style="margin:6px 0 0">Evaluado ${m.evaluado} %${nueva?' · <span class="pill ok">nota nueva</span>':''}</p></a>`; }).join('')}</div>`;
+V.msg = (id) => {
+  const c = id && CHATS.find(x => x.id===id);
+  if (c){ S.leidos[c.id] = true; guardar();
+    return `<a class="atras" href="#/msg">‹ Mensajes</a><div class="row"><h3>${esc(c.t)}</h3><span class="note">${c.n} personas${c.s?` · <a href="#/asig/${c.s}">ver asignatura</a>`:''}</span></div>
+      <div class="tarj" style="margin-top:12px">${chatHTML(c.id,'msg')}</div><p class="note">Chat de ejemplo: tus mensajes se quedan en este navegador.</p>`; }
+  return `<div class="row"><h3>Mensajes</h3><span class="demo-flag">chats de ejemplo</span></div>
+    <p class="note">Un chat por asignatura y por grupo de trabajo.</p><div class="tarj" style="margin-top:12px">${listaChats(false)}</div>`;
 };
 V.ent = () => `<div class="row"><h3>Entregas</h3><span class="note">Todas tus asignaturas, por fecha</span></div>
   <div class="list">${DUE.map(x => `<a class="item" href="#/asig/${x.s}"><time>${fmt.format(new Date(x.d))} · ${fmtH.format(new Date(x.d))}</time><div class="what">${x.t}<small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('')}</div>`;
@@ -564,7 +751,7 @@ document.addEventListener('keydown', e => {
 function paso(){
   const r = ruta();
   if (!S.justificado){
-    if (r!=='inicio' && r!=='asig/aiii') return {n:1, ir:'#/inicio'};
+    if (r!=='inicio' && !r.startsWith('asig/aiii')) return {n:1, ir:'#/inicio'};
     if (!S.archivo) return {n:1, t:'Inicio: el aula nueva ya está en el horario. Y un 0 en rojo: sube el justificante ahí mismo.', obj:'.fila-falta'};
     return {n:1, t:'Justificante listo. Envíalo.', obj:'.enviar'};
   }
@@ -590,16 +777,20 @@ function guiaHTML(){
 let toastT;
 function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
 function pintar(){
-  const [r, arg] = ruta().split('/');
+  const [r, arg, sub] = ruta().split('/');
   const act = V[r] ? r : 'inicio';
   const vivas = DUE.filter(x => new Date(x.d) > new Date()).length;
   document.getElementById('tabs').innerHTML = [
     ['inicio','Inicio',''],
     ['asig','Asignaturas', S.justificado ? `<span class="count">${SUBJECTS.length}</span>` : '<span class="count rojo" title="Faltas sin justificar">1</span>'],
+    ['notas','Calificaciones',''],
     ['ent','Entregas', `<span class="count">${vivas}</span>`],
+    ['msg','Mensajes', sinLeer() ? `<span class="count rojo" title="Sin leer">${sinLeer()}</span>` : ''],
     ['tram','Trámites',''], ['com','Comunidad','']
   ].map(([k,t,c]) => `<a class="tab" id="tab-${k}" href="#/${k}" ${act===k?'aria-current="page"':''}>${t} ${c}</a>`).join('');
-  document.getElementById('view').innerHTML = V[act](arg) + `<p class="note pie">Prototipo del MVP · asignaturas y entregas reales de Blackboard (26/10/2026); horario, aulas, asistencia, compañeros y reservas de ejemplo · no se conecta a ningún portal · <a href="#" onclick="reiniciar();return false">Reiniciar demo</a></p>`;
+  const vista = V[act](arg, sub);   // la vista primero: abrir un chat lo marca como leído
+  document.getElementById('tabs').querySelectorAll('#tab-msg .count').forEach(e => { if (!sinLeer()) e.remove(); else e.textContent = sinLeer(); });
+  document.getElementById('view').innerHTML = vista + `<p class="note pie">Prototipo del MVP · asignaturas y entregas reales de Blackboard (26/10/2026); horario, aulas, asistencia, contenido, notas, chats, compañeros y reservas de ejemplo · no se conecta a ningún portal · <a href="#" onclick="reiniciar();return false">Reiniciar demo</a></p>`;
   document.getElementById('guia').innerHTML = guiaHTML();
   if (S.guia){ const p = paso(); if (p.obj){ const el = document.querySelector(p.obj); if (el) el.classList.add('spot'); } }
   document.querySelectorAll('.j-file').forEach(jf => jf.addEventListener('change', () => { const f = jf.files[0]; if (f){ S.archivo = f.name; guardar(); pintar(); } }));
