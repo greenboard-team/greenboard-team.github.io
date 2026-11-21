@@ -378,7 +378,7 @@ const CHATS = [
   {id:'aiii', s:'aiii', t:'Análisis Matemático III · clase', n:41, sinLeer:1, msgs:[
     {de:'Lucía', h:'ayer', txt:'¿Alguien tiene resuelto el ejercicio 4 de la hoja 2?'},
     {de:'Iván', h:'09:40', txt:'Ya han subido los apuntes del tema 3.'}]},
-  {id:'psdi-g', s:'psdi', t:'Grupo de prácticas · PSDI', n:3, sinLeer:0, msgs:[
+  {id:'psdi-g', s:'psdi', grupo:true, t:'Grupo de prácticas · PSDI', n:3, sinLeer:0, msgs:[
     {de:'Sara', h:'jue', txt:'Yo hago la parte del servidor de la práctica 2.'},
     {de:'Tú', h:'jue', txt:'Perfecto, yo el cliente.', yo:true}]},
   {id:'repaso', t:'Repaso de Optimización', n:9, sinLeer:0, msgs:[
@@ -386,6 +386,9 @@ const CHATS = [
 ];
 const subj = id => SUBJECTS.find(s => s.id===id);
 const corto = s => s.n.split(':')[0];
+/* Toda asignatura tiene su chat de clase (id = id de la asignatura); los que no tienen mensajes de ejemplo arrancan con uno de bienvenida */
+SUBJECTS.forEach(s => { if (!CHATS.some(c => c.id===s.id)) CHATS.push({id:s.id, s:s.id, t:corto(s)+' · clase', n:30, sinLeer:0,
+  msgs:[{de:'Delegación de clase', h:'lun', txt:`Chat de la clase de ${corto(s)}: dudas, avisos y material.`}]}); });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* Media de lo ya publicado (ponderada) y nota acumulada sobre 10 */
 function media(id){
@@ -575,7 +578,7 @@ function horario(){
 }
 function entregas(lista){
   const fut = lista.filter(x => new Date(x.d) > new Date()), pas = lista.filter(x => new Date(x.d) <= new Date()).reverse();
-  return [...fut, ...pas].slice(0,4).map(x => `<a class="fila fila-e" href="#/asig/${x.s}"><span class="ic">${ic('doc')}</span><div><b>${x.t}</b><small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('');
+  return [...fut, ...pas].slice(0,4).map(x => `<a class="fila fila-e" href="#/asig/${x.s}/entregas"><span class="ic">${ic('doc')}</span><div><b>${x.t}</b><small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('');
 }
 function asistencia(id, soloFalta){
   const l = ses(id);
@@ -597,7 +600,7 @@ function contenido(id){
   const s = subj(id), evalua = (NOTAS[id]||[]).map(x => `${esc(x.t)} ${x.p} %`).join(' · ');
   const guia = `<details class="tema" open><summary><span>${ic('libro')}Guía docente 2026/27</span><span class="note">evaluación</span></summary>
     <div class="tema-c"><button class="mat" onclick="abrirDoc()">${ic('doc')}<span>Guía docente · ${esc(corto(s))}.pdf</span></button>
-    <p class="note" style="margin:6px 0 0"><b>Evaluación:</b> ${evalua}</p></div></details>`;
+    <p class="note" style="margin:6px 0 0"><b>Evaluación:</b> ${evalua} <span class="demo-flag">pesos de ejemplo</span></p></div></details>`;
   const abierto = Math.max(0, (CONTENIDO[id]||[]).findIndex(u => u.items.some(x => x.nuevo)));
   return guia + (CONTENIDO[id]||[]).map((u,i) => `<details class="tema" ${i===abierto?'open':''}><summary><span>${ic('cal')}${esc(u.u)}</span><span class="note">${u.items.filter(x => x.tipo!=='pronto').length || ''}${u.items.some(x => x.nuevo)?' <span class="pill ok">nuevo</span>':''}</span></summary>
     <div class="tema-c">${u.items.map(x => x.tipo==='pronto' ? `<p class="note" style="margin:4px 0">${esc(x.t)}</p>`
@@ -664,12 +667,12 @@ V.asig = (id, sub) => {
     const s = subj(id); if (!s) return V.asig();
     const l = ses(id), pres = l.filter(x => x.v).length;
     const falta = id==='aiii' && !S.justificado;
-    sub = sub || (falta ? 'asistencia' : 'contenido');
-    const chat = CHATS.find(c => c.s===id);
+    if (!SUBTABS.some(([k]) => k===sub)) sub = falta ? 'asistencia' : 'contenido';
+    const chat = CHATS.find(c => c.id===id);
     if (sub==='chat' && chat){ S.leidos[chat.id] = true; guardar(); }
     const tabs = `<nav class="subnav" aria-label="Secciones de la asignatura">${SUBTABS.map(([k,t]) => `<a href="#/asig/${id}/${k}" ${sub===k?'aria-current="page"':''}>${t}${k==='asistencia'&&falta?' <span class="pill late">0</span>':''}${k==='notas'&&(NOTAS[id]||[]).some(x=>x.nuevo)?' <span class="pill ok">nueva</span>':''}</a>`).join('')}</nav>`;
     let cuerpo = '';
-    if (sub==='contenido') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Contenido</h3><span class="demo-flag">ordenado por temas</span></div><div class="temas">${contenido(id)}</div>`;
+    if (sub==='contenido') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Contenido</h3><span class="demo-flag">contenido de ejemplo · por temas</span></div><div class="temas">${contenido(id)}</div>`;
     else if (sub==='notas') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Calificaciones</h3><span class="demo-flag">notas de ejemplo</span></div><div class="tarj" style="margin-top:10px">${notasTabla(id)}</div>`;
     else if (sub==='asistencia') cuerpo = `<div class="row"><h3 class="sub" style="margin:0">Asistencia</h3><span class="demo-flag">asistencia de ejemplo</span></div>
       <p><span class="pill ${pres===l.length?'ok':'late'}">${pres} de ${l.length} sesiones</span></p>${asistencia(id, false)}`;
@@ -697,7 +700,7 @@ V.msg = (id) => {
     <p class="note">Un chat por asignatura y por grupo de trabajo.</p><div class="tarj" style="margin-top:12px">${listaChats(false)}</div>`;
 };
 V.ent = () => `<div class="row"><h3>Entregas</h3><span class="note">Todas tus asignaturas, por fecha</span></div>
-  <div class="list">${DUE.map(x => `<a class="item" href="#/asig/${x.s}"><time>${fmt.format(new Date(x.d))} · ${fmtH.format(new Date(x.d))}</time><div class="what">${x.t}<small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('')}</div>`;
+  <div class="list">${DUE.map(x => `<a class="item" href="#/asig/${x.s}/entregas"><time>${fmt.format(new Date(x.d))} · ${fmtH.format(new Date(x.d))}</time><div class="what">${x.t}<small>${subj(x.s).n}</small></div>${pill(x.d)}</a>`).join('')}</div>`;
 V.tram = () => `<div class="row"><h3>Trámites</h3><span class="demo-flag">simulado: no se envía nada</span></div>
   <div class="aviso"><p>Los justificantes de faltas se suben en <b>Asistencia</b>, junto a la falta. Las reservas de aulas, desde la barra de Inicio. <a href="#/inicio">Ir a Inicio</a></p></div>
   <h3 class="sub">Matrícula firmada</h3>
@@ -778,7 +781,7 @@ let toastT;
 function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
 function pintar(){
   const [r, arg, sub] = ruta().split('/');
-  const act = V[r] ? r : 'inicio';
+  const act = Object.prototype.hasOwnProperty.call(V, r) ? r : 'inicio';
   const vivas = DUE.filter(x => new Date(x.d) > new Date()).length;
   document.getElementById('tabs').innerHTML = [
     ['inicio','Inicio',''],
