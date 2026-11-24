@@ -6,12 +6,13 @@
   "description": "Greenboard · MVP en React + Vite (Sprint 3). Se publica en /mvp/ de greenboard-team.github.io",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/limpiar-assets.js",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint src"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.89",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"

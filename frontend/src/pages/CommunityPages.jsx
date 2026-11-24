@@ -6,6 +6,8 @@ import BannerGta from '../components/community/BannerGta.jsx';
 import { ListaAnuncios } from '../components/community/Anuncios.jsx';
 import { Cuadro, DEPORTE, PREMIO, TarjetaTorneo } from '../components/community/Torneos.jsx';
 import FormularioAnuncio from '../components/community/FormularioAnuncio.jsx';
+import EstadoIA from '../components/community/EstadoIA.jsx';
+import { useEstadoIA } from '../hooks/useEstadoIA.js';
 import { ApuntesLista, BotonApunte } from '../components/inicio/Tarjetas.jsx';
 import universidad from '../data/universidad.json';
 import { filtrar, ordenar } from '../domain/comunidad/anuncios.js';
@@ -347,6 +349,7 @@ export function TorneoPage() {
  */
 export function ModeracionPage() {
   const { todos, moderacion, moderador, dispatch } = useComunidad();
+  useEstadoIA(); // repinta el nombre del moderador cuando el modelo termina de cargar
   const { avisar } = useUi();
   const pendientes = todos.filter((a) => a.estado === 'revision');
   const retirados = todos.filter((a) => a.estado === 'retirado');
@@ -356,6 +359,7 @@ export function ModeracionPage() {
       <Link className="atras" to="/community">‹ Green Community</Link>
       <div className="row"><h3>🏛 Moderación</h3><DemoFlag>vista de Vida universitaria</DemoFlag></div>
       <p className="note">Todo anuncio pasa antes por el moderador automático ({moderador}). Aquí solo llega lo dudoso y lo que denuncian los alumnos.</p>
+      <EstadoIA />
       <div className="gc-mod-stats">
         <div><b>{moderacion.publicadosSolos}</b><span className="note">publicados solos</span></div>
         <div><b>{moderacion.bloqueados}</b><span className="note">intentos bloqueados al momento</span></div>

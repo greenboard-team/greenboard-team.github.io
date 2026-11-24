@@ -99,7 +99,7 @@ export function ComunidadProvider({ children }) {
     },
   }), []);
 
-  const valor = useMemo(() => ({ ...estado, todos: estado.anuncios, anuncios: estado.anuncios.filter(esVisible), moderador: moderador.nombre, dispatch, ...acciones }), [estado, acciones]);
+  const valor = useMemo(() => ({ ...estado, todos: estado.anuncios, anuncios: estado.anuncios.filter(esVisible), get moderador() { return moderador.nombre; }, dispatch, ...acciones }), [estado, acciones]);
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
 

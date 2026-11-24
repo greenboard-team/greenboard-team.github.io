@@ -63,3 +63,17 @@ describe('qué se revisa de un anuncio', () => {
     expect(v(textoAModerar(base))).toBe('ok');
   });
 });
+
+describe('modelo de IA', () => {
+  it('lee la respuesta JSON del modelo aunque venga con texto alrededor', async () => {
+    const { leerRespuesta } = await import('../src/services/moderacion/moderadores.js');
+    expect(leerRespuesta('{"veredicto":"bloquear","motivo":"amenaza"}', 'qwen').veredicto).toBe('bloquear');
+    expect(leerRespuesta('Claro: {"veredicto":"ok","motivo":""}', 'qwen').veredicto).toBe('ok');
+    expect(leerRespuesta('no sé', 'qwen')).toBeNull();
+  });
+  it('las reglas ya pillan los números por letras', () => {
+    expect(v('f0llar esta noche')).toBe('bloquear');
+    expect(v('voy a m4tar a Pablo')).toBe('revisar');
+    expect(v('Matar zombis en el modo historia')).toBe('ok');
+  });
+});

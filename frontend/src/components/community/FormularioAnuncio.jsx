@@ -4,6 +4,7 @@ import Icon from '../common/Icon.jsx';
 import { Segmentos } from '../common/Piezas.jsx';
 import { SemanaGrid } from '../horario/SemanaGrid.jsx';
 import BannerGta from './BannerGta.jsx';
+import EstadoIA from './EstadoIA.jsx';
 import universidad from '../../data/universidad.json';
 import { FORMATOS_PADEL, TIPOS, textoAModerar, validar } from '../../domain/comunidad/anuncios.js';
 import { analizar, explicar } from '../../domain/moderacion/reglas.js';
@@ -231,6 +232,7 @@ export default function FormularioAnuncio() {
       <p className="gc-publicar">
         <button className="btn" type="submit" disabled={enviando || previo.veredicto === 'bloquear'}><Icon n="check" />{enviando ? 'Revisando…' : 'Publicar anuncio'}</button>
         <span className="note">Se revisa automáticamente antes de publicarse. Saldrá en Green Community y en el horario de quien tenga ese hueco libre.</span>
+        <EstadoIA compacto />
       </p>
     </form>
   );
