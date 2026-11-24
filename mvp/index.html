@@ -3,23 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Greenboard · prototipo navegable del MVP (issue #42).
-     Aspecto: el mock-up de Gonzalo (PR #25) + la pantalla principal de la diapositiva 7 del Sprint 2.
-     Inicio es un panel que no hace falta abandonar: barra inteligente (Ctrl+K o «/») con sugerencias en vivo,
-     chips según la hora y tus datos, y los resultados se abren como tarjetas en el mismo Inicio.
-     La falta sale como un 0 rojo en Asistencia y el justificante se sube en esa misma fila.
-     Asignaturas con pestañas (Contenido por temas y guía docente · Notas · Asistencia · Entregas · Chat),
-     Calificaciones (media ponderada) y Mensajes (chats de clase y de grupo, issue #43).
-     Happy Path: greenboard/mvp/happy-path.md.
-     Datos reales (#42, datos reales): tras entrar con un correo de alumno de U-tad, el horario de tus grupos de
-     WebUntis con sus cambios, las aulas libres y tus entregas de Blackboard salen del Worker greenboard-mvp
-     (/app/*, _api/greenboard-mvp/src/cuentas.js). Sin sesión no se ve nada real. Con #demo, los datos de ejemplo. -->
-<!-- Ficheros: css/styles.css (estilos) · js/arranque.js (carga data/*.json y luego los módulos en orden:
-     datos.js, buscador.js, ui.js, real.js, app.js) · data/*.json (datos de ejemplo del modo demo) ·
-     sw.js (service worker: solo la carcasa) · manifest.webmanifest e icons/ (instalar como app). -->
-<title>Greenboard · prototipo</title>
+<!-- Greenboard · MVP en React (Sprint 3). Código fuente en /frontend del repositorio greenboard-team.github.io -->
+<title>Greenboard</title>
 <meta name="theme-color" content="#123B2C">
-<!-- Se instala como app en el móvil (PWA): manifest, iconos del logo y service worker (sw.js, solo la carcasa) -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -29,20 +15,10 @@
 <meta name="apple-mobile-web-app-title" content="Greenboard">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="css/styles.css">
+  <script type="module" crossorigin src="./assets/index-M6D6uH12.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BP5Lxj-q.css">
 </head>
 <body>
-<div class="app">
-  <aside class="side">
-    <span class="brand"><i>G</i>Greenboard</span>
-    <div class="who" id="who"><span class="avatar">GM</span><span>Gonzalo Martínez<small>4.º MAIS · U-tad</small></span></div>
-    <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
-  </aside>
-  <main class="main" id="view"></main>
-</div>
-<div id="guia"></div>
-<div id="toast" class="toast" role="status" hidden></div>
-
-<script src="js/arranque.js" defer></script>
+<div id="root"></div>
 </body>
 </html>

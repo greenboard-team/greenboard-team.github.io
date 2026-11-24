@@ -1,0 +1,29 @@
+{
+  "name": "greenboard-mvp",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Greenboard · MVP en React + Vite (Sprint 3). Se publica en /mvp/ de greenboard-team.github.io",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.12.0",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.5"
+  }
+}

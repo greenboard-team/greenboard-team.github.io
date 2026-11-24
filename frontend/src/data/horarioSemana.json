@@ -1,0 +1,29 @@
+{
+  "_leeme": "Horario semanal de ejemplo (doble grado MAIS + FIIS, 4.º) para el modo demo. El día de hoy se sustituye por «hoy» de asignaturas.json. Con sesión, sale de WebUntis.",
+  "semana": {
+    "1": [
+      { "h": "09:00", "f": "10:30", "s": "aiii", "a": "Aula 201" },
+      { "h": "11:00", "f": "12:30", "s": "opti", "a": "Aula 104" },
+      { "h": "15:00", "f": "16:30", "s": "psdi", "a": "Aula 003" }
+    ],
+    "2": [
+      { "h": "09:00", "f": "10:30", "s": "esal", "a": "Aula 202" },
+      { "h": "11:00", "f": "12:30", "s": "aaui", "a": "Aula 104" },
+      { "h": "15:00", "f": "19:00", "s": "pro3", "a": "Aula 112" }
+    ],
+    "3": [
+      { "h": "09:00", "f": "10:30", "s": "opti", "a": "Aula 104" },
+      { "h": "11:00", "f": "12:30", "s": "isof", "a": "Aula 201" },
+      { "h": "16:00", "f": "17:30", "s": "esal", "a": "Aula 202" }
+    ],
+    "4": [
+      { "h": "09:00", "f": "10:30", "s": "aiii", "a": "Aula 201" },
+      { "h": "11:00", "f": "12:30", "s": "psdi", "a": "Aula 003" },
+      { "h": "15:00", "f": "16:30", "s": "aaui", "a": "Aula 104" }
+    ],
+    "5": [
+      { "h": "09:00", "f": "10:30", "s": "isof", "a": "Aula 201" },
+      { "h": "15:00", "f": "19:00", "s": "pro3", "a": "Aula 112" }
+    ]
+  }
+}
