@@ -34,10 +34,11 @@ Ejemplos:
 /** Lee la respuesta del modelo y la convierte en un resultado de moderación (o null si no es válida). */
 export function leerRespuesta(contenido, fuente) {
   try {
+    const bruto = String(contenido).slice(0, 200);
     const salida = JSON.parse(String(contenido).match(/\{[\s\S]*\}/)?.[0] || '{}');
     if (!['ok', 'revisar', 'bloquear'].includes(salida.veredicto)) return null;
     const motivos = salida.veredicto === 'ok' ? [] : [{ categoria: 'modelo', nombre: salida.motivo || 'contenido dudoso', termino: '', accion: salida.veredicto }];
-    return { veredicto: salida.veredicto, motivos, fuente };
+    return { veredicto: salida.veredicto, motivos, fuente, bruto };
   } catch {
     return null;
   }
@@ -170,7 +171,10 @@ export function crearModerador() {
   const capas = [new ModeradorReglas(), new ModeradorNavegador()];
   if (llm.activo) capas.push(new ModeradorOllama(llm));
   if (iaActivada()) activarIA(); // si ya se activó en este navegador, se carga desde la caché
-  return new ModeradorPorCapas(capas);
+  const m = new ModeradorPorCapas(capas);
+  // Para probar desde la consola del navegador: await __greenboardModerar('texto')
+  if (typeof window !== 'undefined') window.__greenboardModerar = (t) => m.moderar(t);
+  return m;
 }
 
 export const configModeracion = config;

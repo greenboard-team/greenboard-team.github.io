@@ -60,7 +60,9 @@ export function analizar(texto, config) {
 export function combinar(...resultados) {
   const validos = resultados.filter(Boolean);
   const peor = validos.reduce((a, b) => (GRAVEDAD[b.veredicto] > GRAVEDAD[a.veredicto] ? b : a), { veredicto: 'ok', motivos: [], fuente: 'reglas' });
-  return { ...peor, motivos: validos.flatMap((r) => r.motivos) };
+  // Quién ha revisado de verdad (para el registro): «reglas + Qwen 2.5 1.5B (en tu navegador)»
+  const fuente = [...new Set(validos.map((r) => r.fuente))].join(' + ') || 'reglas';
+  return { ...peor, fuente, motivos: validos.flatMap((r) => r.motivos), ...(validos.find((r) => r.bruto) && { bruto: validos.find((r) => r.bruto).bruto }) };
 }
 
 /** Frase para el usuario: «No se puede publicar: contenido sexual e insultos.» */
