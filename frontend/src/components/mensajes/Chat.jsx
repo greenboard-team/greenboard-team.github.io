@@ -4,6 +4,8 @@ import Icon from '../common/Icon.jsx';
 import { useAcademico } from '../../store/SesionContext.jsx';
 import { useUi } from '../../store/UiContext.jsx';
 import { useAbrir } from '../../hooks/useAbrir.js';
+import { analizar } from '../../domain/moderacion/reglas.js';
+import { configModeracion } from '../../services/moderacion/moderadores.js';
 
 export function mensajesDe(chat, propios = []) {
   return [...chat.msgs, ...propios];
@@ -14,6 +16,7 @@ export function Chat({ id }) {
   const m = useAcademico();
   const { ui, dispatch } = useUi();
   const [texto, setTexto] = useState('');
+  const bloqueado = analizar(texto, configModeracion).veredicto === 'bloquear';
   const caja = useRef(null);
   const c = m.chats.find((x) => x.id === id);
   const msgs = c ? mensajesDe(c, ui.chats[id]) : [];
@@ -25,7 +28,7 @@ export function Chat({ id }) {
   const enviar = (e) => {
     e.preventDefault();
     const t = texto.trim();
-    if (!t) return;
+    if (!t || bloqueado) return;
     const h = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     dispatch({ type: 'mensaje', id, msg: { de: 'Tú', h, txt: t, yo: true } });
     setTexto('');
@@ -43,8 +46,9 @@ export function Chat({ id }) {
       </div>
       <form className="enviarmsg" onSubmit={enviar}>
         <input value={texto} onChange={(e) => setTexto(e.target.value)} autoComplete="off" placeholder="Escribe un mensaje" aria-label={`Mensaje para ${c.t}`} />
-        <button className="btn sm" aria-label="Enviar">Enviar</button>
+        <button className="btn sm" aria-label="Enviar" disabled={bloqueado}>Enviar</button>
       </form>
+      {bloqueado && <p className="gc-moderacion bloquea" role="status" style={{ marginTop: 8 }}>Ese mensaje no se puede enviar en un chat de la universidad.</p>}
     </>
   );
 }

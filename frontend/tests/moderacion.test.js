@@ -53,3 +53,13 @@ describe('moderación por capas', () => {
     expect(llamado).toBe(false);
   });
 });
+
+describe('qué se revisa de un anuncio', () => {
+  it('título, nota, lugar, nombre y curso', async () => {
+    const { textoAModerar } = await import('../src/domain/comunidad/anuncios.js');
+    const base = { titulo: 'Pachanga', autor: { nombre: 'Gonzalo', curso: '4.º MAIS' }, lugar: { tipo: 'uni', texto: 'Cancha' } };
+    expect(v(textoAModerar({ ...base, nota: 'Traed porros' }))).toBe('bloquear');
+    expect(v(textoAModerar({ ...base, autor: { nombre: 'El Gilipollas', curso: '4.º' } }))).toBe('bloquear');
+    expect(v(textoAModerar(base))).toBe('ok');
+  });
+});

@@ -107,7 +107,7 @@ export const emojiDe = (a, comunidades = []) => comunidades.find((c) => c.id ===
 export const esVisible = (a) => a.estado !== 'retirado' && (a.estado !== 'revision' || a.mio);
 
 /** Texto que se modera: lo que escribe quien publica. */
-export const textoAModerar = (b) => [b.titulo, b.nota, b.lugar?.tipo === 'fuera' ? b.lugar.texto : '', b.plan?.modo].filter(Boolean).join('. ');
+export const textoAModerar = (b) => [b.titulo, b.nota, b.lugar?.tipo === 'fuera' ? b.lugar.texto : '', b.plan?.modo, b.autor?.nombre, b.autor?.curso].filter(Boolean).join('. ');
 
 export const plazasLibres = (a) => Math.max(0, a.plazas - a.apuntados.length);
 export const estaCompleto = (a) => plazasLibres(a) === 0;
