@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { aMin, DIAS_SEMANA, fechaDeLaSemana, diaSemana, fmt } from '../../domain/fechas.js';
 import { corto } from '../../domain/texto.js';
 import { solapan } from '../../domain/horario.js';
@@ -36,8 +37,28 @@ export function SemanaGrid({ semana, subjects, bloques = [], alPulsar, desde = '
   const nombre = (id) => corto(subjects.find((s) => s.id === id) || { n: id });
   const pos = (d, h) => ({ top: (aMin(d) - ini) * PX_MIN, height: Math.max(18, (aMin(h) - aMin(d)) * PX_MIN) });
 
+  // Tras arrastrar el tirador, el navegador lanza un «click» en la columna: se ignora para no mover la franja
+  const arrastrando = useRef(false);
+  const tirar = (b) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const columna = e.currentTarget.closest('.semana-dia').getBoundingClientRect();
+    arrastrando.current = true;
+    const mover = (ev) => {
+      const min = ini + Math.round((ev.clientY - columna.top) / PX_MIN / 15) * 15;
+      b.alRedimensionar(Math.min(Math.max(min, aMin(b.desde) + 15), fin));
+    };
+    const soltar = () => {
+      window.removeEventListener('pointermove', mover);
+      window.removeEventListener('pointerup', soltar);
+      setTimeout(() => { arrastrando.current = false; }, 0);
+    };
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+  };
+
   const pulsar = (dia) => (e) => {
-    if (!alPulsar) return;
+    if (!alPulsar || arrastrando.current) return;
     const r = e.currentTarget.getBoundingClientRect();
     const min = ini + Math.floor((e.clientY - r.top) / PX_MIN / 30) * 30;
     alPulsar(dia, Math.min(Math.max(min, ini), fin - 30));
@@ -62,7 +83,7 @@ export function SemanaGrid({ semana, subjects, bloques = [], alPulsar, desde = '
               {horas.map((m) => <i key={m} className="linea" style={{ top: (m - ini) * PX_MIN }} />)}
               {(semana[d.n] || []).map((c, i) => (
                 <div key={'c' + i} className={`bloque clase ${c.cancelada ? 'cancelada' : ''}`} style={pos(c.h, c.f)} title={`${nombre(c.s)} · ${c.h}–${c.f} · ${c.a}`}>
-                  <b>{nombre(c.s)}</b><small>{c.h}–{c.f}{c.a ? ' · ' + c.a : ''}</small>
+                  <b>{nombre(c.s)}</b><small>{c.h}–{c.f}</small>{c.a && <small>{c.a}</small>}
                 </div>
               ))}
               {propios.map((b, i) => {
@@ -74,6 +95,14 @@ export function SemanaGrid({ semana, subjects, bloques = [], alPulsar, desde = '
                     style={{ ...pos(b.desde, b.hasta), left: `calc(${b.carril * ancho}% + 2px)`, width: `calc(${ancho}% - 4px)` }}
                     onClick={b.onClick ? (e) => { e.stopPropagation(); b.onClick(); } : undefined}>
                     <b>{b.titulo}</b>{b.sub && <small>{b.sub}</small>}
+                    {b.alRedimensionar && (
+                      <span className="tirador" role="slider" aria-label="Arrastra para cambiar la hora de fin" aria-valuetext={b.hasta} tabIndex={0}
+                        onPointerDown={tirar(b)} onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') { e.preventDefault(); b.alRedimensionar(Math.min(aMin(b.hasta) + 15, fin)); }
+                          if (e.key === 'ArrowUp') { e.preventDefault(); b.alRedimensionar(Math.max(aMin(b.hasta) - 15, aMin(b.desde) + 15)); }
+                        }} />
+                    )}
                   </Tag>
                 );
               })}

@@ -16,6 +16,7 @@ import { useUi } from '../../store/UiContext.jsx';
 import { usePerfil } from '../../hooks/usePerfil.js';
 
 const DURACIONES = [60, 90, 120, 180];
+const formatoDuracion = (min) => (min >= 60 ? `${Math.floor(min / 60)} h${min % 60 ? ' ' + (min % 60) : ''}` : `${min} min`);
 const instalacion = (deporte) => universidad.instalaciones.find((i) => i.deporte === deporte);
 
 function borradorInicial(params, perfil, comunidades) {
@@ -59,6 +60,11 @@ export default function FormularioAnuncio() {
   const formato = FORMATOS_PADEL[b.padel.formato];
 
   const elegirFranja = (dia, min) => set({ dia, desde: deMin(min), hasta: deMin(Math.min(min + b.duracion, 23 * 60 + 59)) });
+  const fijarFin = (minFin) => {
+    if (!b.desde) return;
+    const d = minFin - aMin(b.desde);
+    if (d >= 15) set({ hasta: deMin(minFin), duracion: d });
+  };
   const cambiarDuracion = (d) => set({ duracion: d, ...(b.desde && { hasta: deMin(Math.min(aMin(b.desde) + d, 23 * 60 + 59)) }) });
   const choque = b.dia ? clasesQueSolapan(m.semana, b) : [];
   const nombreAsig = (id) => corto(m.subjects.find((s) => s.id === id) || { n: id });
@@ -172,15 +178,17 @@ export default function FormularioAnuncio() {
         <legend>4 · Franja</legend>
         <p className="note" style={{ marginTop: 0 }}>Toca la rejilla donde quieras empezar. Ves tus clases para tenerlas en cuenta; si lo pones en hora de clase, se avisa pero se puede.</p>
         <div className="lbl">Duración</div>
-        <Segmentos etiqueta="Duración" valor={b.duracion} onCambio={cambiarDuracion} opciones={DURACIONES.map((d) => ({ k: d, t: d % 60 ? `${Math.floor(d / 60)} h ${d % 60}` : `${d / 60} h` }))} />
+        <Segmentos etiqueta="Duración" valor={b.duracion} onCambio={cambiarDuracion} opciones={DURACIONES.map((d) => ({ k: d, t: formatoDuracion(d) }))} />
         <div className="gc-franja-manual">
           <label>Día <select value={b.dia ?? ''} onChange={(e) => e.target.value && elegirFranja(Number(e.target.value), b.desde ? aMin(b.desde) : 13 * 60)}>
             <option value="">Elige…</option>{DIAS_SEMANA.map((d) => <option key={d.n} value={d.n}>{d.largo}</option>)}
           </select></label>
-          <label>Empieza <input type="time" step="1800" value={b.desde ?? ''} onChange={(e) => e.target.value && elegirFranja(b.dia || b._sugerenciaDia, aMin(e.target.value))} /></label>
+          <label>Empieza <input type="time" step="900" value={b.desde ?? ''} onChange={(e) => e.target.value && elegirFranja(b.dia || b._sugerenciaDia, aMin(e.target.value))} /></label>
+          <label>Acaba <input type="time" step="900" value={b.hasta ?? ''} disabled={!b.desde} onChange={(e) => e.target.value && fijarFin(aMin(e.target.value))} /></label>
+          {b.desde && <span className="note">Duración: {formatoDuracion(aMin(b.hasta) - aMin(b.desde))} · también puedes arrastrar el borde de abajo del bloque</span>}
         </div>
         <SemanaGrid semana={m.semana} subjects={m.subjects} alPulsar={elegirFranja} referencia={m.diaClase} etiqueta="Elige la franja"
-          bloques={b.dia ? [{ dia: b.dia, desde: b.desde, hasta: b.hasta, tipo: choque.length ? 'seleccion choca' : 'seleccion', titulo: `${TIPOS[b.tipo].emoji} Tu ${b.tipo === 'plan' ? 'plan' : TIPOS[b.tipo].corto.toLowerCase()}`, sub: `${b.desde}–${b.hasta}` }] : []} />
+          bloques={b.dia ? [{ dia: b.dia, desde: b.desde, hasta: b.hasta, tipo: choque.length ? 'seleccion choca' : 'seleccion', alRedimensionar: fijarFin, titulo: `${TIPOS[b.tipo].emoji} Tu ${b.tipo === 'plan' ? 'plan' : TIPOS[b.tipo].corto.toLowerCase()}`, sub: `${b.desde}–${b.hasta}` }] : []} />
         {b.dia && (
           <p className={choque.length ? 'gc-aviso-clase' : 'gc-ok-clase'}>
             {choque.length

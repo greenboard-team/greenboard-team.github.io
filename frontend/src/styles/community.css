@@ -130,8 +130,10 @@
 .gc-plazas-sel{display:flex;gap:10px;align-items:center;margin-top:12px}
 .gc-plazas-sel b{font-family:var(--f-display);font-size:22px;min-width:28px;text-align:center}
 .gc-plazas-sel .btn{width:36px;height:36px;padding:0}
-.gc-franja-manual{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;font-size:14px}
-.gc-franja-manual select,.gc-franja-manual input{font:inherit;margin-left:6px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.gc-franja-manual{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+.gc-franja-manual label{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.gc-franja-manual select,.gc-franja-manual input{font:inherit;font-size:15px;font-weight:400;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.gc-franja-manual select:focus,.gc-franja-manual input:focus{outline:none;border-color:var(--accent)}
 .gc-aviso-clase{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:700}
 .gc-ok-clase{margin:10px 0 0;display:flex;gap:6px;align-items:center;color:var(--accent);font-weight:700}
 .gc-publicar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0}
@@ -145,23 +147,22 @@
 .semana-cab span.hoy{color:var(--accent)}
 .semana-cuerpo{position:relative}
 .semana-horas{position:relative}
-.semana-horas span{position:absolute;right:6px;transform:translateY(-50%);font-family:var(--f-mono);font-size:10px;color:var(--muted)}
-.semana-horas span:first-child{transform:none}
+.semana-horas span{position:absolute;right:8px;margin-top:3px;font-family:var(--f-mono);font-size:10px;line-height:1;color:var(--muted)}
 .semana-dia{position:relative;border-left:1px solid var(--line)}
 .semana-dia.hoy{background:color-mix(in srgb,var(--lime) 7%,transparent)}
 .semana.elegible .semana-dia{cursor:crosshair}
 .semana.elegible .semana-dia:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .semana-dia .linea{position:absolute;left:0;right:0;border-top:1px dashed var(--line);opacity:.6}
-.bloque{position:absolute;left:3px;right:3px;border-radius:8px;padding:3px 6px;font-size:11px;line-height:1.25;overflow:hidden;text-align:left;border:0;font-family:inherit}
-.bloque b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bloque small{display:block;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bloque{position:absolute;left:4px;right:4px;border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.25;overflow:hidden;text-align:left;border:0;font-family:var(--f-body);display:flex;flex-direction:column;gap:2px}
+.bloque b{font-size:12px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;hyphens:auto;-webkit-hyphens:auto}
+.bloque small{opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .bloque.clase{background:var(--board);color:var(--chalk);z-index:1}
 .bloque.clase.cancelada{opacity:.45;text-decoration:line-through}
 .bloque.plan{background:var(--surface);border:1.5px dashed var(--gc-plan);color:var(--ink);z-index:2;cursor:pointer}
 .bloque.plan:hover{background:color-mix(in srgb,var(--gc-plan) 12%,var(--surface))}
 .bloque.mio{background:var(--lime);color:#10301F;z-index:2}
 .bloque.seleccion{background:var(--lime);color:#10301F;z-index:3;box-shadow:0 0 0 2px var(--accent)}
-.bloque.seleccion.choca{background:var(--warn-bg);color:var(--warn);box-shadow:0 0 0 2px var(--warn)}
+.bloque.seleccion.choca{background:var(--warn-bg);color:var(--warn);box-shadow:0 0 0 2px var(--warn);left:38%!important;width:auto!important;right:3px;opacity:.96}
 .gc-leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
 .gc-leyenda span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px}
 .gc-leyenda .clase::before{background:var(--board)}
@@ -184,3 +185,14 @@
 .gc-apuntes summary{list-style:none;width:max-content;cursor:pointer}
 .gc-apuntes summary::-webkit-details-marker{display:none}
 .gc-apuntes[open] summary{margin-bottom:10px;background:var(--ok-bg);color:var(--accent)}
+
+/* La guía de la demo no tapa el contenido en escritorio: va a la esquina */
+@media (min-width:761px){
+  .guide{left:auto;right:16px;transform:none;width:min(400px,calc(100% - 32px))}
+}
+
+/* Tirador para cambiar la duración arrastrando el borde de abajo */
+.bloque .tirador{position:absolute;left:0;right:0;bottom:0;height:12px;cursor:ns-resize;touch-action:none;display:flex;align-items:center;justify-content:center}
+.bloque .tirador::after{content:"";width:28px;height:4px;border-radius:2px;background:currentColor;opacity:.55}
+.bloque .tirador:hover::after,.bloque .tirador:focus-visible::after{opacity:1}
+.gc-franja-manual input:disabled{opacity:.5}
