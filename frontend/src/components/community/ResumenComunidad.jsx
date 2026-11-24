@@ -34,7 +34,7 @@ export function ResumenComunidad() {
     <section className="tarj" id="t-com">
       <div className="tarj-h">
         <span className="ic"><Icon n="uni" /></span>
-        <h4>Green Community<small>{plural(planes.length, 'plan')} {planes.length === 1 ? 'cabe' : 'caben'} en tus huecos esta semana</small></h4>
+        <h4>Green Community<small>{plural(planes.length, 'plan', 'planes')} {planes.length === 1 ? 'cabe' : 'caben'} en tus huecos esta semana</small></h4>
         <Link className="vermas" to="/community">Ver más →</Link>
       </div>
       {planes.slice(0, 3).map((a) => (
