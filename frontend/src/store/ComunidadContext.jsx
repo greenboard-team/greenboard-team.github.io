@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import * as repo from '../repositories/comunidadRepository.js';
 import { crearAnuncio, esVisible, salirse, textoAModerar, unirse } from '../domain/comunidad/anuncios.js';
-import { analizar, explicar } from '../domain/moderacion/reglas.js';
-import { configModeracion, crearModerador } from '../services/moderacion/moderadores.js';
+import { explicar } from '../domain/moderacion/reglas.js';
+import { configModeracion, crearModerador, revisarAlMomento } from '../services/moderacion/moderadores.js';
 import { empezar, inscribir, marcarGanador, validarTorneo } from '../domain/comunidad/torneos.js';
 
 /**
@@ -38,7 +38,7 @@ export function comunidadReducer(s, a) {
     case 'seguir':
       return { ...s, seguidas: s.seguidas.includes(a.id) ? s.seguidas.filter((x) => x !== a.id) : [...s.seguidas, a.id] };
     case 'inscribir': {
-      const r = analizar(a.equipo.equipo, configModeracion);
+      const r = revisarAlMomento(a.equipo.equipo);
       if (r.veredicto === 'bloquear') throw new Error('Ese nombre de equipo no se puede usar.');
       return cambiarTorneo(a.id, (t) => inscribir(t, a.equipo));
     }

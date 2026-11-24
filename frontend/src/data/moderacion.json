@@ -343,12 +343,5 @@
     }
    ]
   }
- ],
- "navegador": {
-  "modelo": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-  "nombre": "Qwen 2.5 1.5B",
-  "tamano": "≈1 GB",
-  "timeoutMs": 20000,
-  "_leeme": "Modelo que se descarga una vez en el navegador (WebLLM, necesita WebGPU: Chrome o Edge recientes) y modera sin servidor."
- }
+ ]
 }

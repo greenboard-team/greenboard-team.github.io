@@ -77,3 +77,26 @@ describe('modelo de IA', () => {
     expect(v('Matar zombis en el modo historia')).toBe('ok');
   });
 });
+
+describe('modelo propio', async () => {
+  const modelo = (await import('../src/data/modeloModeracion.json')).default;
+  const { cargarModelo, probabilidades, clasificar } = await import('../src/domain/moderacion/modelo.js');
+  const { revisarAlMomento } = await import('../src/services/moderacion/moderadores.js');
+  const m = cargarModelo(modelo);
+
+  it('da las mismas probabilidades que scikit-learn', () => {
+    for (const c of modelo.control) {
+      probabilidades(m, c.texto).forEach((p, i) => expect(p).toBeCloseTo(c.probabilidades[i], 3));
+    }
+  });
+  it('entiende frases que la lista de palabras no ve', () => {
+    expect(clasificar(m, 'Vamos a reírnos de Hugo en la cafetería').veredicto).toBe('bloquear');
+    expect(revisarAlMomento('Voy a m4tar a Pablo').veredicto).toBe('bloquear');
+  });
+  it('con reglas + modelo, los planes normales no se bloquean', () => {
+    for (const t of ['Pachanga mixta de tarde', 'Golpes online en Vice City', 'Matar zombis en el modo historia', 'Acuarela en el Retiro',
+      'Repaso de Optimización el jueves', 'Partida de cartas en la cafetería', 'Busco pareja para el pádel', 'Se ha retrasado la clase']) {
+      expect(revisarAlMomento(t).veredicto, t).not.toBe('bloquear');
+    }
+  });
+});

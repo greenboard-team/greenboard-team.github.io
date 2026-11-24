@@ -1,11 +1,14 @@
 import config from '../../data/moderacion.json';
 import { analizar, combinar } from '../../domain/moderacion/reglas.js';
-import { local, sesion } from '../storage/almacen.js';
+import { sesion } from '../storage/almacen.js';
+import modeloJson from '../../data/modeloModeracion.json';
+import { cargarModelo, clasificar } from '../../domain/moderacion/modelo.js';
 
 /**
  * Moderación por capas (patrón Strategy + Composite):
  *   1. Reglas locales: instantáneas, siempre activas, bloquean lo evidente.
- *   2. Modelo local (Ollama + Qwen u otro): opcional, para lo que las reglas no ven.
+ *   2. Modelo propio entrenado por el equipo (n-gramas + regresión logística): entiende frases, no solo palabras.
+ *   (Opcional) un LLM en un servidor de la universidad (Ollama + Qwen) para lo que se escape.
  *   3. Lo dudoso va a revisión humana (Vida universitaria); el resto se publica solo.
  * Si el modelo no responde, se sigue solo con las reglas: publicar nunca se queda colgado.
  */
@@ -80,59 +83,21 @@ export class ModeradorOllama {
   }
 }
 
-/* ---------- Modelo en el navegador (WebLLM + WebGPU) ----------
-   Se descarga una vez (≈1 GB) a la caché del navegador y después funciona sin servidor y sin conexión.
-   La librería solo se carga si se activa: no pesa en la app normal. */
-const NAV = config.navegador;
-const CLAVE_IA = 'gb-moderador-ia';
-let motor = null;
-let estadoIA = { fase: 'apagado', progreso: 0, texto: '' }; // apagado | cargando | listo | error | sin-webgpu
-const oyentes = new Set();
-const emitir = (cambios) => { estadoIA = { ...estadoIA, ...cambios }; oyentes.forEach((f) => f(estadoIA)); };
+/* ---------- Modelo propio (entrenado por el equipo, vive en el repo) ----------
+   frontend/modelo/entrenar.py → src/data/modeloModeracion.json. Sin servidor, sin descargas, instantáneo. */
+const MODELO = cargarModelo(modeloJson);
+export const infoModelo = { ...modeloJson.metricas, ngramas: modeloJson.vocabulario.length };
 
-export const webgpuDisponible = () => typeof navigator !== 'undefined' && 'gpu' in navigator;
-export const iaActivada = () => local.leerTexto(CLAVE_IA) === '1';
-export function suscribirIA(f) { oyentes.add(f); f(estadoIA); return () => oyentes.delete(f); }
-
-/** Descarga (la primera vez) y arranca Qwen en el navegador. */
-export function activarIA() {
-  local.guardar(CLAVE_IA, '1');
-  if (motor) return motor;
-  if (!webgpuDisponible()) { emitir({ fase: 'sin-webgpu' }); return Promise.resolve(null); }
-  emitir({ fase: 'cargando', progreso: 0, texto: 'Preparando…' });
-  motor = import('@mlc-ai/web-llm')
-    .then(({ CreateMLCEngine }) => CreateMLCEngine(NAV.modelo, {
-      initProgressCallback: (p) => emitir({ fase: 'cargando', progreso: p.progress, texto: p.text }),
-    }))
-    .then((e) => { emitir({ fase: 'listo', progreso: 1, texto: '' }); return e; })
-    .catch((err) => { motor = null; emitir({ fase: 'error', texto: String(err?.message || err) }); return null; });
-  return motor;
-}
-
-export function desactivarIA() {
-  local.borrar(CLAVE_IA);
-  motor?.then((e) => e?.unload?.());
-  motor = null;
-  emitir({ fase: 'apagado', progreso: 0, texto: '' });
-}
-
-export class ModeradorNavegador {
-  nombre = `${NAV.nombre} (en tu navegador)`;
-
+export class ModeradorModelo {
+  nombre = 'modelo propio';
   async moderar(texto) {
-    if (estadoIA.fase !== 'listo' || !motor) return null; // sin modelo cargado, deciden las reglas
-    const e = await motor;
-    if (!e) return null;
-    const respuesta = e.chat.completions.create({
-      messages: [{ role: 'system', content: INSTRUCCIONES }, { role: 'user', content: `Anuncio: «${texto}»` }],
-      temperature: 0,
-      max_tokens: 60,
-      response_format: { type: 'json_object' },
-    });
-    const limite = new Promise((ok) => setTimeout(() => ok(null), NAV.timeoutMs));
-    const r = await Promise.race([respuesta, limite]).catch(() => null);
-    return r ? leerRespuesta(r.choices?.[0]?.message?.content, this.nombre) : null;
+    return clasificar(MODELO, texto);
   }
+}
+
+/** Revisión instantánea (reglas + modelo propio) para avisar mientras se escribe. */
+export function revisarAlMomento(texto) {
+  return combinar(analizar(texto, config), clasificar(MODELO, texto));
 }
 
 export class ModeradorPorCapas {
@@ -141,7 +106,7 @@ export class ModeradorPorCapas {
   }
 
   get nombre() {
-    return this.capas.filter((c) => !(c instanceof ModeradorNavegador) || estadoIA.fase === 'listo').map((c) => c.nombre).join(' + ');
+    return this.capas.map((c) => c.nombre).join(' + ');
   }
 
   async moderar(texto) {
@@ -168,9 +133,8 @@ export function crearModerador() {
   } catch {
     /* sin URL ni almacenamiento: configuración por defecto */
   }
-  const capas = [new ModeradorReglas(), new ModeradorNavegador()];
-  if (llm.activo) capas.push(new ModeradorOllama(llm));
-  if (iaActivada()) activarIA(); // si ya se activó en este navegador, se carga desde la caché
+  const capas = [new ModeradorReglas(), new ModeradorModelo()];
+  if (llm.activo) capas.push(new ModeradorOllama(llm)); // opcional: un LLM en un servidor de la universidad
   const m = new ModeradorPorCapas(capas);
   // Para probar desde la consola del navegador: await __greenboardModerar('texto')
   if (typeof window !== 'undefined') window.__greenboardModerar = (t) => m.moderar(t);

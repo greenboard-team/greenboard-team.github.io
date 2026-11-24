@@ -4,8 +4,7 @@ import Icon from '../common/Icon.jsx';
 import { useAcademico } from '../../store/SesionContext.jsx';
 import { useUi } from '../../store/UiContext.jsx';
 import { useAbrir } from '../../hooks/useAbrir.js';
-import { analizar } from '../../domain/moderacion/reglas.js';
-import { configModeracion } from '../../services/moderacion/moderadores.js';
+import { revisarAlMomento } from '../../services/moderacion/moderadores.js';
 
 export function mensajesDe(chat, propios = []) {
   return [...chat.msgs, ...propios];
@@ -16,7 +15,7 @@ export function Chat({ id }) {
   const m = useAcademico();
   const { ui, dispatch } = useUi();
   const [texto, setTexto] = useState('');
-  const bloqueado = analizar(texto, configModeracion).veredicto === 'bloquear';
+  const bloqueado = texto.trim().length > 3 && revisarAlMomento(texto).veredicto === 'bloquear';
   const caja = useRef(null);
   const c = m.chats.find((x) => x.id === id);
   const msgs = c ? mensajesDe(c, ui.chats[id]) : [];

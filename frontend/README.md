@@ -77,12 +77,12 @@ Todo lo de Green Community es de ejemplo y se guarda en el navegador. En la demo
 Todo anuncio pasa por `services/moderacion/moderadores.js` antes de publicarse, en capas:
 
 1. **Filtro local** (`domain/moderacion/reglas.js` + `data/moderacion.json`): instantáneo y sin red. Normaliza trucos («F0LLA», «fooolla», «f o l l a»), bloquea lo evidente mientras escribes (sexual, insultos, odio, drogas) y manda a revisión lo dudoso (apuestas, alcohol, desnudos artísticos, teléfonos). La universidad edita la lista en el JSON.
-2. **Modelo local opcional** (Ollama + Qwen): para lo que una lista no ve («vamos a reírnos de Fulano»). Se activa en `data/moderacion.json` (`llm.activo`) o, para probar, con `?moderador=ollama&modelo=qwen2.5:1.5b`:
+2. **Modelo propio** (`modelo/` → `src/data/modeloModeracion.json`, ~220 KB): n-gramas de caracteres + TF-IDF + regresión logística entrenados por el equipo con scikit-learn. Entiende frases que una lista no ve («vamos a reírnos de Hugo», «traed algo para fumar, ya me entendéis») y aguanta trucos («m4tar»). Va dentro de la app: sin servidor, sin descargas, al instante (también avisa mientras escribes). La app replica la inferencia en JS y un test comprueba que da las mismas probabilidades que Python.
    ```bash
-   ollama pull qwen2.5:1.5b
-   OLLAMA_ORIGINS=* ollama serve
+   cd frontend/modelo && pip install scikit-learn && python entrenar.py   # reentrena y evalúa
    ```
-   Si el modelo no responde en 6 s, decide el filtro: publicar nunca se queda colgado.
+   Evaluación con plantillas que no vio al entrenar: 76 % de acierto, 0 planes normales bloqueados por error. Los datos son sintéticos: para producción se reentrena con los anuncios que revise Vida universitaria.
+   (Opcional) un LLM en un servidor de la universidad (Ollama + Qwen) con `llm.activo` en `data/moderacion.json`.
 3. **Revisión humana solo de lo dudoso**: lo marcado y lo que denuncian los alumnos (botón «Denunciar») llega a `#/community/moderacion`. Lo demás se publica solo. Los nombres de equipos de los torneos pasan el mismo filtro.
 
-En producción el modelo iría en un servidor de la universidad (o en el Worker), no en el portátil de cada alumno.
+El LLM opcional iría en un servidor de la universidad (o en el Worker), no en el portátil de cada alumno; el modelo propio ya va dentro de la app.

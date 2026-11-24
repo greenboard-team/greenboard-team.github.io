@@ -2,3 +2,4 @@ _api/greenboard-mvp/.wrangler/
 node_modules/
 
 _api/greenboard-mvp/.dev.vars
+__pycache__/
