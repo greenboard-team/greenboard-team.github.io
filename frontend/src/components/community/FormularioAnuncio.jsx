@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import { Segmentos } from '../common/Piezas.jsx';
 import { SemanaGrid } from '../horario/SemanaGrid.jsx';
 import BannerGta from './BannerGta.jsx';
 import universidad from '../../data/universidad.json';
-import { FORMATOS_PADEL, TIPOS, validar } from '../../domain/comunidad/anuncios.js';
+import { FORMATOS_PADEL, TIPOS, textoAModerar, validar } from '../../domain/comunidad/anuncios.js';
+import { analizar, explicar } from '../../domain/moderacion/reglas.js';
+import { configModeracion } from '../../services/moderacion/moderadores.js';
 import { modosDisponibles, modoPago } from '../../domain/comunidad/pagos.js';
 import { clasesQueSolapan } from '../../domain/horario.js';
 import { aMin, deMin, DIAS_SEMANA, diaSemana, nombreDia } from '../../domain/fechas.js';
@@ -44,13 +46,14 @@ function borradorInicial(params, perfil, comunidades) {
 /** Formulario para publicar una pachanga, un partido de pádel o un plan, eligiendo la franja sobre tu horario. */
 export default function FormularioAnuncio() {
   const m = useAcademico();
-  const { comunidades, publicar } = useComunidad();
+  const { comunidades, publicar, dispatch } = useComunidad();
   const perfil = usePerfil();
   const { avisar } = useUi();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [b, setB] = useState(() => borradorInicial(params, perfil, comunidades));
   const [errores, setErrores] = useState([]);
+  const [enviando, setEnviando] = useState(false);
   const set = (cambios) => { setB((x) => ({ ...x, ...cambios })); setErrores([]); };
 
   const comunidad = comunidades.find((c) => c.id === b.comunidad);
@@ -69,8 +72,20 @@ export default function FormularioAnuncio() {
   const choque = b.dia ? clasesQueSolapan(m.semana, b) : [];
   const nombreAsig = (id) => corto(m.subjects.find((s) => s.id === id) || { n: id });
 
-  const enviar = (e) => {
+  // Aviso en vivo con el filtro local (instantáneo); el modelo, si está activo, solo actúa al publicar
+  const previo = analizar(textoAModerar(b), configModeracion);
+  // Un intento bloqueado cuenta una vez por anuncio (para las estadísticas de moderación)
+  const contado = useRef(false);
+  useEffect(() => {
+    if (previo.veredicto === 'bloquear' && !contado.current) {
+      contado.current = true;
+      dispatch({ type: 'contarModeracion', clave: 'bloqueados' });
+    }
+  }, [previo.veredicto, dispatch]);
+
+  const enviar = async (e) => {
     e.preventDefault();
+    if (enviando) return;
     const final = {
       ...b,
       comunidad: b.tipo === 'plan' ? (comunidadDelJuego?.id || b.comunidad || (b.plan.categoria === 'arte' ? 'arte' : b.plan.categoria === 'estudio' ? 'estudio' : null)) : b.tipo,
@@ -78,9 +93,11 @@ export default function FormularioAnuncio() {
     };
     const errs = validar(final);
     if (errs.length) { setErrores(errs); return; }
-    const r = publicar(final, m.semana);
+    setEnviando(true);
+    const r = await publicar(final, m.semana);
+    setEnviando(false);
     if (r.error) { setErrores([r.error]); return; }
-    avisar('Publicado. Le saldrá a quien tenga ese hueco libre.');
+    avisar(r.anuncio.estado === 'revision' ? 'Enviado a revisión: lo verá Vida universitaria antes de publicarse.' : 'Publicado. Le saldrá a quien tenga ese hueco libre.');
     navigate(`/community?nuevo=${r.anuncio.id}`);
   };
 
@@ -205,10 +222,15 @@ export default function FormularioAnuncio() {
         </div>
       </fieldset>
 
+      {previo.veredicto !== 'ok' && (
+        <p className={previo.veredicto === 'bloquear' ? 'gc-moderacion bloquea' : 'gc-moderacion revisa'} role="status">
+          <Icon n="aviso" />{explicar(previo)}
+        </p>
+      )}
       {errores.length > 0 && <div className="error" role="alert">{errores.map((e) => <p key={e} style={{ margin: 0 }}>{e}</p>)}</div>}
       <p className="gc-publicar">
-        <button className="btn" type="submit"><Icon n="check" />Publicar anuncio</button>
-        <span className="note">Saldrá en Green Community y en el horario de quien tenga ese hueco libre.</span>
+        <button className="btn" type="submit" disabled={enviando || previo.veredicto === 'bloquear'}><Icon n="check" />{enviando ? 'Revisando…' : 'Publicar anuncio'}</button>
+        <span className="note">Se revisa automáticamente antes de publicarse. Saldrá en Green Community y en el horario de quien tenga ese hueco libre.</span>
       </p>
     </form>
   );

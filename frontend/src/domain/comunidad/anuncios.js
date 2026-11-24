@@ -65,6 +65,9 @@ export function crearAnuncio(borrador, semana = {}, ahora = new Date()) {
     comunidad: borrador.comunidad || null,
     creado: ahora.toISOString(),
     mio: true,
+    estado: borrador.estado || 'publicado', // 'publicado' | 'revision' | 'retirado'
+    moderacion: borrador.moderacion || null,
+    denuncias: [],
   };
   base.enClase = clasesQueSolapan(semana, base).length > 0;
 
@@ -99,6 +102,12 @@ export function crearAnuncio(borrador, semana = {}, ahora = new Date()) {
 
 /** Emoji del anuncio: el de su comunidad si la tiene (🌴 GTA, ⚔️ LoL…), si no el de su tipo. */
 export const emojiDe = (a, comunidades = []) => comunidades.find((c) => c.id === a.comunidad)?.emoji || TIPOS[a.tipo].emoji;
+
+/** Se ve en la lista: no retirado y, si está en revisión, solo lo ve quien lo publicó. */
+export const esVisible = (a) => a.estado !== 'retirado' && (a.estado !== 'revision' || a.mio);
+
+/** Texto que se modera: lo que escribe quien publica. */
+export const textoAModerar = (b) => [b.titulo, b.nota, b.lugar?.tipo === 'fuera' ? b.lugar.texto : '', b.plan?.modo].filter(Boolean).join('. ');
 
 export const plazasLibres = (a) => Math.max(0, a.plazas - a.apuntados.length);
 export const estaCompleto = (a) => plazasLibres(a) === 0;

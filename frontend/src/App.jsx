@@ -5,7 +5,7 @@ import InicioPage from './pages/InicioPage.jsx';
 import { AsignaturaPage, AsignaturasPage, CalificacionesPage, EntregasPage, MensajesPage, TramitesPage } from './pages/AcademicoPages.jsx';
 import { AjustesPage, EntrarPage, GruposPage } from './pages/CuentaPages.jsx';
 import HorarioPage from './pages/HorarioPage.jsx';
-import { CommunityPage, ComunidadDetallePage, NuevoAnuncioPage, TorneoPage, TorneosPage } from './pages/CommunityPages.jsx';
+import { CommunityPage, ComunidadDetallePage, ModeracionPage, NuevoAnuncioPage, TorneoPage, TorneosPage } from './pages/CommunityPages.jsx';
 import { SesionProvider, useSesion } from './store/SesionContext.jsx';
 import { UiProvider } from './store/UiContext.jsx';
 import { ComunidadProvider } from './store/ComunidadContext.jsx';
@@ -43,6 +43,7 @@ function Rutas() {
         <Route path="/community/c/:id" element={<ComunidadDetallePage />} />
         <Route path="/community/torneos" element={<TorneosPage />} />
         <Route path="/community/torneos/:id" element={<TorneoPage />} />
+        <Route path="/community/moderacion" element={<ModeracionPage />} />
         {academico?.real && <Route path="/ajustes" element={<AjustesPage />} />}
         <Route path="/com" element={<Navigate to="/community" replace />} />
         <Route path="/demo" element={<Navigate to="/inicio" replace />} />

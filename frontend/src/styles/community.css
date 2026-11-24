@@ -136,6 +136,18 @@
 .gc-franja-manual select:focus,.gc-franja-manual input:focus{outline:none;border-color:var(--accent)}
 .gc-aviso-clase{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:700}
 .gc-ok-clase{margin:10px 0 0;display:flex;gap:6px;align-items:center;color:var(--accent);font-weight:700}
+.gc-moderacion{display:flex;gap:8px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:12px;font-weight:700}
+.gc-moderacion svg{flex:none;margin-top:2px}
+.gc-moderacion.bloquea{background:var(--late-bg);color:var(--late)}
+.gc-moderacion.revisa{background:var(--warn-bg);color:var(--warn)}
+.gc-revision{width:100%;justify-content:center}
+.gc-denunciar{font-size:12px;color:var(--muted)}
+.gc-mod-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.gc-mod-stats div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.gc-mod-stats b{display:block;font-family:var(--f-display);font-size:28px}
+.gc-mod-item{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:12px 14px;margin-top:10px}
+.gc-mod-item h4{margin:0 0 4px}
+.gc-mod-item .fila-b{margin-top:10px}
 .gc-publicar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0}
 
 /* Horario semanal */

@@ -1,6 +1,8 @@
 import semilla from '../data/greenCommunity.json';
 import { local, CLAVES } from '../services/storage/almacen.js';
 import { generarCuadro, marcarGanador } from '../domain/comunidad/torneos.js';
+import { analizar } from '../domain/moderacion/reglas.js';
+import moderacion from '../data/moderacion.json';
 
 /**
  * Repository de Green Community. Hoy guarda en el navegador (localStorage);
@@ -23,6 +25,7 @@ export function estadoInicial() {
     anuncios: semilla.anuncios.map((a) => ({ ...a, apuntados: [...a.apuntados] })),
     torneos: semilla.torneos.map(prepararTorneo),
     seguidas: ['gta6', 'futbol'],
+    moderacion: { bloqueados: 0, publicadosSolos: 0, revisados: 0 },
     perfil: null, // {nombre, curso}: se rellena la primera vez que publicas o te unes
   };
 }
@@ -31,8 +34,14 @@ export function cargar() {
   const guardado = local.leer(CLAVES.comunidad);
   if (!guardado || guardado.version !== 1) return estadoInicial();
   // Las comunidades vienen siempre de la semilla (por si se añaden nuevas); lo demás, de lo guardado
-  return { ...estadoInicial(), ...guardado, comunidades: semilla.comunidades };
+  const estado = { ...estadoInicial(), ...guardado, comunidades: semilla.comunidades };
+  // Anuncios guardados antes de que existiera el filtro: si hoy se bloquearían, se retiran
+  estado.anuncios = estado.anuncios.map((a) => (a.mio && a.estado !== 'retirado' && analizar(textoDe(a), moderacion).veredicto === 'bloquear'
+    ? { ...a, estado: 'retirado', moderacion: { ...analizar(textoDe(a), moderacion), retiradoAlCargar: true } } : a));
+  return estado;
 }
+
+const textoDe = (a) => [a.titulo, a.nota, a.lugar?.texto, a.plan?.modo].filter(Boolean).join('. ');
 
 export function guardar(estado) {
   const { comunidades: _c, ...resto } = estado;

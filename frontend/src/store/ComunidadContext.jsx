@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import * as repo from '../repositories/comunidadRepository.js';
-import { crearAnuncio, salirse, unirse } from '../domain/comunidad/anuncios.js';
+import { crearAnuncio, esVisible, salirse, textoAModerar, unirse } from '../domain/comunidad/anuncios.js';
+import { analizar, explicar } from '../domain/moderacion/reglas.js';
+import { configModeracion, crearModerador } from '../services/moderacion/moderadores.js';
 import { empezar, inscribir, marcarGanador, validarTorneo } from '../domain/comunidad/torneos.js';
 
 /**
@@ -20,12 +22,26 @@ export function comunidadReducer(s, a) {
       return cambiarAnuncio(a.id, (x) => unirse(x, a.persona, { aceptaCondiciones: a.acepta }));
     case 'salirse':
       return cambiarAnuncio(a.id, (x) => salirse(x, a.nombre));
+    case 'denunciar':
+      return cambiarAnuncio(a.id, (x) => {
+        const denuncias = [...(x.denuncias || []), { de: a.de, motivo: a.motivo, fecha: new Date().toISOString() }];
+        return { ...x, denuncias, estado: denuncias.length >= configModeracion.umbralDenuncias ? 'revision' : x.estado };
+      });
+    case 'aprobar':
+      return { ...cambiarAnuncio(a.id, (x) => ({ ...x, estado: 'publicado', denuncias: [] })), moderacion: { ...s.moderacion, revisados: s.moderacion.revisados + 1 } };
+    case 'retirar':
+      return { ...cambiarAnuncio(a.id, (x) => ({ ...x, estado: 'retirado' })), moderacion: { ...s.moderacion, revisados: s.moderacion.revisados + 1 } };
+    case 'contarModeracion':
+      return { ...s, moderacion: { ...s.moderacion, [a.clave]: (s.moderacion[a.clave] || 0) + 1 } };
     case 'borrar':
       return { ...s, anuncios: s.anuncios.filter((x) => x.id !== a.id) };
     case 'seguir':
       return { ...s, seguidas: s.seguidas.includes(a.id) ? s.seguidas.filter((x) => x !== a.id) : [...s.seguidas, a.id] };
-    case 'inscribir':
+    case 'inscribir': {
+      const r = analizar(a.equipo.equipo, configModeracion);
+      if (r.veredicto === 'bloquear') throw new Error('Ese nombre de equipo no se puede usar.');
       return cambiarTorneo(a.id, (t) => inscribir(t, a.equipo));
+    }
     case 'crearTorneo': {
       const e = validarTorneo(a.torneo);
       if (e.length) throw new Error(e.join(' '));
@@ -43,6 +59,7 @@ export function comunidadReducer(s, a) {
 }
 
 const Ctx = createContext(null);
+const moderador = crearModerador();
 
 export function ComunidadProvider({ children }) {
   const [estado, dispatch] = useReducer(comunidadReducer, null, repo.cargar);
@@ -62,19 +79,27 @@ export function ComunidadProvider({ children }) {
         return e.message;
       }
     },
-    publicar(borrador, semana) {
+    /** Modera y publica. Lo evidente se bloquea, lo dudoso va a revisión y el resto sale publicado solo. */
+    async publicar(borrador, semana) {
       try {
-        const anuncio = crearAnuncio(borrador, semana);
+        const r = await moderador.moderar(textoAModerar(borrador));
+        if (r.veredicto === 'bloquear') {
+          // Si lo bloquea el modelo (las reglas ya cuentan en vivo en el formulario)
+          if (r.fuente !== 'reglas') dispatch({ type: 'contarModeracion', clave: 'bloqueados' });
+          return { error: explicar(r), bloqueado: true };
+        }
+        const anuncio = crearAnuncio({ ...borrador, estado: r.veredicto === 'revisar' ? 'revision' : 'publicado', moderacion: r }, semana);
         dispatch({ type: 'perfil', perfil: borrador.autor });
         dispatch({ type: 'publicar', anuncio });
-        return { anuncio };
+        if (r.veredicto === 'ok') dispatch({ type: 'contarModeracion', clave: 'publicadosSolos' });
+        return { anuncio, aviso: explicar(r) };
       } catch (e) {
         return { error: e.message };
       }
     },
   }), []);
 
-  const valor = useMemo(() => ({ ...estado, dispatch, ...acciones }), [estado, acciones]);
+  const valor = useMemo(() => ({ ...estado, todos: estado.anuncios, anuncios: estado.anuncios.filter(esVisible), moderador: moderador.nombre, dispatch, ...acciones }), [estado, acciones]);
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
 

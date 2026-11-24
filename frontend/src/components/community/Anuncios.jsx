@@ -53,13 +53,17 @@ export function TarjetaAnuncio({ a, alUnirse }) {
       </div>
       <div className="gc-anuncio-pie">
         <span className="gc-autor"><span className="avatar sm">{iniciales(a.autor.nombre)}</span>{a.autor.nombre}<small>{a.autor.curso}</small></span>
+        {a.mio && a.estado === 'revision' && <span className="gc-tag aviso gc-revision">En revisión · solo lo ves tú</span>}
         {a.mio ? (
           <button className="linkbtn" onClick={() => { dispatch({ type: 'borrar', id: a.id }); avisar('Anuncio retirado'); }}>Retirar mi anuncio</button>
         ) : apuntado ? (
           <span className="gc-dentro"><span className="pill ok"><Icon n="check" />Apuntado</span>
             <button className="linkbtn" onClick={() => { dispatch({ type: 'salirse', id: a.id, nombre: perfil.nombre }); avisar('Te has salido'); }}>Salirme</button></span>
         ) : (
-          <button className="btn sm" disabled={!libres} onClick={() => alUnirse(a)}>{libres ? 'Unirme' : 'Completo'}</button>
+          <span className="gc-dentro">
+            <button className="linkbtn gc-denunciar" onClick={() => { dispatch({ type: 'denunciar', id: a.id, de: perfil.nombre, motivo: 'Inapropiado' }); avisar('Gracias. Lo hemos ocultado y lo revisará Vida universitaria.'); }}>Denunciar</button>
+            <button className="btn sm" disabled={!libres} onClick={() => alUnirse(a)}>{libres ? 'Unirme' : 'Completo'}</button>
+          </span>
         )}
       </div>
     </article>

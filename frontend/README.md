@@ -71,3 +71,18 @@ src/
 - **Horario**: la pestaña Horario pinta en tus huecos los planes que caben, y te unes desde ahí.
 
 Todo lo de Green Community es de ejemplo y se guarda en el navegador. En la demo no se cobra nada.
+
+## Moderación (sin que Secretaría lo revise todo)
+
+Todo anuncio pasa por `services/moderacion/moderadores.js` antes de publicarse, en capas:
+
+1. **Filtro local** (`domain/moderacion/reglas.js` + `data/moderacion.json`): instantáneo y sin red. Normaliza trucos («F0LLA», «fooolla», «f o l l a»), bloquea lo evidente mientras escribes (sexual, insultos, odio, drogas) y manda a revisión lo dudoso (apuestas, alcohol, desnudos artísticos, teléfonos). La universidad edita la lista en el JSON.
+2. **Modelo local opcional** (Ollama + Qwen): para lo que una lista no ve («vamos a reírnos de Fulano»). Se activa en `data/moderacion.json` (`llm.activo`) o, para probar, con `?moderador=ollama&modelo=qwen2.5:1.5b`:
+   ```bash
+   ollama pull qwen2.5:1.5b
+   OLLAMA_ORIGINS=* ollama serve
+   ```
+   Si el modelo no responde en 6 s, decide el filtro: publicar nunca se queda colgado.
+3. **Revisión humana solo de lo dudoso**: lo marcado y lo que denuncian los alumnos (botón «Denunciar») llega a `#/community/moderacion`. Lo demás se publica solo. Los nombres de equipos de los torneos pasan el mismo filtro.
+
+En producción el modelo iría en un servidor de la universidad (o en el Worker), no en el portátil de cada alumno.

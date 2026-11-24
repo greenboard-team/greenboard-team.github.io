@@ -131,6 +131,7 @@ export function CommunityPage() {
 
       <div className="row gc-seccion"><h3 className="sub">Estudio · apuntes y clases de apoyo</h3><DemoFlag>compañeros de ejemplo</DemoFlag></div>
       <Apuntes />
+      <p className="note" style={{ marginTop: 24 }}>Los anuncios se revisan automáticamente antes de publicarse. <Link to="/community/moderacion">Panel de moderación (Vida universitaria) →</Link></p>
     </>
   );
 }
@@ -336,6 +337,53 @@ export function TorneoPage() {
         {t.inscritos.map((x) => <span key={x.equipo} className={x.mio ? 'mio' : ''}>{x.equipo}<small>{x.capitan}</small></span>)}
         {Array.from({ length: plazasTorneo(t) }, (_, i) => <span key={'v' + i} className="vacio">Libre</span>)}
       </div>
+    </>
+  );
+}
+
+/**
+ * Panel de Vida universitaria: solo llega lo dudoso (lo que el filtro manda a revisión y lo denunciado).
+ * Lo evidente ya lo bloqueó el filtro y lo normal se publicó solo.
+ */
+export function ModeracionPage() {
+  const { todos, moderacion, moderador, dispatch } = useComunidad();
+  const { avisar } = useUi();
+  const pendientes = todos.filter((a) => a.estado === 'revision');
+  const retirados = todos.filter((a) => a.estado === 'retirado');
+  const total = moderacion.publicadosSolos + moderacion.bloqueados + pendientes.length + moderacion.revisados;
+  return (
+    <>
+      <Link className="atras" to="/community">‹ Green Community</Link>
+      <div className="row"><h3>🏛 Moderación</h3><DemoFlag>vista de Vida universitaria</DemoFlag></div>
+      <p className="note">Todo anuncio pasa antes por el moderador automático ({moderador}). Aquí solo llega lo dudoso y lo que denuncian los alumnos.</p>
+      <div className="gc-mod-stats">
+        <div><b>{moderacion.publicadosSolos}</b><span className="note">publicados solos</span></div>
+        <div><b>{moderacion.bloqueados}</b><span className="note">intentos bloqueados al momento</span></div>
+        <div><b>{pendientes.length}</b><span className="note">esperando revisión</span></div>
+        <div><b>{total ? Math.round(((moderacion.publicadosSolos + moderacion.bloqueados) / total) * 100) : 100} %</b><span className="note">sin intervención humana</span></div>
+      </div>
+      <h3 className="sub">Pendientes</h3>
+      {!pendientes.length && <p className="note gc-vacio">Nada que revisar. 🎉</p>}
+      {pendientes.map((a) => (
+        <article key={a.id} className="gc-mod-item">
+          <h4>{a.titulo}</h4>
+          <p className="note" style={{ margin: 0 }}>{a.autor.nombre} · {a.autor.curso}{a.nota && <> · «{a.nota}»</>}</p>
+          <p style={{ margin: '6px 0 0' }}>
+            {a.denuncias?.length > 0 && <span className="gc-tag aviso">{a.denuncias.length} denuncia{a.denuncias.length > 1 ? 's' : ''}</span>}{' '}
+            {a.moderacion?.motivos?.map((x, i) => <span key={i} className="gc-tag">{x.nombre} · {a.moderacion.fuente}</span>)}
+          </p>
+          <div className="fila-b">
+            <button className="btn sm" onClick={() => { dispatch({ type: 'aprobar', id: a.id }); avisar('Aprobado y publicado'); }}>Aprobar</button>
+            <button className="btn sm dark" onClick={() => { dispatch({ type: 'retirar', id: a.id }); avisar('Anuncio retirado'); }}>Retirar</button>
+          </div>
+        </article>
+      ))}
+      {retirados.length > 0 && (
+        <>
+          <h3 className="sub">Retirados</h3>
+          {retirados.map((a) => <p key={a.id} className="note" style={{ margin: '4px 0' }}>«{a.titulo}» · {a.autor.nombre}</p>)}
+        </>
+      )}
     </>
   );
 }
