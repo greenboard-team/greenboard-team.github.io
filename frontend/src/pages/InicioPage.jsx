@@ -10,7 +10,7 @@ import { MigrarBlackboard } from './CuentaPages.jsx';
 import { capitalizar, fmtDia, fmtLargo, saludo } from '../domain/fechas.js';
 import { asignatura, sesionesAsistencia, tituloHorario } from '../repositories/academicoRepository.js';
 import { useAcademico } from '../store/SesionContext.jsx';
-import { useUi } from '../store/UiContext.jsx';
+import { faltaPendiente, useUi } from '../store/UiContext.jsx';
 import { useInstalar } from '../hooks/useInstalar.js';
 import { useAbrir } from '../hooks/useAbrir.js';
 
@@ -92,7 +92,7 @@ export default function InicioPage() {
         </section>
         <section className="tarj" id="t-asis">
           <div className="tarj-h">
-            <span className="ic" style={ui.justificado ? undefined : { background: 'var(--late-bg)', color: 'var(--late)' }}><Icon n="asis" /></span>
+            <span className="ic" style={!faltaPendiente(ui) ? undefined : { background: 'var(--late-bg)', color: 'var(--late)' }}><Icon n="asis" /></span>
             <h4>Asistencia<small>{asignatura(m, m.asisId).n} · {l.filter((x) => x.v).length} de {l.length}</small></h4>
             <DemoFlag>de ejemplo</DemoFlag>
           </div>

@@ -4,15 +4,16 @@
   {
    "id": "apuntes",
    "t": "Apuntes de Análisis Matemático III",
-   "s": "Compartidos por un alumno de 5.º · curso 2025/26",
-   "accion": "Pedir acceso",
-   "hecho": "Solicitud enviada",
+   "s": "Compartidos por un alumno de 5.º · curso 2025/26 · abiertos a todos",
+   "accion": "Ver apuntes",
+   "hecho": "Vistos",
    "det": [
     "Tema 1 · Sucesiones y series de funciones",
     "Tema 2 · Integrales de línea",
     "Tema 3 · Integrales de superficie",
     "Exámenes resueltos 2025/26"
-   ]
+   ],
+   "tipo": "apuntes"
   },
   {
    "id": "repaso",

@@ -12,7 +12,7 @@ import { cortoAula } from '../services/adapters/webuntisAdapter.js';
 import { slug } from '../domain/texto.js';
 import { asignatura, sesionesAsistencia } from '../repositories/academicoRepository.js';
 import { useAcademico } from '../store/SesionContext.jsx';
-import { useUi } from '../store/UiContext.jsx';
+import { faltaPendiente, useUi } from '../store/UiContext.jsx';
 
 const SUBTABS = [['contenido', 'Contenido'], ['notas', 'Notas'], ['asistencia', 'Asistencia'], ['entregas', 'Entregas'], ['chat', 'Chat']];
 
@@ -43,7 +43,7 @@ export function AsignaturasPage() {
             <div className="code">{s.c}</div>
             {s.p && <p className="note" style={{ margin: '8px 0 0' }}>Profesor: {s.p}</p>}
             {s.last && <p className="note" style={{ margin: '8px 0 0' }}>{s.last}</p>}
-            {s.id === m.asisId && !ui.justificado && <p style={{ margin: '8px 0 0' }}><span className="pill late">1 falta sin justificar{m.real ? ' · de ejemplo' : ''}</span></p>}
+            {s.id === m.asisId && faltaPendiente(ui) && <p style={{ margin: '8px 0 0' }}><span className="pill late">1 falta sin justificar{m.real ? ' · de ejemplo' : ''}</span></p>}
           </Link>
         ))}
       </div>
@@ -60,7 +60,7 @@ export function AsignaturaPage() {
   if (!s) return <AsignaturasPage />;
   const l = sesionesAsistencia(m, id);
   const pres = l.filter((x) => x.v).length;
-  const falta = id === m.asisId && !ui.justificado;
+  const falta = id === m.asisId && faltaPendiente(ui);
   const sub = SUBTABS.some(([k]) => k === subUrl) ? subUrl : falta ? 'asistencia' : 'contenido';
   const chat = m.chats.find((c) => c.id === id);
   const ents = m.due.filter((x) => x.s === id);

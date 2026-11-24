@@ -11,6 +11,7 @@ import { useComunidad } from '../../store/ComunidadContext.jsx';
 import { useAcademico } from '../../store/SesionContext.jsx';
 import { useUi } from '../../store/UiContext.jsx';
 import { usePerfil } from '../../hooks/usePerfil.js';
+import { useAbrir } from '../../hooks/useAbrir.js';
 
 /** Planes de la semana que caben en tus huecos, empezando por los más cercanos a hoy. */
 export function planesEnMisHuecos(anuncios, semana, perfil, hoy = diaSemana()) {
@@ -27,6 +28,7 @@ export function ResumenComunidad() {
   const perfil = usePerfil();
   const { ui, dispatch, avisar } = useUi();
   const [abierto, setAbierto] = useState(null);
+  const abrir = useAbrir();
   const planes = planesEnMisHuecos(anuncios, m.semana, perfil);
   return (
     <section className="tarj" id="t-com">
@@ -46,7 +48,9 @@ export function ResumenComunidad() {
         <div key={c.id} className="fila fila-e">
           <span className="ic"><Icon n="libro" /></span>
           <div><b>{c.t}</b><small>{c.s}</small></div>
-          <BotonApunte sm c={c} hecho={ui.com[c.id]} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar(c.id === 'apuntes' ? 'Solicitud enviada (demo)' : 'Apuntado (demo)'); }} />
+          {c.tipo === 'apuntes'
+            ? <button className="btn sm" id={`btn-${c.id}`} onClick={() => abrir('com-' + c.id)}>{c.accion}</button>
+            : <BotonApunte sm c={c} hecho={ui.com[c.id]} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar('Apuntado (demo)'); }} />}
         </div>
       ))}
       <DialogoUnirse a={abierto} alCerrar={() => setAbierto(null)} />

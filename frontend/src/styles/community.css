@@ -178,3 +178,9 @@
   .gc-lista,.gc-torneos{grid-template-columns:1fr}
   .gc-form fieldset{padding:12px}
 }
+
+/* Apuntes compartidos (Estudio) */
+.temas-c{display:flex;flex-direction:column;gap:6px}
+.gc-apuntes summary{list-style:none;width:max-content;cursor:pointer}
+.gc-apuntes summary::-webkit-details-marker{display:none}
+.gc-apuntes[open] summary{margin-bottom:10px;background:var(--ok-bg);color:var(--accent)}

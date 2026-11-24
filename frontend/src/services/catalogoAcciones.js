@@ -47,14 +47,14 @@ export function chips(m, ui, comunidad, ahora = new Date()) {
     const s = m.subjects.find((x) => x.id === sig.s) || { n: '' };
     out.push({ id: 'horario', t: `${corto(s)} · ${m.finde ? 'lun ' : ''}${sig.h} · ${sig.a}`, ico: 'pin', por: sig.changed ? 'aula nueva' : 'siguiente' });
   }
-  if (!ui.justificado) out.push({ id: 'justificante', t: 'Subir justificante', ico: 'asis', rojo: true, por: '1 falta' });
+  if (!ui.justificado && !ui.noJustificada) out.push({ id: 'justificante', t: 'Subir justificante', ico: 'asis', rojo: true, por: '1 falta' });
   const gta = comunidad.comunidades.find((c) => c.id === 'gta6');
   if (gta) out.push({ id: 'gc-c-gta6', ruta: '/community/c/gta6', t: 'GTA VI con gente de la uni', ico: 'mando', por: 'nuevo' });
   out.push({ id: 'gc-futbol', ruta: '/community?tipo=futbol', t: 'Pachanga en tu hueco', ico: 'balon', por: 'community' });
   const vie = ahora.getDay() === 5;
   out.push({ id: 'padel', t: vie && ahora.getHours() >= 12 ? 'Reservar pádel esta tarde' : 'Reservar pádel el viernes', ico: 'padel', q: vie ? 'pádel hoy' : 'pádel viernes' });
   out.push({ id: 'aula', t: 'Reservar aula para estudiar', ico: 'aula' });
-  if (!ui.com.apuntes) out.push({ id: 'com-apuntes', t: 'Apuntes de Análisis III', ico: 'libro', por: 'estudio' });
+  out.push({ id: 'com-apuntes', t: 'Apuntes de Análisis III', ico: 'libro', por: 'estudio' });
   const nl = sinLeer(m, ui.leidos);
   if (nl) out.push({ id: 'mensajes', t: `Mensajes · ${nl} sin leer`, ico: 'uni' });
   if (m.notas.aiii) out.push({ id: 'notas-aiii', t: 'Nota nueva: Asistencia', ico: 'asis', por: 'Análisis III' });

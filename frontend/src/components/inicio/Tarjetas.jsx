@@ -164,22 +164,41 @@ export function Matricula({ conCabecera = true }) {
   );
 }
 
+/** Apuntes compartidos: abiertos a todos, cada tema se abre directamente. */
+export function ApuntesLista({ c }) {
+  const { avisar } = useUi();
+  return (
+    <div className="temas-c">
+      {c.det.map((d) => (
+        <button key={d} className="mat" onClick={() => avisar(`Se abre «${d}» (PDF de ejemplo)`)}>
+          <Icon n="doc" /><span>{d}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Apunte({ c }) {
   const { ui, dispatch, avisar } = useUi();
   const hecho = ui.com[c.id];
+  if (c.tipo === 'apuntes') {
+    return (
+      <>
+        <CabeceraTarjeta id={'com-' + c.id} icono="libro" titulo={c.t} sub={c.s} />
+        <ApuntesLista c={c} />
+      </>
+    );
+  }
   return (
     <>
       <CabeceraTarjeta id={'com-' + c.id} icono="libro" titulo={c.t} sub={c.s} />
       <div className="asis">
         {c.det.map((d) => (
-          <div key={d} className="ses" style={{ gridTemplateColumns: '1fr auto' }}>
-            <span>{d}</span>
-            {c.id === 'apuntes' && <span className={`pill ${hecho ? 'soon' : 'late'}`}>{hecho ? 'pendiente' : 'sin acceso'}</span>}
-          </div>
+          <div key={d} className="ses" style={{ gridTemplateColumns: '1fr' }}><span>{d}</span></div>
         ))}
       </div>
       <p style={{ margin: '12px 0 0' }}>
-        <BotonApunte c={c} hecho={hecho} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar(c.id === 'apuntes' ? 'Solicitud enviada (demo)' : 'Apuntado (demo)'); }} />
+        <BotonApunte c={c} hecho={hecho} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar('Apuntado (demo)'); }} />
       </p>
     </>
   );

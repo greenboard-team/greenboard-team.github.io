@@ -5,7 +5,7 @@ import { sinLeer } from '../../repositories/academicoRepository.js';
 import { estoyApuntado } from '../../domain/comunidad/anuncios.js';
 import { useAcademico, useSesion } from '../../store/SesionContext.jsx';
 import { useComunidad } from '../../store/ComunidadContext.jsx';
-import { useUi } from '../../store/UiContext.jsx';
+import { faltaPendiente, useUi } from '../../store/UiContext.jsx';
 import { usePerfil } from '../../hooks/usePerfil.js';
 
 function Pestanas() {
@@ -16,7 +16,7 @@ function Pestanas() {
   const items = [
     ['/inicio', 'Inicio', null],
     ['/horario', 'Horario', null],
-    ['/asig', 'Asignaturas', ui.justificado ? <span className="count">{m.subjects.length}</span> : <span className="count rojo" title="Faltas sin justificar">1</span>],
+    ['/asig', 'Asignaturas', !faltaPendiente(ui) ? <span className="count">{m.subjects.length}</span> : <span className="count rojo" title="Faltas sin justificar">1</span>],
     ['/notas', 'Calificaciones', null],
     ['/ent', 'Entregas', <span key="c" className="count">{vivas}</span>],
     ['/msg', 'Mensajes', nl ? <span className="count rojo" title="Sin leer">{nl}</span> : null],
@@ -57,10 +57,10 @@ function Pie() {
 
 /** Recorrido guiado de la demo (Happy Path). Resalta el elemento del paso actual. */
 function pasoActual(ui, ruta, asisId, apuntadoAlgo) {
-  if (!ui.justificado) {
+  if (faltaPendiente(ui)) {
     if (ruta !== '/inicio' && !ruta.startsWith('/asig/' + asisId)) return { n: 1, ir: '/inicio' };
     if (!ui.archivo) return { n: 1, t: 'Inicio: el aula nueva ya está en el horario. Y un 0 en rojo: sube el justificante ahí mismo.', obj: '.fila-falta' };
-    return { n: 1, t: 'Justificante listo. Envíalo.', obj: '.enviar' };
+    return { n: 1, t: 'Justificante listo. Envíalo (o, si no hace falta, «No justificar»).', obj: '.enviar' };
   }
   if (!ui.padel.hecho) {
     if (ruta !== '/inicio') return { n: 2, ir: '/inicio' };

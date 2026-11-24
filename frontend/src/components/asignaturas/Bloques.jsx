@@ -59,6 +59,15 @@ export function Asistencia({ id, soloFalta }) {
             <div key={i} className="ses"><div><time>{fecha}</time><small>Asistencia registrada</small></div><span className="nota-a">1</span></div>
           );
         }
+        if (ui.noJustificada) {
+          return (
+            <div key={i} className="ses enviado">
+              <div><time>{fecha}{nombre}</time><small>Falta sin justificar · has decidido no justificarla</small></div>
+              <span className="nota-a">0</span>
+              <button className="linkbtn" style={{ gridColumn: '1 / -1', justifySelf: 'start' }} onClick={() => dispatch({ type: 'cambiar', cambios: { noJustificada: false } })}>Deshacer</button>
+            </div>
+          );
+        }
         if (ui.justificado) {
           return (
             <div key={i} className="ses enviado">
@@ -87,6 +96,7 @@ export function Asistencia({ id, soloFalta }) {
                 {!ui.archivo && (
                   <button className="linkbtn" onClick={() => dispatch({ type: 'cambiar', cambios: { archivo: 'justificante-medico.pdf' } })}>Usar un justificante de ejemplo</button>
                 )}
+                <button className="linkbtn" onClick={() => { dispatch({ type: 'cambiar', cambios: { noJustificada: true, archivo: null } }); avisar('Vale, no la justificas. Ya no te lo recordaremos.'); }}>No justificar</button>
               </div>
             </div>
           </div>

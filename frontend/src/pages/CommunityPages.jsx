@@ -6,7 +6,7 @@ import BannerGta from '../components/community/BannerGta.jsx';
 import { ListaAnuncios } from '../components/community/Anuncios.jsx';
 import { Cuadro, DEPORTE, PREMIO, TarjetaTorneo } from '../components/community/Torneos.jsx';
 import FormularioAnuncio from '../components/community/FormularioAnuncio.jsx';
-import { BotonApunte } from '../components/inicio/Tarjetas.jsx';
+import { ApuntesLista, BotonApunte } from '../components/inicio/Tarjetas.jsx';
 import universidad from '../data/universidad.json';
 import { filtrar, ordenar } from '../domain/comunidad/anuncios.js';
 import { bote, campeon, plazasTorneo, TAMANOS } from '../domain/comunidad/torneos.js';
@@ -34,7 +34,14 @@ function Apuntes() {
         <div key={c.id} className="card act">
           <h4>📚 {c.t}</h4>
           <p className="note">{c.s}</p>
-          <BotonApunte c={c} hecho={ui.com[c.id]} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar(c.id === 'apuntes' ? 'Solicitud enviada (demo)' : 'Apuntado (demo)'); }} />
+          {c.tipo === 'apuntes' ? (
+            <details className="gc-apuntes">
+              <summary className="btn">{c.accion}</summary>
+              <ApuntesLista c={c} />
+            </details>
+          ) : (
+            <BotonApunte c={c} hecho={ui.com[c.id]} onClick={() => { dispatch({ type: 'apuntarCom', id: c.id }); avisar('Apuntado (demo)'); }} />
+          )}
         </div>
       ))}
     </div>

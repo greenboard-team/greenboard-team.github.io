@@ -9,6 +9,7 @@ import { sesion, CLAVES } from '../services/storage/almacen.js';
 export const UI_INICIAL = {
   archivo: null,
   justificado: false,
+  noJustificada: false,
   com: {},
   mat: false,
   guia: true,
@@ -42,6 +43,9 @@ export function uiReducer(s, a) {
       throw new Error('Acción desconocida: ' + a.type);
   }
 }
+
+/** ¿Queda una falta por resolver? (ni justificada ni marcada como «no justificar»). */
+export const faltaPendiente = (ui) => !ui.justificado && !ui.noJustificada;
 
 const Ctx = createContext(null);
 
