@@ -18,6 +18,7 @@ const MAX_PERSONAS = 80;
 const AVATARES = 10;
 const ORIGENES = [
   "https://greenboard-team.github.io",
+  "https://raw.githack.com",
   "http://localhost:4173", "http://127.0.0.1:4173",
   "http://localhost:8000", "http://127.0.0.1:8000",
   "http://localhost:5500", "http://127.0.0.1:5500",
