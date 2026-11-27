@@ -1,4 +1,5 @@
 _api/greenboard-mvp/.wrangler/
 node_modules/
+.claude/
 
 _api/greenboard-mvp/.dev.vars

@@ -1,7 +1,7 @@
 // node --test test/   (desde _api/greenboard-mvp). Funciones puras de src/cuentas.js, sin Worker.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aulasLibres, codigosDe, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, tocaSesion } from "../src/cuentas.js";
+import { aulasLibres, codigosDe, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, sinDuplicados, tocaSesion } from "../src/cuentas.js";
 
 test("solo entran correos de alumno de U-tad", () => {
   const d = ["live.u-tad.com"];
@@ -87,12 +87,29 @@ test("conflictos: la misma asignatura en grupos con horarios distintos", () => {
   assert.equal(conflictosDeGrupos(datos, ["FIIS4A"]).length, 0);
 });
 
-test("conflictos: mismo horario en dos grupos no es conflicto", () => {
+test("conflictos: mismo día, hora y aula en dos grupos no es conflicto", () => {
   const datos = { sessions: [
-    { cod: "FIGI", asig: "Física General I", g: ["A"], d: "2026-11-23", h: "11:00", f: "13:00" },
-    { cod: "FIGI", asig: "Física General I", g: ["B"], d: "2026-11-24", h: "11:00", f: "13:00" },
+    { cod: "FIGI", asig: "Física General I", g: ["A"], d: "2026-11-23", h: "11:00", f: "13:00", aula: "112" },
+    { cod: "FIGI", asig: "Física General I", g: ["B"], d: "2026-11-23", h: "11:00", f: "13:00", aula: "112" },
   ] };
   assert.equal(conflictosDeGrupos(datos, ["A", "B"]).length, 0);
+});
+
+test("conflictos: la misma hora en otro día sí es conflicto", () => {
+  const datos = { sessions: [
+    { cod: "FIGI", asig: "Física General I", g: ["A"], d: "2026-11-23", h: "09:00", f: "11:00", aula: "112" },
+    { cod: "FIGI", asig: "Física General I", g: ["B"], d: "2026-11-24", h: "09:00", f: "11:00", aula: "112" },
+  ] };
+  assert.equal(conflictosDeGrupos(datos, ["A", "B"]).length, 1);
+});
+
+test("sinDuplicados: la misma clase que llega de dos grupos se pinta una vez", () => {
+  const sesiones = [
+    { d: "2026-11-24", h: "15:00", f: "17:00", asig: "PRO3", aula: "113" },
+    { d: "2026-11-24", h: "15:00", f: "17:00", asig: "PRO3", aula: "113" },
+    { d: "2026-11-24", h: "15:00", f: "17:00", asig: "PRO3", aula: "205" },
+  ];
+  assert.equal(sinDuplicados(sesiones).length, 2);
 });
 
 test("códigos: sueltos (se ligan al usarlos) o con correo asignado", () => {
@@ -108,4 +125,11 @@ test("tocaSesion: la asignatura elegida manda sobre el resto de grupos", () => {
   assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], {}), true);
   assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), false);
   assert.equal(tocaSesion({ cod: "PRO3", g: ["FIIS4A"] }, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), true);
+});
+
+test("tocaSesion: un cambio sin cod resuelve la asignatura por su nombre", () => {
+  const cambio = { asig: "Proyectos III: Desarrollo Web y Apps", g: ["INSO3D"] };
+  const mapa = new Map([["Proyectos III: Desarrollo Web y Apps", "PRO3"]]);
+  assert.equal(tocaSesion(cambio, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }, mapa), false);
+  assert.equal(tocaSesion(cambio, ["FIIS4A", "INSO3D"], { PRO3: "INSO3D" }, mapa), true);
 });

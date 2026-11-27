@@ -165,6 +165,7 @@ export default {
     if (url.pathname.startsWith("/app/")) {
       const h = new Headers(req.headers);
       h.delete("X-Interno-Admin");
+      h.delete("X-Interno-Equipo");
       if (env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`) h.set("X-Interno-Admin", "1");
       const res = await env.CUENTAS.get(env.CUENTAS.idFromName("cuentas")).fetch(new Request(req, { headers: h }));
       const out = new Response(res.body, res);

@@ -58,11 +58,26 @@ export function correoValido(correo, dominios) {
 }
 
 /** ¿Esta sesión entra en el horario del alumno? Si eligió grupo para la asignatura, manda esa elección. */
-export function tocaSesion(x, grupos, materias = {}) {
-  const clave = x.cod || x.asig;
+export function tocaSesion(x, grupos, materias = {}, codDeAsig = null) {
+  // Los cambios del pipeline no traen `cod`; se resuelve por el nombre de la asignatura.
+  const clave = x.cod || (codDeAsig && codDeAsig.get(x.asig)) || x.asig;
   const elegido = clave && materias[clave];
   if (elegido) return (x.g || []).includes(elegido);
   return (x.g || []).some((g) => grupos.includes(g));
+}
+
+/** Día de la semana (0 domingo … 6 sábado) de una fecha ISO, para comparar el patrón semanal. */
+const diaSemana = (iso) => new Date(iso + "T12:00").getDay();
+
+/** Quita sesiones repetidas (misma asignatura, día, hora y aula) que llegan de varios grupos. */
+export function sinDuplicados(items) {
+  const vistos = new Set();
+  return (items || []).filter((x) => {
+    const k = `${x.d}|${x.h}|${x.f}|${x.asig}|${x.aula || ""}`;
+    if (vistos.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
 }
 
 /**
@@ -88,9 +103,10 @@ export function conflictosDeGrupos(datos, grupos) {
   const out = [];
   for (const [clave, e] of por) {
     if (e.franjas.size < 2) continue;
+    // El patrón incluye el día de la semana y el aula: la misma hora en otro día (o en otra aula) también es conflicto.
     const patrones = new Set([...e.franjas.values()].map((f) =>
-      [...new Set([...f.values()].map((m) => `${m.h}-${m.f}`))].sort().join("|")));
-    if (patrones.size < 2) continue;   // mismo horario en ambos grupos: no hay nada que elegir
+      [...new Set([...f.values()].map((m) => `${diaSemana(m.d)}|${m.h}-${m.f}|${m.aula}`))].sort().join("|")));
+    if (patrones.size < 2) continue;   // mismo día, hora y aula en ambos grupos: no hay nada que elegir
     out.push({
       clave, cod: e.cod, asig: e.asig,
       opciones: grupos.filter((g) => e.franjas.has(g)).map((g) => {
@@ -202,8 +218,10 @@ export function parseIcs(texto) {
 const MOTIVOS = new Set(["no existe", "no es un calendario"]);
 const motivo = (e) => (MOTIVOS.has(e.message) || /^HTTP \d+$/.test(e.message) ? e.message : "sin respuesta");
 
-async function leerBlackboard(url) {
+async function leerBlackboard(url, hosts = []) {
   const r = await fetch(url, { redirect: "follow", headers: { Accept: "text/calendar" } });
+  // Tras las redirecciones, el host final tiene que seguir siendo el de U-tad.
+  if (hosts.length && !hosts.includes(new URL(r.url).host)) throw new Error("host");
   if (!r.ok) throw new Error(r.status === 404 ? "no existe" : `HTTP ${r.status}`);
   const t = await r.text();
   if (!t.slice(0, 400).includes("BEGIN:VCALENDAR")) throw new Error("no es un calendario");
@@ -272,8 +290,10 @@ export class Cuentas {
       if (codigo) {
         const entrada = codigosDe(env).find((c) => iguales(c.codigo, codigo));
         if (!entrada) {
-          // Límite global de códigos fallidos: probar correos distintos no sirve para adivinar códigos.
-          if (!(await this.limite("codigo-malo", 30, 3600e3))) return json({ ok: false, error: "espera" }, 429);
+          // Límites de códigos fallidos, por IP y globales: probar correos distintos no sirve para adivinar códigos.
+          const ip = req.headers.get("CF-Connecting-IP") || "sin-ip";
+          const porIp = await this.limite("codigo-malo:" + ip, 10, 3600e3);
+          if (!porIp || !(await this.limite("codigo-malo", 30, 3600e3))) return json({ ok: false, error: "espera" }, 429);
           return json({ ok: false, error: "codigo" }, 401);
         }
         // Un código con correo asignado solo vale para ese correo.
@@ -360,10 +380,11 @@ export class Cuentas {
       }
       if (req.method === "GET" && ruta === "/horario") {
         const g = await dato(env, "groups.json");
-        const mios = u.grupos || [], materias = u.materias || {};
-        const toca = (x) => tocaSesion(x, mios, materias);
+        const mios = (u.grupos || []).filter((x) => x in g.groups), materias = u.materias || {};
+        const codDeAsig = new Map((g.sessions || []).filter((x) => x.cod).map((x) => [x.asig, x.cod]));
+        const toca = (x) => tocaSesion(x, mios, materias, codDeAsig);
         return json({ generado: g.generated, semanas: g.weeks, grupos: mios, materias,
-          sesiones: g.sessions.filter(toca), cambios: (g.cambios || []).filter(toca) });
+          sesiones: sinDuplicados(g.sessions.filter(toca)), cambios: sinDuplicados((g.cambios || []).filter(toca)) });
       }
       if (req.method === "GET" && ruta === "/aulas") {
         const dia = url.searchParams.get("dia") || "", desde = url.searchParams.get("desde") || "",
@@ -380,7 +401,7 @@ export class Cuentas {
       const b = await body(), limpio = enlaceBlackboard(b.url, hosts);
       if (!limpio) return json({ ok: false, error: "enlace" }, 400);
       let datos;
-      try { datos = await leerBlackboard(limpio); } catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
+      try { datos = await leerBlackboard(limpio, hosts); } catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
       u.bb = limpio; await this.st.put(uk, u);
       return json({ ok: true, entregas: datos.entregas.length, eventos: datos.eventos.length });
     }
@@ -389,7 +410,7 @@ export class Cuentas {
     }
     if (req.method === "GET" && ruta === "/entregas") {
       if (!u.bb) return json({ ok: false, error: "sin-blackboard" }, 404);
-      try { return json({ ok: true, ...(await leerBlackboard(u.bb)) }); }
+      try { return json({ ok: true, ...(await leerBlackboard(u.bb, hosts)) }); }
       catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
     }
     return json({ error: "no" }, 404);
