@@ -29,6 +29,8 @@
 
 const SESION_DIAS = 30;
 const ENLACE_MIN = 15;
+// Un alumno puede tener clase en varios grupos (optativas, asignaturas de otro curso o cambio de titulación).
+const MAX_GRUPOS = 8;
 const APP_URL = "https://greenboard-team.github.io/mvp/";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -53,6 +55,79 @@ export function correoValido(correo, dominios) {
   const c = String(correo || "").trim().toLowerCase();
   const m = c.match(/^[a-z0-9._%+-]{1,64}@([a-z0-9.-]+)$/);
   return m && dominios.includes(m[1]) ? c : null;
+}
+
+/** ¿Esta sesión entra en el horario del alumno? Si eligió sus asignaturas, solo cuentan esas. */
+export function tocaSesion(x, grupos, materias = {}, codDeAsig = null, soloElegidas = false) {
+  // Los cambios del pipeline no traen `cod`; se resuelve por el nombre de la asignatura.
+  const clave = x.cod || (codDeAsig && codDeAsig.get(x.asig)) || x.asig;
+  const elegido = clave && materias[clave];
+  if (elegido) return (x.g || []).includes(elegido);
+  if (soloElegidas) return false;   // el alumno ya marcó sus asignaturas: las demás no cuentan
+  return (x.g || []).some((g) => grupos.includes(g));
+}
+
+/** Día de la semana (0 domingo … 6 sábado) de una fecha ISO, para comparar el patrón semanal. */
+const diaSemana = (iso) => new Date(iso + "T12:00").getDay();
+
+/** Quita sesiones repetidas (misma asignatura, día, hora y aula) que llegan de varios grupos. */
+export function sinDuplicados(items) {
+  const vistos = new Set();
+  return (items || []).filter((x) => {
+    const k = `${x.d}|${x.h}|${x.f}|${x.asig}|${x.aula || ""}`;
+    if (vistos.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
+}
+
+/** Agrupa las sesiones de los grupos elegidos por asignatura: qué grupos la dan y una muestra de horarios. */
+function porAsignatura(datos, grupos) {
+  const sel = new Set(grupos);
+  const por = new Map();
+  for (const x of datos?.sessions || []) {
+    const clave = x.cod || x.asig;
+    if (!clave) continue;
+    const suyos = (x.g || []).filter((g) => sel.has(g));
+    if (!suyos.length) continue;
+    const e = por.get(clave) || { cod: x.cod || "", asig: x.asig || clave, franjas: new Map() };
+    for (const g of suyos) {
+      const f = e.franjas.get(g) || new Map();
+      f.set(`${x.d}|${x.h}|${x.f}`, { d: x.d, h: x.h, f: x.f, aula: x.aula || "" });
+      e.franjas.set(g, f);
+    }
+    por.set(clave, e);
+  }
+  return por;
+}
+
+const opcionesDe = (e, grupos) => grupos.filter((g) => e.franjas.has(g)).map((g) => {
+  const ms = [...e.franjas.get(g).values()].sort((a, b) => a.d.localeCompare(b.d) || a.h.localeCompare(b.h));
+  return { grupo: g, muestras: ms.slice(0, 2) };
+});
+
+/** Todas las asignaturas que dan los grupos elegidos, con los grupos que las dan. */
+export function asignaturasDeGrupos(datos, grupos) {
+  return [...porAsignatura(datos, grupos)].map(([clave, e]) => ({
+    clave, cod: e.cod, asig: e.asig, opciones: opcionesDe(e, grupos),
+  }));
+}
+
+/**
+ * Asignaturas que varios de los grupos elegidos dan en franjas distintas (p. ej. PRO3 a las 15:00 en
+ * FIIS4A y a las 09:00 en INSO3D). El alumno elige con qué grupo cursa cada una.
+ */
+export function conflictosDeGrupos(datos, grupos) {
+  const out = [];
+  for (const [clave, e] of porAsignatura(datos, grupos)) {
+    if (e.franjas.size < 2) continue;
+    // El patrón incluye el día de la semana y el aula: la misma hora en otro día (o en otra aula) también es conflicto.
+    const patrones = new Set([...e.franjas.values()].map((f) =>
+      [...new Set([...f.values()].map((m) => `${diaSemana(m.d)}|${m.h}-${m.f}|${m.aula}`))].sort().join("|")));
+    if (patrones.size < 2) continue;   // mismo día, hora y aula en ambos grupos: no hay nada que elegir
+    out.push({ clave, cod: e.cod, asig: e.asig, opciones: opcionesDe(e, grupos) });
+  }
+  return out;
 }
 
 // --- Datos del pipeline (gist), con copia en memoria 5 min y la última buena si el gist no contesta ---
@@ -155,8 +230,10 @@ export function parseIcs(texto) {
 const MOTIVOS = new Set(["no existe", "no es un calendario"]);
 const motivo = (e) => (MOTIVOS.has(e.message) || /^HTTP \d+$/.test(e.message) ? e.message : "sin respuesta");
 
-async function leerBlackboard(url) {
+async function leerBlackboard(url, hosts = []) {
   const r = await fetch(url, { redirect: "follow", headers: { Accept: "text/calendar" } });
+  // Tras las redirecciones, el host final tiene que seguir siendo el de U-tad.
+  if (hosts.length && !hosts.includes(new URL(r.url).host)) throw new Error("host");
   if (!r.ok) throw new Error(r.status === 404 ? "no existe" : `HTTP ${r.status}`);
   const t = await r.text();
   if (!t.slice(0, 400).includes("BEGIN:VCALENDAR")) throw new Error("no es un calendario");
@@ -176,7 +253,13 @@ async function enviarEnlace(env, correo, enlace) {
   if (!r.ok) throw new Error(`correo ${r.status}`);
 }
 
-const codigosDe = (env) => String(env.INVITE_CODES || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+// Cada entrada es un código suelto (se liga al primer correo que lo usa) o "codigo:correo" (solo vale para ese correo).
+export const codigosDe = (env) => String(env.INVITE_CODES || "").split(",").map((x) => {
+  const i = x.indexOf(":");
+  const codigo = (i === -1 ? x : x.slice(0, i)).trim().toLowerCase();
+  const correo = i === -1 ? "" : x.slice(i + 1).trim().toLowerCase();
+  return { codigo, correo };
+}).filter((x) => x.codigo);
 const enmascara = (c) => c.slice(0, 4) + "…";
 
 // --- El objeto que guarda cuentas y sesiones ---
@@ -188,7 +271,7 @@ export class Cuentas {
     const k = "s:" + await sha256(token), s = await this.st.get(k);
     if (!s || s.exp < Date.now()) return null;
     // Entró con un código que ya no está en INVITE_CODES: acceso retirado.
-    if (s.codigo && !codigosDe(this.env).includes(s.codigo)) { await this.st.delete(k); return null; }
+    if (s.codigo && !codigosDe(this.env).some((c) => c.codigo === s.codigo)) { await this.st.delete(k); return null; }
     return s;
   }
   async nuevaSesion(correo, codigo = null) {
@@ -217,17 +300,20 @@ export class Cuentas {
       if (!(await this.limite("entrar:" + correo, 8, 3600e3))) return json({ ok: false, error: "espera" }, 429);
       const codigo = String(b.codigo || "").trim().toLowerCase();
       if (codigo) {
-        const codigos = codigosDe(env);
-        const ok = codigos.find((c) => iguales(c, codigo));
-        if (!ok) {
-          // Límite global de códigos fallidos: probar correos distintos no sirve para adivinar códigos.
-          if (!(await this.limite("codigo-malo", 30, 3600e3))) return json({ ok: false, error: "espera" }, 429);
+        const entrada = codigosDe(env).find((c) => iguales(c.codigo, codigo));
+        if (!entrada) {
+          // Límites de códigos fallidos, por IP y globales: probar correos distintos no sirve para adivinar códigos.
+          const ip = req.headers.get("CF-Connecting-IP") || "sin-ip";
+          const porIp = await this.limite("codigo-malo:" + ip, 10, 3600e3);
+          if (!porIp || !(await this.limite("codigo-malo", 30, 3600e3))) return json({ ok: false, error: "espera" }, 429);
           return json({ ok: false, error: "codigo" }, 401);
         }
-        const dueño = await this.st.get("c:" + ok);
+        // Un código con correo asignado solo vale para ese correo.
+        if (entrada.correo && entrada.correo !== correo) return json({ ok: false, error: "codigo-usado" }, 401);
+        const dueño = await this.st.get("c:" + entrada.codigo);
         if (dueño && dueño !== correo) return json({ ok: false, error: "codigo-usado" }, 401);
-        if (!dueño) await this.st.put("c:" + ok, correo);
-        return json({ ok: true, token: await this.nuevaSesion(correo, ok) });
+        if (!dueño) await this.st.put("c:" + entrada.codigo, correo);
+        return json({ ok: true, token: await this.nuevaSesion(correo, entrada.codigo) });
       }
       if (!env.RESEND_API_KEY || !env.MAIL_FROM) return json({ ok: false, error: "sin-correo", modo: "codigo" }, 400);
       const enlace = aleatorio();
@@ -249,9 +335,9 @@ export class Cuentas {
       if (req.method === "GET" && ruta === "/admin/codigos") {
         const out = [];
         for (const c of codigosDe(env)) {
-          const correo = (await this.st.get("c:" + c)) || null;
+          const correo = c.correo || (await this.st.get("c:" + c.codigo)) || null;
           const u = correo ? await this.st.get("u:" + correo) : null;
-          out.push({ codigo: enmascara(c), correo, grupos: u?.grupos || [], blackboard: !!u?.bb, ultimo: u?.ultimo || null });
+          out.push({ codigo: enmascara(c.codigo), correo, grupos: u?.grupos || [], blackboard: !!u?.bb, ultimo: u?.ultimo || null });
         }
         return json({ ok: true, codigos: out });
       }
@@ -278,25 +364,47 @@ export class Cuentas {
       await this.st.delete("s:" + await sha256(token)); return json({ ok: true });
     }
     if (req.method === "GET" && ruta === "/yo") {
-      return json({ correo: s.correo, grupos: u.grupos || [], blackboard: !!u.bb });
+      return json({ correo: s.correo, grupos: u.grupos || [], materias: u.materias || {}, elegidas: !!u.elegidas, blackboard: !!u.bb });
     }
     try {
       if (req.method === "GET" && ruta === "/grupos") {
         const g = await dato(env, "groups.json");
         return json({ grupos: g.groups, generado: g.generated });
       }
+      if (req.method === "GET" && ruta === "/asignaturas") {
+        const g = await dato(env, "groups.json");
+        const pedidos = (url.searchParams.get("grupos") || "").split(",").map((x) => x.trim()).filter(Boolean);
+        const grupos = [...new Set(pedidos)].filter((x) => x in g.groups).slice(0, MAX_GRUPOS);
+        return json({ asignaturas: asignaturasDeGrupos(g, grupos) });
+      }
+      if (req.method === "GET" && ruta === "/conflictos") {
+        const g = await dato(env, "groups.json");
+        const pedidos = (url.searchParams.get("grupos") || "").split(",").map((x) => x.trim()).filter(Boolean);
+        const grupos = [...new Set(pedidos)].filter((x) => x in g.groups).slice(0, MAX_GRUPOS);
+        return json({ conflictos: conflictosDeGrupos(g, grupos) });
+      }
       if (req.method === "PUT" && ruta === "/grupos") {
         const g = await dato(env, "groups.json"), b = await body();
         const grupos = [...new Set((Array.isArray(b.grupos) ? b.grupos : []).map(String))].filter((x) => x in g.groups);
-        if (grupos.length < 1 || grupos.length > 3) return json({ ok: false, error: "grupos" }, 400);
-        u.grupos = grupos; await this.st.put(uk, u);
-        return json({ ok: true, grupos });
+        if (grupos.length < 1 || grupos.length > MAX_GRUPOS) return json({ ok: false, error: "grupos" }, 400);
+        // Solo se guardan elecciones válidas: un grupo elegido que de verdad dé esa asignatura.
+        const materias = {};
+        for (const [clave, grupo] of Object.entries(b.materias && typeof b.materias === "object" ? b.materias : {})) {
+          if (!grupos.includes(grupo)) continue;
+          if ((g.sessions || []).some((x) => (x.cod || x.asig) === clave && (x.g || []).includes(grupo))) materias[clave] = grupo;
+        }
+        u.grupos = grupos; u.materias = materias;
+        u.elegidas = !!(b.elegidas && Object.keys(materias).length);
+        await this.st.put(uk, u);
+        return json({ ok: true, grupos, materias, elegidas: !!u.elegidas });
       }
       if (req.method === "GET" && ruta === "/horario") {
-        const g = await dato(env, "groups.json"), mios = new Set(u.grupos || []);
-        const toca = (x) => x.g.some((y) => mios.has(y));
-        return json({ generado: g.generated, semanas: g.weeks, grupos: u.grupos || [],
-          sesiones: g.sessions.filter(toca), cambios: (g.cambios || []).filter(toca) });
+        const g = await dato(env, "groups.json");
+        const mios = (u.grupos || []).filter((x) => x in g.groups), materias = u.materias || {};
+        const codDeAsig = new Map((g.sessions || []).filter((x) => x.cod).map((x) => [x.asig, x.cod]));
+        const toca = (x) => tocaSesion(x, mios, materias, codDeAsig, !!u.elegidas);
+        return json({ generado: g.generated, semanas: g.weeks, grupos: mios, materias, elegidas: !!u.elegidas,
+          sesiones: sinDuplicados(g.sessions.filter(toca)), cambios: sinDuplicados((g.cambios || []).filter(toca)) });
       }
       if (req.method === "GET" && ruta === "/aulas") {
         const dia = url.searchParams.get("dia") || "", desde = url.searchParams.get("desde") || "",
@@ -313,7 +421,7 @@ export class Cuentas {
       const b = await body(), limpio = enlaceBlackboard(b.url, hosts);
       if (!limpio) return json({ ok: false, error: "enlace" }, 400);
       let datos;
-      try { datos = await leerBlackboard(limpio); } catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
+      try { datos = await leerBlackboard(limpio, hosts); } catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
       u.bb = limpio; await this.st.put(uk, u);
       return json({ ok: true, entregas: datos.entregas.length, eventos: datos.eventos.length });
     }
@@ -322,7 +430,7 @@ export class Cuentas {
     }
     if (req.method === "GET" && ruta === "/entregas") {
       if (!u.bb) return json({ ok: false, error: "sin-blackboard" }, 404);
-      try { return json({ ok: true, ...(await leerBlackboard(u.bb)) }); }
+      try { return json({ ok: true, ...(await leerBlackboard(u.bb, hosts)) }); }
       catch (e) { return json({ ok: false, error: "no-responde", motivo: motivo(e) }, 502); }
     }
     return json({ error: "no" }, 404);
