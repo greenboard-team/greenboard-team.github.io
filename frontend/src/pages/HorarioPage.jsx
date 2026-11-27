@@ -46,7 +46,7 @@ export default function HorarioPage() {
       <div className="gc-toolbar">
         <label className="gc-switch"><input type="checkbox" checked={verPlanes} onChange={(e) => setVerPlanes(e.target.checked)} />Ver planes en mis huecos ({enHueco.length})</label>
         <details className="asig-filtro">
-          <summary>Asignaturas: {asignaturas.length ? `${asignaturas.length} seleccionadas` : 'todas'}</summary>
+          <summary>Asignaturas: {asignaturas.length ? `${asignaturas.length} ${asignaturas.length === 1 ? 'seleccionada' : 'seleccionadas'}` : 'todas'}</summary>
           <div className="asig-filtro-opciones">
             {m.subjects.map((s) => (
               <label key={s.id} className="gc-switch">
