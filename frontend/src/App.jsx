@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout, { Toast } from './components/layout/Layout.jsx';
 import InicioPage from './pages/InicioPage.jsx';
 import { AsignaturaPage, AsignaturasPage, CalificacionesPage, EntregasPage, MensajesPage, TramitesPage } from './pages/AcademicoPages.jsx';
@@ -23,7 +23,9 @@ function Puerta() {
 
 function Rutas() {
   const { puertaAbierta, academico } = useSesion();
-  useEffect(() => { document.body.classList.toggle('sin-menu', !puertaAbierta); }, [puertaAbierta]);
+  const { pathname } = useLocation();
+  // /grupos se monta fuera del Layout: necesita la misma columna única que la puerta de entrada.
+  useEffect(() => { document.body.classList.toggle('sin-menu', !puertaAbierta || pathname === '/grupos'); }, [puertaAbierta, pathname]);
   if (!puertaAbierta) return <div className="app"><Puerta /></div>;
   return (
     <Routes>

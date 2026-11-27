@@ -96,6 +96,7 @@ export function academicoReal(yo, horario, bb, bbError = null, ahora = new Date(
       correo: yo.correo,
       grupos: a.grupos,
       materias: yo.materias || {},
+      elegidas: !!yo.elegidas,
       bb: !!bb,
       bbError,
       generado: a.generado,

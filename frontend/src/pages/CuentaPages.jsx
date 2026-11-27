@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../components/common/Icon.jsx';
 import { Hecho } from '../components/common/Piezas.jsx';
 import { AvisoInstalar } from './InicioPage.jsx';
-import { defaultsDeConflicto } from '../domain/conflictos.js';
-import { fmtDia } from '../domain/fechas.js';
 import { norm } from '../domain/texto.js';
 import { useSesion } from '../store/SesionContext.jsx';
 import { useUi } from '../store/UiContext.jsx';
@@ -49,7 +47,7 @@ export function EntrarPage() {
 
 const MAX_GRUPOS = 8;
 
-/** Elegir grupos de WebUntis. Un alumno puede tener clase en varios (optativas, otro curso, cambio de titulación). */
+/** Elegir grupos de WebUntis y, después, qué asignaturas cursa. */
 export function GruposPage() {
   const { api, academico, guardarGrupos } = useSesion();
   const { avisar } = useUi();
@@ -57,9 +55,10 @@ export function GruposPage() {
   const [lista, setLista] = useState(null);
   const [filtro, setFiltro] = useState('');
   const [elegidos, setElegidos] = useState(() => [...(academico?.real?.grupos || [])]);
-  const [paso, setPaso] = useState('grupos');       // 'grupos' | 'conflictos'
-  const [conflictos, setConflictos] = useState([]);
-  const [materias, setMaterias] = useState(() => ({ ...(academico?.real?.materias || {}) }));
+  const [paso, setPaso] = useState('grupos');       // 'grupos' | 'asignaturas'
+  const [asignaturas, setAsignaturas] = useState([]);
+  const [materias, setMaterias] = useState(() => (academico?.real?.elegidas ? { ...(academico?.real?.materias || {}) } : {}));
+  const [filtroAsig, setFiltroAsig] = useState('');
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => { api.grupos().then((r) => setLista(r.grupos)).catch(() => setLista({})); }, [api]);
@@ -75,45 +74,63 @@ export function GruposPage() {
   const continuar = async () => {
     setOcupado(true);
     try {
-      const r = await api.conflictos(elegidos);
-      if (!r.conflictos.length) { await guardarGrupos(elegidos, {}); navigate('/inicio'); return; }
-      setMaterias(defaultsDeConflicto(r.conflictos, materias));
-      setConflictos(r.conflictos);
-      setPaso('conflictos');
-    } catch { avisar('No se han podido comprobar las asignaturas de esos grupos'); }
+      const r = await api.asignaturas(elegidos);
+      setAsignaturas(r.asignaturas);
+      setFiltroAsig('');
+      setPaso('asignaturas');
+    } catch { avisar('No se han podido leer las asignaturas de esos grupos'); }
     finally { setOcupado(false); }
   };
 
   const guardar = async () => {
     setOcupado(true);
-    try { await guardarGrupos(elegidos, materias); navigate('/inicio'); }
+    try { await guardarGrupos(elegidos, materias, true); navigate('/inicio'); }
     catch { avisar('No se han podido guardar los grupos'); }
     finally { setOcupado(false); }
   };
 
-  if (paso === 'conflictos') {
+  if (paso === 'asignaturas') {
+    const fa = norm(filtroAsig);
+    const visibles = asignaturas.filter((a) => !fa || norm(a.asig + ' ' + a.cod).includes(fa));
+    const marcadas = Object.keys(materias).length;
+    const alternar = (a) => setMaterias((m) => {
+      if (m[a.clave]) { const n = { ...m }; delete n[a.clave]; return n; }
+      return { ...m, [a.clave]: a.opciones[0].grupo };
+    });
     return (
-      <div className="puerta" style={{ maxWidth: 720, marginTop: '2vh' }}>
+      <div className="puerta" style={{ maxWidth: 760, marginTop: '2vh' }}>
         <span className="brand"><i>G</i>Greenboard</span>
-        <h2>¿Dónde cursas cada asignatura?</h2>
-        <p className="note">Estos grupos dan la misma asignatura en horarios distintos. Marca el grupo al que vas de verdad.</p>
-        <div className="conflictos">
-          {conflictos.map((c) => (
-            <fieldset key={c.clave} className="conflicto">
-              <legend>{c.asig}</legend>
-              {c.opciones.map((o) => (
-                <label key={o.grupo} className={`opcion-grupo ${materias[c.clave] === o.grupo ? 'elegida' : ''}`}>
-                  <input type="radio" name={`materia-${c.clave}`} checked={materias[c.clave] === o.grupo}
-                    onChange={() => setMaterias((m) => ({ ...m, [c.clave]: o.grupo }))} />
-                  <b>{o.grupo}</b>
-                  <small>{o.muestras.map((x) => `${fmtDia.format(new Date(x.d + 'T12:00'))} ${x.h}–${x.f}${x.aula ? ' · ' + x.aula : ''}`).join(' · ')}</small>
+        <h2>¿Qué asignaturas cursas?</h2>
+        <p className="note">Marca solo las que tienes este cuatrimestre. Las demás no se contarán en tu horario, tus asignaturas ni tu matrícula.</p>
+        <div className="campo"><label htmlFor="fa">Buscar asignatura</label><input id="fa" type="search" placeholder="Proyectos, Física, Dirección…" value={filtroAsig} onChange={(e) => setFiltroAsig(e.target.value)} /></div>
+        <div className="asig-acciones">
+          <span className="note">{marcadas} de {asignaturas.length} marcadas</span>
+          <button type="button" className="linkbtn" disabled={ocupado} onClick={() => setMaterias(Object.fromEntries(asignaturas.map((a) => [a.clave, a.opciones[0].grupo])))}>Marcar todas</button>
+          <button type="button" className="linkbtn" disabled={ocupado} onClick={() => setMaterias({})}>Quitar todas</button>
+        </div>
+        <div className="asignaturas-lista">
+          {visibles.map((a) => {
+            const grupo = materias[a.clave];
+            return (
+              <div key={a.clave} className={`asig-fila ${grupo ? 'elegida' : ''}`}>
+                <label className="asig-check">
+                  <input type="checkbox" checked={!!grupo} disabled={ocupado} onChange={() => alternar(a)} />
+                  <span><b>{a.asig}</b><small>{a.cod || a.clave}</small></span>
                 </label>
-              ))}
-            </fieldset>
-          ))}
+                {a.opciones.length > 1 && (
+                  <select value={grupo || a.opciones[0].grupo} disabled={!grupo || ocupado}
+                    onChange={(e) => setMaterias((m) => ({ ...m, [a.clave]: e.target.value }))} aria-label={`Grupo de ${a.asig}`}>
+                    {a.opciones.map((o) => <option key={o.grupo} value={o.grupo}>{o.grupo}</option>)}
+                  </select>
+                )}
+                {a.opciones.length === 1 && <span className="pill ok">{a.opciones[0].grupo}</span>}
+              </div>
+            );
+          })}
+          {!visibles.length && <p className="note">Ninguna asignatura con ese nombre.</p>}
         </div>
         <p style={{ margin: '16px 0 0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn" disabled={ocupado} onClick={guardar}>{ocupado ? 'Guardando…' : 'Guardar y ver mi horario'}</button>
+          <button className="btn" disabled={!marcadas || ocupado} onClick={guardar}>{ocupado ? 'Guardando…' : `Guardar y ver mi horario (${marcadas})`}</button>
           <button type="button" className="linkbtn" disabled={ocupado} onClick={() => setPaso('grupos')}>Volver a los grupos</button>
         </p>
       </div>
@@ -124,7 +141,7 @@ export function GruposPage() {
     <div className="puerta" style={{ maxWidth: 720, marginTop: '2vh' }}>
       <span className="brand"><i>G</i>Greenboard</span>
       <h2>¿En qué grupo estás?</h2>
-      <p className="note">Tu horario sale de tu grupo de WebUntis. Si haces doble grado, elige los dos (por ejemplo <b>FIIS4A</b> y <b>MAIS4A</b>) y se juntan en uno. Si tienes clase en grupos de otros cursos (optativas, cambio de titulación), elige también esos: hasta 8.</p>
+      <p className="note">Tu horario sale de tu grupo de WebUntis. Si haces doble grado, elige los dos (por ejemplo <b>FIIS4A</b> y <b>MAIS4A</b>) y se juntan en uno. Si tienes clase en grupos de otros cursos (optativas, cambio de titulación), elige también esos: hasta 8. Después eliges tus asignaturas.</p>
       {elegidos.length > 0 && (
         <div className="grupos-elegidos" aria-live="polite">
           <span className="note">Tus grupos:</span>
@@ -191,6 +208,27 @@ export function MigrarBlackboard() {
   );
 }
 
+function TemaSwitch() {
+  const [oscuro, setOscuro] = useState(() => {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  const cambiar = (v) => {
+    setOscuro(v);
+    document.documentElement.dataset.theme = v ? 'dark' : 'light';
+    try { localStorage.setItem('gb-tema', v ? 'dark' : 'light'); } catch { /* sin localStorage */ }
+  };
+  return (
+    <div className="tema-fila">
+      <div><b>Modo oscuro</b><small className="note">Si no lo tocas, sigue el del sistema.</small></div>
+      <label className="switch">
+        <input type="checkbox" role="switch" checked={oscuro} onChange={(e) => cambiar(e.target.checked)} aria-label="Modo oscuro" />
+        <span className="switch-ui" aria-hidden="true" />
+      </label>
+    </div>
+  );
+}
+
 export function AjustesPage() {
   const { academico: m, quitarBB, salir } = useSesion();
   const { avisar } = useUi();
@@ -204,6 +242,8 @@ export function AjustesPage() {
       {m.real.bb
         ? <p>Tus entregas se leen de tu calendario de Blackboard. <button className="linkbtn" onClick={async () => { await quitarBB(); avisar('Enlace de Blackboard borrado'); }}>Quitar el enlace</button></p>
         : <div className="tarj"><MigrarBlackboard /></div>}
+      <h3 className="sub">Apariencia</h3>
+      <TemaSwitch />
       <h3 className="sub">App en el móvil</h3>
       <AvisoInstalar siempre />
       <h3 className="sub">Sesión</h3>
