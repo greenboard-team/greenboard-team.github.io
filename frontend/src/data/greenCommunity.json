@@ -1,0 +1,684 @@
+{
+ "_leeme": "Contenido de partida de Green Community para la demo en clase. Personas, equipos y planes inventados. Lo que publiques en la demo se guarda solo en tu navegador.",
+ "comunidades": [
+  {
+   "id": "gta6",
+   "nombre": "GTA VI · U-tad",
+   "categoria": "videojuegos",
+   "emoji": "🌴",
+   "destacada": true,
+   "banner": "gta6",
+   "lema": "Vice City, pero saliendo de clase",
+   "descripcion": "Ha salido GTA VI. Busca gente de la uni para el modo historia, golpes online, carreras o para echar la tarde en casa de alguien.",
+   "miembros": 214,
+   "juego": "GTA VI",
+   "modos": [
+    "Modo historia",
+    "Online",
+    "Misiones",
+    "Golpes",
+    "Carreras",
+    "En casa de alguien"
+   ]
+  },
+  {
+   "id": "lol",
+   "nombre": "League of Legends",
+   "categoria": "videojuegos",
+   "emoji": "⚔️",
+   "descripcion": "Clash, flex y normales. Di tu rol y tu liga.",
+   "miembros": 163,
+   "juego": "League of Legends",
+   "modos": [
+    "Ranked",
+    "Normal",
+    "Clash",
+    "ARAM"
+   ]
+  },
+  {
+   "id": "pokemon",
+   "nombre": "Pokémon",
+   "categoria": "videojuegos",
+   "emoji": "⚡",
+   "descripcion": "Combates, intercambios y raids en la cafetería o online.",
+   "miembros": 88,
+   "juego": "Pokémon",
+   "modos": [
+    "Intercambios",
+    "Combates",
+    "Raids"
+   ]
+  },
+  {
+   "id": "futbol",
+   "nombre": "Fútbol sala",
+   "categoria": "deporte",
+   "emoji": "⚽",
+   "descripcion": "Pachangas en la cancha de U-tad. Elige franja, di cuántos faltan y a jugar.",
+   "miembros": 132
+  },
+  {
+   "id": "padel",
+   "nombre": "Pádel",
+   "categoria": "deporte",
+   "emoji": "🎾",
+   "descripcion": "Pistas de U-tad a 5 € la hora. Busca pareja o rivales y decidid cómo se paga.",
+   "miembros": 97
+  },
+  {
+   "id": "arte",
+   "nombre": "Arte y diseño",
+   "categoria": "arte",
+   "emoji": "🎨",
+   "descripcion": "Salidas a pintar, sketching, visitas a museos y feedback de portfolio.",
+   "miembros": 71
+  },
+  {
+   "id": "estudio",
+   "nombre": "Estudio",
+   "categoria": "estudio",
+   "emoji": "📚",
+   "descripcion": "Apuntes y clases de apoyo de alumnos que ya aprobaron la asignatura.",
+   "miembros": 240
+  }
+ ],
+ "anuncios": [
+  {
+   "id": "seed-f1",
+   "tipo": "futbol",
+   "titulo": "Pachanga 5×5 a mediodía",
+   "comunidad": "futbol",
+   "autor": {
+    "nombre": "Álvaro Ruiz",
+    "curso": "3.º Animación"
+   },
+   "dia": 3,
+   "desde": "13:00",
+   "hasta": "14:30",
+   "plazas": 6,
+   "apuntados": [
+    {
+     "nombre": "Leo Martín",
+     "curso": "2.º Videojuegos"
+    },
+    {
+     "nombre": "Hugo Sanz",
+     "curso": "4.º INSO"
+    },
+    {
+     "nombre": "Nerea Gil",
+     "curso": "1.º MAIS"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Cancha de fútbol sala · U-tad"
+   },
+   "nota": "Nivel tranquilo, se viene a pasarlo bien."
+  },
+  {
+   "id": "seed-f2",
+   "tipo": "futbol",
+   "titulo": "Fútbol sala antes del finde",
+   "comunidad": "futbol",
+   "autor": {
+    "nombre": "Marcos León",
+    "curso": "2.º Diseño de Videojuegos"
+   },
+   "dia": 5,
+   "desde": "13:00",
+   "hasta": "14:30",
+   "plazas": 4,
+   "apuntados": [
+    {
+     "nombre": "Iván Pardo",
+     "curso": "2.º Diseño de Videojuegos"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Cancha de fútbol sala · U-tad"
+   }
+  },
+  {
+   "id": "seed-f3",
+   "tipo": "futbol",
+   "titulo": "Pachanga mixta de tarde",
+   "comunidad": "futbol",
+   "autor": {
+    "nombre": "Irene Castro",
+    "curso": "4.º INSO"
+   },
+   "dia": 1,
+   "desde": "19:00",
+   "hasta": "20:30",
+   "plazas": 8,
+   "apuntados": [
+    {
+     "nombre": "Sara Mena",
+     "curso": "4.º INSO"
+    },
+    {
+     "nombre": "Pau Ríos",
+     "curso": "3.º Ciberseguridad"
+    },
+    {
+     "nombre": "Lola Vidal",
+     "curso": "2.º Animación"
+    },
+    {
+     "nombre": "Dani Ortiz",
+     "curso": "4.º INSO"
+    },
+    {
+     "nombre": "Raúl Soto",
+     "curso": "1.º Ingeniería de Software"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Cancha de fútbol sala · U-tad"
+   }
+  },
+  {
+   "id": "seed-f4",
+   "tipo": "futbol",
+   "titulo": "Revancha 4.º contra 3.º",
+   "comunidad": "futbol",
+   "autor": {
+    "nombre": "Jorge Prieto",
+    "curso": "4.º MAIS"
+   },
+   "dia": 4,
+   "desde": "17:00",
+   "hasta": "18:30",
+   "plazas": 3,
+   "apuntados": [
+    {
+     "nombre": "Óscar Vela",
+     "curso": "4.º MAIS"
+    },
+    {
+     "nombre": "Adrián Luque",
+     "curso": "4.º FIIS"
+    },
+    {
+     "nombre": "Mario Calvo",
+     "curso": "4.º MAIS"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Cancha de fútbol sala · U-tad"
+   }
+  },
+  {
+   "id": "seed-p1",
+   "tipo": "padel",
+   "titulo": "Somos 2, buscamos rivales",
+   "comunidad": "padel",
+   "autor": {
+    "nombre": "Sergio Navas",
+    "curso": "3.º MAIS"
+   },
+   "dia": 2,
+   "desde": "13:00",
+   "hasta": "14:00",
+   "plazas": 2,
+   "apuntados": [
+    {
+     "nombre": "Carla Peña",
+     "curso": "3.º Ingeniería de Software"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Pistas de pádel · U-tad"
+   },
+   "padel": {
+    "formato": "rivales",
+    "pago": "perdedor",
+    "precio": 5
+   },
+   "nota": "Jugamos con Nacho, nivel medio."
+  },
+  {
+   "id": "seed-p2",
+   "tipo": "padel",
+   "titulo": "Me falta pareja para el jueves",
+   "comunidad": "padel",
+   "autor": {
+    "nombre": "Lucía Herrero",
+    "curso": "2.º Animación"
+   },
+   "dia": 4,
+   "desde": "19:00",
+   "hasta": "20:00",
+   "plazas": 1,
+   "apuntados": [],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Pistas de pádel · U-tad"
+   },
+   "padel": {
+    "formato": "companero",
+    "pago": "partes",
+    "precio": 5
+   }
+  },
+  {
+   "id": "seed-p3",
+   "tipo": "padel",
+   "titulo": "Invito a la pista, faltan 3",
+   "comunidad": "padel",
+   "autor": {
+    "nombre": "Tomás Ferrer",
+    "curso": "4.º Ciberseguridad"
+   },
+   "dia": 5,
+   "desde": "17:00",
+   "hasta": "18:00",
+   "plazas": 3,
+   "apuntados": [
+    {
+     "nombre": "Elena Roca",
+     "curso": "4.º Ciberseguridad"
+    }
+   ],
+   "lugar": {
+    "tipo": "instalacion",
+    "texto": "Pistas de pádel · U-tad"
+   },
+   "padel": {
+    "formato": "partido",
+    "pago": "anunciante",
+    "precio": 5
+   }
+  },
+  {
+   "id": "seed-g1",
+   "tipo": "plan",
+   "titulo": "Golpes online en Vice City",
+   "comunidad": "gta6",
+   "autor": {
+    "nombre": "Pablo Iglesias",
+    "curso": "3.º Diseño de Videojuegos"
+   },
+   "dia": 5,
+   "desde": "21:00",
+   "hasta": "23:30",
+   "plazas": 3,
+   "apuntados": [
+    {
+     "nombre": "Bruno Sáez",
+     "curso": "3.º Diseño de Videojuegos"
+    }
+   ],
+   "lugar": {
+    "tipo": "online",
+    "texto": "Online"
+   },
+   "plan": {
+    "categoria": "videojuegos",
+    "juego": "GTA VI",
+    "modo": "Golpes"
+   },
+   "nota": "PS5. Con micro, por Discord."
+  },
+  {
+   "id": "seed-g2",
+   "tipo": "plan",
+   "titulo": "Modo historia en casa de Hugo",
+   "comunidad": "gta6",
+   "autor": {
+    "nombre": "Hugo Sanz",
+    "curso": "4.º INSO"
+   },
+   "dia": 6,
+   "desde": "17:00",
+   "hasta": "20:30",
+   "plazas": 4,
+   "apuntados": [
+    {
+     "nombre": "Nerea Gil",
+     "curso": "1.º MAIS"
+    },
+    {
+     "nombre": "Leo Martín",
+     "curso": "2.º Videojuegos"
+    }
+   ],
+   "lugar": {
+    "tipo": "fuera",
+    "texto": "Casa de Hugo · Las Rozas"
+   },
+   "plan": {
+    "categoria": "videojuegos",
+    "juego": "GTA VI",
+    "modo": "En casa de alguien"
+   },
+   "nota": "Pantalla grande y pizza. Nos turnamos el mando por misión."
+  },
+  {
+   "id": "seed-g3",
+   "tipo": "plan",
+   "titulo": "Carreras de GTA VI en el aula de videojuegos",
+   "comunidad": "gta6",
+   "autor": {
+    "nombre": "Marta Lozano",
+    "curso": "2.º Diseño de Videojuegos"
+   },
+   "dia": 3,
+   "desde": "13:00",
+   "hasta": "15:00",
+   "plazas": 6,
+   "apuntados": [
+    {
+     "nombre": "Iván Pardo",
+     "curso": "2.º Diseño de Videojuegos"
+    },
+    {
+     "nombre": "Lola Vidal",
+     "curso": "2.º Animación"
+    }
+   ],
+   "lugar": {
+    "tipo": "uni",
+    "texto": "Aula de videojuegos · U-tad"
+   },
+   "plan": {
+    "categoria": "videojuegos",
+    "juego": "GTA VI",
+    "modo": "Carreras"
+   }
+  },
+  {
+   "id": "seed-l1",
+   "tipo": "plan",
+   "titulo": "Clash: nos falta el support",
+   "comunidad": "lol",
+   "autor": {
+    "nombre": "Andrés Gómez",
+    "curso": "4.º Ingeniería de Software"
+   },
+   "dia": 4,
+   "desde": "22:00",
+   "hasta": "23:30",
+   "plazas": 1,
+   "apuntados": [],
+   "lugar": {
+    "tipo": "online",
+    "texto": "Online"
+   },
+   "plan": {
+    "categoria": "videojuegos",
+    "juego": "League of Legends",
+    "modo": "Clash"
+   },
+   "nota": "Platino-Esmeralda. Si eres support, te queremos."
+  },
+  {
+   "id": "seed-k1",
+   "tipo": "plan",
+   "titulo": "Combates e intercambios Pokémon",
+   "comunidad": "pokemon",
+   "autor": {
+    "nombre": "Nerea Gil",
+    "curso": "1.º MAIS"
+   },
+   "dia": 2,
+   "desde": "13:00",
+   "hasta": "14:30",
+   "plazas": 5,
+   "apuntados": [
+    {
+     "nombre": "Raúl Soto",
+     "curso": "1.º Ingeniería de Software"
+    }
+   ],
+   "lugar": {
+    "tipo": "uni",
+    "texto": "Cafetería · U-tad"
+   },
+   "plan": {
+    "categoria": "videojuegos",
+    "juego": "Pokémon",
+    "modo": "Combates"
+   }
+  },
+  {
+   "id": "seed-a1",
+   "tipo": "plan",
+   "titulo": "Acuarela en el Retiro",
+   "comunidad": "arte",
+   "autor": {
+    "nombre": "Claudia Ramos",
+    "curso": "3.º Bellas Artes digitales"
+   },
+   "dia": 6,
+   "desde": "11:00",
+   "hasta": "13:30",
+   "plazas": 5,
+   "apuntados": [
+    {
+     "nombre": "Lola Vidal",
+     "curso": "2.º Animación"
+    },
+    {
+     "nombre": "Ana Bravo",
+     "curso": "1.º Animación"
+    }
+   ],
+   "lugar": {
+    "tipo": "fuera",
+    "texto": "Parque del Retiro · Madrid"
+   },
+   "plan": {
+    "categoria": "arte",
+    "juego": "",
+    "modo": ""
+   },
+   "nota": "Trae tu material; yo llevo papel de sobra."
+  },
+  {
+   "id": "seed-a2",
+   "tipo": "plan",
+   "titulo": "Sketching rápido de figura",
+   "comunidad": "arte",
+   "autor": {
+    "nombre": "Ana Bravo",
+    "curso": "1.º Animación"
+   },
+   "dia": 4,
+   "desde": "13:00",
+   "hasta": "14:30",
+   "plazas": 8,
+   "apuntados": [
+    {
+     "nombre": "Claudia Ramos",
+     "curso": "3.º Bellas Artes digitales"
+    }
+   ],
+   "lugar": {
+    "tipo": "uni",
+    "texto": "Aula 104 · U-tad"
+   },
+   "plan": {
+    "categoria": "arte",
+    "juego": "",
+    "modo": ""
+   }
+  }
+ ],
+ "torneos": [
+  {
+   "id": "copa-futsal",
+   "deporte": "futbol",
+   "nombre": "Copa U-tad de fútbol sala",
+   "equipos": 8,
+   "cuota": 10,
+   "premio": {
+    "tipo": "dinero",
+    "base": 150,
+    "texto": "Dinero para el equipo campeón + trofeo"
+   },
+   "fechas": "Del 9 al 18 de diciembre · martes y jueves a las 13:00",
+   "estado": "inscripcion",
+   "inscritos": [
+    {
+     "equipo": "Pixel United",
+     "capitan": "Marcos León"
+    },
+    {
+     "equipo": "Los del Render",
+     "capitan": "Álvaro Ruiz"
+    },
+    {
+     "equipo": "NullPointer FC",
+     "capitan": "Irene Castro"
+    },
+    {
+     "equipo": "Real Sociedad de Vértices",
+     "capitan": "Jorge Prieto"
+    },
+    {
+     "equipo": "Atlético de Ciber",
+     "capitan": "Pau Ríos"
+    }
+   ]
+  },
+  {
+   "id": "padel-invierno",
+   "deporte": "padel",
+   "nombre": "Torneo de pádel de invierno",
+   "equipos": 16,
+   "cuota": 5,
+   "premio": {
+    "tipo": "tarjeta",
+    "base": 60,
+    "texto": "Tarjeta regalo de material deportivo para la pareja campeona"
+   },
+   "fechas": "Del 16 de noviembre al 4 de diciembre · tardes",
+   "estado": "en-juego",
+   "inscritos": [
+    {
+     "equipo": "Navas / Peña",
+     "capitan": "Sergio Navas"
+    },
+    {
+     "equipo": "Ferrer / Roca",
+     "capitan": "Tomás Ferrer"
+    },
+    {
+     "equipo": "Herrero / Bravo",
+     "capitan": "Lucía Herrero"
+    },
+    {
+     "equipo": "Gómez / Lozano",
+     "capitan": "Andrés Gómez"
+    },
+    {
+     "equipo": "Mena / Ortiz",
+     "capitan": "Sara Mena"
+    },
+    {
+     "equipo": "Vela / Luque",
+     "capitan": "Óscar Vela"
+    },
+    {
+     "equipo": "Ramos / Vidal",
+     "capitan": "Claudia Ramos"
+    },
+    {
+     "equipo": "Pardo / Sáez",
+     "capitan": "Iván Pardo"
+    },
+    {
+     "equipo": "Gil / Soto",
+     "capitan": "Nerea Gil"
+    },
+    {
+     "equipo": "Calvo / Prieto",
+     "capitan": "Mario Calvo"
+    },
+    {
+     "equipo": "Martín / Sanz",
+     "capitan": "Leo Martín"
+    },
+    {
+     "equipo": "Castro / Ríos",
+     "capitan": "Irene Castro"
+    },
+    {
+     "equipo": "León / Ruiz",
+     "capitan": "Marcos León"
+    },
+    {
+     "equipo": "Iglesias / Bruno",
+     "capitan": "Pablo Iglesias"
+    },
+    {
+     "equipo": "Luna / Paz",
+     "capitan": "Vera Luna"
+    },
+    {
+     "equipo": "Rey / Moya",
+     "capitan": "Gael Rey"
+    }
+   ],
+   "resultados": [
+    [
+     0,
+     0,
+     "Navas / Peña"
+    ],
+    [
+     0,
+     1,
+     "Ferrer / Roca"
+    ],
+    [
+     0,
+     2,
+     "Iglesias / Bruno"
+    ],
+    [
+     0,
+     3,
+     "Gómez / Lozano"
+    ],
+    [
+     0,
+     4,
+     "Mena / Ortiz"
+    ],
+    [
+     0,
+     5,
+     "Vela / Luque"
+    ],
+    [
+     0,
+     6,
+     "Ramos / Vidal"
+    ],
+    [
+     0,
+     7,
+     "Gil / Soto"
+    ],
+    [
+     1,
+     0,
+     "Navas / Peña"
+    ],
+    [
+     1,
+     1,
+     "Gómez / Lozano"
+    ]
+   ]
+  }
+ ]
+}

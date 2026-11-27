@@ -1,0 +1,109 @@
+{
+ "_leeme": "Comunidad y chats de ejemplo (idea del issue #43). Personas y mensajes inventados.",
+ "comunidad": [
+  {
+   "id": "apuntes",
+   "t": "Apuntes de Análisis Matemático III",
+   "s": "Compartidos por un alumno de 5.º · curso 2025/26 · abiertos a todos",
+   "accion": "Ver apuntes",
+   "hecho": "Vistos",
+   "det": [
+    "Tema 1 · Sucesiones y series de funciones",
+    "Tema 2 · Integrales de línea",
+    "Tema 3 · Integrales de superficie",
+    "Exámenes resueltos 2025/26"
+   ],
+   "tipo": "apuntes"
+  },
+  {
+   "id": "repaso",
+   "t": "Repaso de Optimización",
+   "s": "Sesión de apoyo en grupo · jueves 18:00",
+   "accion": "Apuntarme",
+   "hecho": "Apuntado",
+   "det": [
+    "Jueves, 18:00 – 19:30",
+    "Lo da un alumno que ya aprobó la asignatura",
+    "Grupo pequeño: trae tus dudas de la hoja de ejercicios"
+   ]
+  }
+ ],
+ "chats": [
+  {
+   "id": "pro3",
+   "s": "pro3",
+   "t": "Proyectos III · clase",
+   "n": 28,
+   "sinLeer": 2,
+   "msgs": [
+    {
+     "de": "Marta",
+     "h": "10:12",
+     "txt": "¿Alguien sabe si el Sprint 3 también es una presentación?"
+    },
+    {
+     "de": "Álex",
+     "h": "10:15",
+     "txt": "Creo que sí, lo dijeron en clase el martes."
+    },
+    {
+     "de": "Marta",
+     "h": "10:16",
+     "txt": "Ok, gracias. Y el lunes estamos en el aula 112, no en la 003."
+    }
+   ]
+  },
+  {
+   "id": "aiii",
+   "s": "aiii",
+   "t": "Análisis Matemático III · clase",
+   "n": 41,
+   "sinLeer": 1,
+   "msgs": [
+    {
+     "de": "Lucía",
+     "h": "ayer",
+     "txt": "¿Alguien tiene resuelto el ejercicio 4 de la hoja 2?"
+    },
+    {
+     "de": "Iván",
+     "h": "09:40",
+     "txt": "Ya han subido los apuntes del tema 3."
+    }
+   ]
+  },
+  {
+   "id": "psdi-g",
+   "s": "psdi",
+   "t": "Grupo de prácticas · PSDI",
+   "n": 3,
+   "sinLeer": 0,
+   "msgs": [
+    {
+     "de": "Sara",
+     "h": "jue",
+     "txt": "Yo hago la parte del servidor de la práctica 2."
+    },
+    {
+     "de": "Tú",
+     "h": "jue",
+     "txt": "Perfecto, yo el cliente.",
+     "yo": true
+    }
+   ]
+  },
+  {
+   "id": "repaso",
+   "t": "Repaso de Optimización",
+   "n": 9,
+   "sinLeer": 0,
+   "msgs": [
+    {
+     "de": "Organiza: alumno de 5.º",
+     "h": "lun",
+     "txt": "El jueves a las 18:00 repasamos el método símplex. Traed dudas."
+    }
+   ]
+  }
+ ]
+}

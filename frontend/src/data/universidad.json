@@ -1,0 +1,26 @@
+{
+  "_leeme": "Configuración de la universidad. Para llevar Greenboard a otra universidad se cambia este fichero: sus instalaciones (si tiene futbolín, pistas de tenis…), sus lugares y sus categorías.",
+  "nombre": "U-tad",
+  "campus": "Las Rozas",
+  "organizador": "U-tad · Vida universitaria",
+  "instalaciones": [
+    { "id": "futsal", "deporte": "futbol", "nombre": "Cancha de fútbol sala", "precio": 0, "jugadores": 10 },
+    { "id": "padel", "deporte": "padel", "nombre": "Pistas de pádel", "precio": 5, "pistas": 2, "jugadores": 4 }
+  ],
+  "lugares": [
+    { "tipo": "online", "texto": "Online" },
+    { "tipo": "uni", "texto": "Cafetería · U-tad" },
+    { "tipo": "uni", "texto": "Biblioteca · U-tad" },
+    { "tipo": "uni", "texto": "Aula de videojuegos · U-tad" },
+    { "tipo": "uni", "texto": "Aula 104 · U-tad" },
+    { "tipo": "fuera", "texto": "Fuera de la uni" }
+  ],
+  "categoriasPlan": [
+    { "id": "videojuegos", "nombre": "Videojuegos", "emoji": "🎮" },
+    { "id": "arte", "nombre": "Arte y diseño", "emoji": "🎨" },
+    { "id": "estudio", "nombre": "Estudio", "emoji": "📚" },
+    { "id": "ocio", "nombre": "Quedadas", "emoji": "☕" }
+  ],
+  "juegos": ["GTA VI", "League of Legends", "Pokémon", "Valorant", "EA Sports FC", "Mario Kart", "Otro"],
+  "modosJuego": ["Modo historia", "Online", "Misiones", "Golpes", "Carreras", "En casa de alguien", "Ranked", "Normal", "Intercambios", "Combates"]
+}

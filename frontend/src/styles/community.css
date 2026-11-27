@@ -1,0 +1,220 @@
+/* Greenboard · Green Community y horario semanal. Mismos colores y tipos que base.css (mock-up de Gonzalo). */
+:root{--gc-futbol:#2E8B57;--gc-padel:#C9A227;--gc-plan:#7A4FD1;--gc-arte:#D5568B}
+.tab .count.nuevo{background:var(--lime);color:#10301F;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+
+/* Portada */
+.gc-hero{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;background:var(--board);color:var(--chalk);border-radius:20px;padding:22px 24px;position:relative;overflow:hidden}
+.gc-hero::after{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(155,225,93,.35),transparent 70%);pointer-events:none}
+.gc-hero h2{font-size:26px;font-weight:800;margin:6px 0 4px}
+.gc-hero p{margin:0;color:#C9DCCB;max-width:520px}
+.gc-marca{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--lime)}
+.gc-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:#C9DCCB}
+.gc-stats b{color:var(--chalk);font-family:var(--f-display);font-size:18px;margin-right:4px}
+.gc-hero .btn{position:relative;z-index:1}
+
+.gc-destacada{display:block;margin-top:16px;border-radius:20px;overflow:hidden;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px rgba(43,16,85,.18);transition:transform .2s}
+.gc-destacada:hover{transform:translateY(-2px)}
+.gc-destacada-pie{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;flex-wrap:wrap}
+.gc-destacada-pie small{display:block;color:var(--muted);font-size:13px}
+.banner-gta{display:block;width:100%}
+.banner-gta-titulo{font-family:var(--f-display);font-weight:800;font-size:56px;fill:#FFF4E0;letter-spacing:-.02em;paint-order:stroke;stroke:#FF3E9A;stroke-width:2px}
+.banner-gta-sub{font-family:var(--f-mono);font-size:14px;fill:#FFE6F3;letter-spacing:.2em}
+.banner-gta-sello{font-family:var(--f-body);font-weight:700;font-size:13px;fill:#10301F}
+.gc-banner{border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.gc-cabecera-com{height:110px;border-radius:18px;display:grid;place-items:center;font-size:56px;background:linear-gradient(135deg,var(--board),var(--board-2))}
+
+/* Filtros */
+.gc-filtros{margin:20px 0 12px;display:flex;flex-direction:column;gap:10px}
+.gc-toolbar{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.gc-buscar{flex:1;min-width:200px;font:inherit;padding:9px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+.gc-buscar:focus{outline:none;border-color:var(--accent)}
+.gc-switch{display:inline-flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+.gc-switch input{width:18px;height:18px;accent-color:var(--accent)}
+.gc-seccion{margin-top:26px}
+.gc-vacio{padding:18px;border:1.5px dashed var(--line);border-radius:14px;text-align:center}
+
+/* Anuncios */
+.gc-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.gc-anuncio{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:6px;border-top:4px solid var(--gc-plan);transition:box-shadow .2s}
+.gc-anuncio.tipo-futbol{border-top-color:var(--gc-futbol)}
+.gc-anuncio.tipo-padel{border-top-color:var(--gc-padel)}
+.gc-anuncio.completo{opacity:.7}
+.gc-anuncio.recien{box-shadow:0 0 0 3px var(--lime),0 10px 30px rgba(18,59,44,.18);animation:entra .4s ease-out}
+.gc-anuncio-h{display:flex;gap:10px;align-items:flex-start}
+.gc-anuncio-h h4{font-size:17px;margin-top:2px}
+.gc-emoji{font-size:24px;line-height:1;flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--ok-bg)}
+.gc-tipo{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.gc-cuando{margin:0;display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
+.gc-cuando svg{width:15px;height:15px}
+.gc-etiquetas{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0}
+.gc-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.gc-tag svg{width:13px;height:13px}
+.gc-tag.ok{background:var(--ok-bg);border-color:transparent;color:var(--accent);font-weight:700}
+.gc-tag.aviso{background:var(--warn-bg);border-color:transparent;color:var(--warn);font-weight:700}
+.gc-plazas{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.gc-plazas span{width:14px;height:14px;border-radius:50%;border:2px solid var(--line)}
+.gc-plazas span.llena{background:var(--accent);border-color:var(--accent)}
+.gc-plazas small{margin-left:6px;font-size:13px;font-weight:700;color:var(--ink)}
+.gc-anuncio-pie{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line);flex-wrap:wrap}
+.gc-autor{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;min-width:0}
+.gc-autor small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.avatar.sm{width:28px;height:28px;font-size:11px}
+.gc-dentro{display:inline-flex;gap:8px;align-items:center}
+
+/* Diálogo de unirse */
+.gc-velo{position:fixed;inset:0;background:rgba(10,25,18,.55);display:grid;place-items:center;z-index:60;padding:16px;animation:entra .2s}
+.gc-dialogo{background:var(--surface);border-radius:20px;padding:18px;max-width:480px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gc-dialogo .tarj-h .ic{font-size:20px}
+.gc-condiciones{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.gc-cuota{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--ok-bg);font-size:14px}
+.gc-acepto{display:flex;gap:10px;align-items:center;margin-top:14px;font-weight:700;cursor:pointer}
+.gc-acepto input{width:20px;height:20px;accent-color:var(--accent)}
+
+/* Torneos */
+.gc-torneos{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:10px}
+.gc-torneo{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.gc-torneo:hover{border-color:var(--accent)}
+.gc-torneo-h{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.gc-torneo-h>div{flex:1 1 180px;min-width:0}
+.gc-torneo-h .pill{margin-left:auto}
+.gc-bote{display:flex;gap:10px;align-items:center;margin:12px 0 8px;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#FFF5D6,#FCE7B2);color:#5B4300}
+.gc-bote b{font-family:var(--f-display);font-size:22px;display:block;line-height:1}
+.gc-bote small{display:block;font-size:12px}
+.gc-bote svg{width:26px;height:26px}
+.gc-bote.grande{margin:14px 0}
+.gc-bote.grande b{font-size:34px}
+.gc-barra{height:8px;border-radius:999px;background:var(--bg);overflow:hidden}
+.gc-barra span{display:block;height:100%;background:var(--accent);border-radius:999px}
+.gc-campeon{margin:8px 0 0;font-weight:700}
+.gc-campeon.grande{font-family:var(--f-display);font-size:22px}
+.gc-cuadro{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 14px}
+.gc-ronda{flex:none;width:190px;display:flex;flex-direction:column}
+.gc-ronda h5{margin:0 0 8px;font-family:var(--f-mono);font-size:12px;text-transform:uppercase;color:var(--muted)}
+.gc-partidos{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:10px}
+.gc-partido{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.gc-equipo{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 10px;font-size:13px;border:0;background:transparent;text-align:left;color:var(--ink)}
+.gc-equipo + .gc-equipo{border-top:1px solid var(--line)}
+.gc-equipo:disabled{cursor:default}
+.gc-equipo:not(:disabled):hover{background:var(--ok-bg)}
+.gc-equipo.gana{font-weight:700;background:var(--ok-bg);color:var(--accent)}
+.gc-equipo.pierde{color:var(--muted);text-decoration:line-through}
+.gc-equipo svg{width:14px;height:14px}
+.gc-ronda.campeon .gc-equipo{font-size:15px;padding:12px}
+.gc-inscritos{display:flex;flex-wrap:wrap;gap:8px}
+.gc-inscritos span{padding:6px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px}
+.gc-inscritos span small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.gc-inscritos span.mio{border-color:var(--accent);background:var(--ok-bg)}
+.gc-inscritos span.vacio{border-style:dashed;color:var(--muted);font-weight:400}
+.gc-vista{display:flex;gap:8px;align-items:center}
+.gc-vista .seg{margin:0}
+.gc-form-torneo{margin:12px 0}
+
+/* Comunidades */
+.gc-comunidades{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:10px}
+.gc-comunidad{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:inherit}
+.gc-comunidad>div{flex:1;min-width:0}
+.gc-comunidad small{display:block;color:var(--muted);font-size:12px}
+.gc-comunidad:hover{border-color:var(--accent)}
+
+/* Formulario */
+.gc-form{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.gc-form fieldset{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0;background:var(--surface);min-width:0}
+.gc-form legend{font-family:var(--f-display);font-weight:700;font-size:17px;padding:0 6px}
+.gc-opciones{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.gc-opcion{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg)}
+.gc-opcion>span{font-size:26px}
+.gc-opcion small{color:var(--muted);font-size:12px}
+.gc-opcion[aria-pressed="true"]{border-color:var(--accent);background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--accent)}
+.gc-opcion.sm{padding:9px 11px}
+.gc-campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
+.gc-plazas-sel{display:flex;gap:10px;align-items:center;margin-top:12px}
+.gc-plazas-sel b{font-family:var(--f-display);font-size:22px;min-width:28px;text-align:center}
+.gc-plazas-sel .btn{width:36px;height:36px;padding:0}
+.gc-franja-manual{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+.gc-franja-manual label{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.gc-franja-manual select,.gc-franja-manual input{font:inherit;font-size:15px;font-weight:400;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.gc-franja-manual select:focus,.gc-franja-manual input:focus{outline:none;border-color:var(--accent)}
+.gc-aviso-clase{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:700}
+.gc-ok-clase{margin:10px 0 0;display:flex;gap:6px;align-items:center;color:var(--accent);font-weight:700}
+.gc-moderacion{display:flex;gap:8px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:12px;font-weight:700}
+.gc-moderacion svg{flex:none;margin-top:2px}
+.gc-moderacion.bloquea{background:var(--late-bg);color:var(--late)}
+.gc-moderacion.revisa{background:var(--warn-bg);color:var(--warn)}
+.gc-revision{width:100%;justify-content:center}
+.gc-denunciar{font-size:12px;color:var(--muted)}
+.gc-mod-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.gc-mod-stats div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.gc-mod-stats b{display:block;font-family:var(--f-display);font-size:28px}
+.gc-mod-item{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:12px 14px;margin-top:10px}
+.gc-mod-item h4{margin:0 0 4px}
+.gc-mod-item .fila-b{margin-top:10px}
+.gc-publicar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0}
+
+/* Horario semanal */
+.semana{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow-x:auto;margin-top:12px}
+.semana-cab,.semana-cuerpo{display:grid;grid-template-columns:46px repeat(7,minmax(92px,1fr));min-width:700px}
+.semana-cab{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);z-index:2}
+.semana-cab span{padding:8px 6px;font-weight:700;font-size:13px;text-align:center}
+.semana-cab span small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.semana-cab span.hoy{color:var(--accent)}
+.semana-cuerpo{position:relative}
+.semana-horas{position:relative}
+.semana-horas span{position:absolute;right:8px;margin-top:3px;font-family:var(--f-mono);font-size:10px;line-height:1;color:var(--muted)}
+.semana-dia{position:relative;border-left:1px solid var(--line)}
+.semana-dia.hoy{background:color-mix(in srgb,var(--lime) 7%,transparent)}
+.semana.elegible .semana-dia{cursor:crosshair}
+.semana.elegible .semana-dia:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.semana-dia .linea{position:absolute;left:0;right:0;border-top:1px dashed var(--line);opacity:.6}
+.bloque{position:absolute;left:4px;right:4px;border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.25;overflow:hidden;text-align:left;border:0;font-family:var(--f-body);display:flex;flex-direction:column;gap:2px}
+.bloque b{font-size:12px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;hyphens:auto;-webkit-hyphens:auto}
+.bloque small{opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.bloque.clase{background:var(--board);color:var(--chalk);z-index:1}
+.bloque.clase.cancelada{opacity:.45;text-decoration:line-through}
+.bloque.plan{background:var(--surface);border:1.5px dashed var(--gc-plan);color:var(--ink);z-index:2;cursor:pointer}
+.bloque.plan:hover{background:color-mix(in srgb,var(--gc-plan) 12%,var(--surface))}
+.bloque.mio{background:var(--lime);color:#10301F;z-index:2}
+.bloque.seleccion{background:var(--lime);color:#10301F;z-index:3;box-shadow:0 0 0 2px var(--accent)}
+.bloque.seleccion.choca{background:var(--warn-bg);color:var(--warn);box-shadow:0 0 0 2px var(--warn);left:38%!important;width:auto!important;right:3px;opacity:.96}
+.gc-leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+.gc-leyenda span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+.gc-leyenda .clase::before{background:var(--board)}
+.gc-leyenda .plan::before{border:1.5px dashed var(--gc-plan)}
+.gc-leyenda .mio::before{background:var(--lime)}
+.gc-dia + .gc-dia{margin-top:12px}
+.gc-dia .lbl{text-transform:capitalize}
+.gc-hueco .ic{font-size:18px}
+
+@media (max-width:760px){
+  .gc-hero{padding:18px}
+  .gc-hero h2{font-size:22px}
+  .banner-gta-titulo{font-size:48px}
+  .gc-lista,.gc-torneos{grid-template-columns:1fr}
+  .gc-form fieldset{padding:12px}
+}
+
+/* Apuntes compartidos (Estudio) */
+.temas-c{display:flex;flex-direction:column;gap:6px}
+.gc-apuntes summary{list-style:none;width:max-content;cursor:pointer}
+.gc-apuntes summary::-webkit-details-marker{display:none}
+.gc-apuntes[open] summary{margin-bottom:10px;background:var(--ok-bg);color:var(--accent)}
+
+/* La guía de la demo no tapa el contenido en escritorio: va a la esquina */
+@media (min-width:761px){
+  .guide{left:auto;right:16px;transform:none;width:min(400px,calc(100% - 32px))}
+}
+
+/* Tirador para cambiar la duración arrastrando el borde de abajo */
+.bloque .tirador{position:absolute;left:0;right:0;bottom:0;height:12px;cursor:ns-resize;touch-action:none;display:flex;align-items:center;justify-content:center}
+.bloque .tirador::after{content:"";width:28px;height:4px;border-radius:2px;background:currentColor;opacity:.55}
+.bloque .tirador:hover::after,.bloque .tirador:focus-visible::after{opacity:1}
+.gc-franja-manual input:disabled{opacity:.5}
+
+/* Moderador con IA */
+.gc-ia-panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
+.gc-ia-panel.fase-listo{border-color:var(--accent);background:var(--ok-bg)}
+.gc-ia-cab{display:flex;gap:10px;align-items:flex-start}
+.gc-ia-cab .ic{font-size:22px}
+.gc-ia-cab small{display:block;color:var(--muted);font-size:13px}
+.gc-ia-panel .btn{align-self:flex-start}
+.gc-ia{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.gc-ia.ok{color:var(--accent);font-weight:700}

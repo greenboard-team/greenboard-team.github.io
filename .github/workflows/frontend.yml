@@ -1,0 +1,29 @@
+name: Frontend (lint, tests y build)
+
+# Solo cuando cambia el código de la app: así no gasta minutos de Actions con el resto del repo.
+on:
+  pull_request:
+    paths: ['frontend/**']
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: El build de /mvp está subido
+        run: git diff --exit-code -- ../mvp/index.html || (echo "Ejecuta npm run build y sube mvp/index.html y mvp/assets" && exit 1)

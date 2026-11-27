@@ -1,0 +1,347 @@
+{
+ "_leeme": "Moderación de Green Community. La universidad edita este fichero: qué se bloquea al momento, qué pasa a revisión humana y si hay un modelo local (Ollama) para los casos dudosos. Los términos van en minúsculas y sin tildes; «prefijo: true» también bloquea las palabras que empiezan así.",
+ "umbralDenuncias": 1,
+ "_umbral": "En la demo basta 1 denuncia para ocultar un anuncio; en producción, 3.",
+ "llm": {
+  "activo": false,
+  "url": "http://localhost:11434",
+  "modelo": "qwen2.5:1.5b",
+  "timeoutMs": 6000
+ },
+ "categorias": [
+  {
+   "id": "sexual",
+   "nombre": "contenido sexual",
+   "accion": "bloquear",
+   "terminos": [
+    {
+     "t": "folla",
+     "prefijo": true
+    },
+    {
+     "t": "follo"
+    },
+    {
+     "t": "follen"
+    },
+    {
+     "t": "follamig",
+     "prefijo": true
+    },
+    {
+     "t": "sexo"
+    },
+    {
+     "t": "sexual",
+     "prefijo": true
+    },
+    {
+     "t": "porn",
+     "prefijo": true
+    },
+    {
+     "t": "polla",
+     "prefijo": true
+    },
+    {
+     "t": "pollon"
+    },
+    {
+     "t": "tetas"
+    },
+    {
+     "t": "mamada"
+    },
+    {
+     "t": "chupamela"
+    },
+    {
+     "t": "chupala"
+    },
+    {
+     "t": "pajas"
+    },
+    {
+     "t": "pajote"
+    },
+    {
+     "t": "correrse"
+    },
+    {
+     "t": "cachond",
+     "prefijo": true
+    },
+    {
+     "t": "orgia",
+     "prefijo": true
+    },
+    {
+     "t": "nudes"
+    },
+    {
+     "t": "fuck",
+     "prefijo": true
+    },
+    {
+     "t": "echar un polvo"
+    },
+    {
+     "t": "meterla"
+    }
+   ]
+  },
+  {
+   "id": "insultos",
+   "nombre": "insultos",
+   "accion": "bloquear",
+   "terminos": [
+    {
+     "t": "puta"
+    },
+    {
+     "t": "putas"
+    },
+    {
+     "t": "puto"
+    },
+    {
+     "t": "putos"
+    },
+    {
+     "t": "gilipollas"
+    },
+    {
+     "t": "imbecil",
+     "prefijo": true
+    },
+    {
+     "t": "subnormal",
+     "prefijo": true
+    },
+    {
+     "t": "zorra",
+     "prefijo": true
+    },
+    {
+     "t": "cabron",
+     "prefijo": true
+    },
+    {
+     "t": "hijo de puta"
+    },
+    {
+     "t": "hdp"
+    },
+    {
+     "t": "malparid",
+     "prefijo": true
+    },
+    {
+     "t": "pringad",
+     "prefijo": true
+    },
+    {
+     "t": "mongolo"
+    },
+    {
+     "t": "mongola"
+    },
+    {
+     "t": "mongolos"
+    },
+    {
+     "t": "retrasado mental"
+    }
+   ]
+  },
+  {
+   "id": "odio",
+   "nombre": "discurso de odio",
+   "accion": "bloquear",
+   "terminos": [
+    {
+     "t": "maricon",
+     "prefijo": true
+    },
+    {
+     "t": "nazi",
+     "prefijo": true
+    },
+    {
+     "t": "negrata",
+     "prefijo": true
+    },
+    {
+     "t": "sudaca",
+     "prefijo": true
+    },
+    {
+     "t": "panchit",
+     "prefijo": true
+    },
+    {
+     "t": "travelo",
+     "prefijo": true
+    }
+   ]
+  },
+  {
+   "id": "drogas",
+   "nombre": "drogas",
+   "accion": "bloquear",
+   "terminos": [
+    {
+     "t": "porro",
+     "prefijo": true
+    },
+    {
+     "t": "petas"
+    },
+    {
+     "t": "marihuana"
+    },
+    {
+     "t": "cocaina"
+    },
+    {
+     "t": "farlopa"
+    },
+    {
+     "t": "mdma"
+    },
+    {
+     "t": "extasis"
+    },
+    {
+     "t": "ketamina"
+    },
+    {
+     "t": "droga",
+     "prefijo": true
+    },
+    {
+     "t": "fumar hierba"
+    },
+    {
+     "t": "pillar coca"
+    }
+   ]
+  },
+  {
+   "id": "desnudos",
+   "nombre": "desnudos",
+   "accion": "revisar",
+   "terminos": [
+    {
+     "t": "desnud",
+     "prefijo": true
+    }
+   ]
+  },
+  {
+   "id": "violencia",
+   "nombre": "violencia real",
+   "accion": "revisar",
+   "terminos": [
+    {
+     "t": "paliza a"
+    },
+    {
+     "t": "pegar a"
+    },
+    {
+     "t": "partir la cara"
+    },
+    {
+     "t": "pelea con"
+    },
+    {
+     "t": "navaja",
+     "prefijo": true
+    },
+    {
+     "t": "apunalar",
+     "prefijo": true
+    },
+    {
+     "t": "reventar a"
+    },
+    {
+     "t": "matar a"
+    },
+    {
+     "t": "matarte"
+    },
+    {
+     "t": "matarlo"
+    },
+    {
+     "t": "matarla"
+    },
+    {
+     "t": "te voy a matar"
+    },
+    {
+     "t": "os voy a matar"
+    }
+   ]
+  },
+  {
+   "id": "apuestas",
+   "nombre": "apuestas",
+   "accion": "revisar",
+   "terminos": [
+    {
+     "t": "apuesta",
+     "prefijo": true
+    },
+    {
+     "t": "aposta",
+     "prefijo": true
+    },
+    {
+     "t": "casino",
+     "prefijo": true
+    }
+   ]
+  },
+  {
+   "id": "alcohol",
+   "nombre": "alcohol",
+   "accion": "revisar",
+   "terminos": [
+    {
+     "t": "botellon",
+     "prefijo": true
+    },
+    {
+     "t": "borrachera",
+     "prefijo": true
+    },
+    {
+     "t": "pedo"
+    },
+    {
+     "t": "chupito",
+     "prefijo": true
+    }
+   ]
+  },
+  {
+   "id": "venta",
+   "nombre": "venta o dinero",
+   "accion": "revisar",
+   "terminos": [
+    {
+     "t": "vendo"
+    },
+    {
+     "t": "bizum"
+    },
+    {
+     "t": "paypal"
+    }
+   ]
+  }
+ ]
+}
