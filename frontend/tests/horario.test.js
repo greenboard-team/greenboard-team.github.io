@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { huecosDelDia, solapan, tengoClase, franjasDelDia } from '../src/domain/horario.js';
+import { filtrarSemana, huecosDelDia, solapan, tengoClase, franjasDelDia } from '../src/domain/horario.js';
 
 const lunes = [
   { h: '09:00', f: '10:30', s: 'aiii' },
@@ -25,5 +25,11 @@ describe('horario', () => {
   it('marca las franjas que chocan con clase', () => {
     const f = franjasDelDia(lunes, { desde: '10:00', hasta: '12:00', duracion: 60, paso: 60 });
     expect(f.map((x) => x.conClase.map((c) => c.s))).toEqual([['aiii'], ['opti']]);
+  });
+  it('filtra la semana por asignaturas sin mutar la original', () => {
+    const semana = { 1: [{ h: '09:00', f: '10:30', s: 'aiii' }, { h: '11:00', f: '12:30', s: 'opti' }], 2: [] };
+    expect(filtrarSemana(semana, ['opti'])).toEqual({ 1: [{ h: '11:00', f: '12:30', s: 'opti' }], 2: [] });
+    expect(semana[1]).toHaveLength(2);
+    expect(filtrarSemana(semana, [])).toBe(semana);
   });
 });
