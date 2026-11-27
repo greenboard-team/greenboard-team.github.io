@@ -10,22 +10,31 @@
 //   GET  /foto                  -> la imagen tal cual (o 404). GET /foto/meta -> { hay, ts, tipo, bytes }
 //   DELETE /foto                -> la quita. Authorization: Bearer <ADMIN_TOKEN>.
 
+import { Cuentas } from "./cuentas.js";
+export { Cuentas };
+
 const PLAZAS = 5;
 const MAX_PERSONAS = 80;
 const AVATARES = 10;
 const ORIGENES = [
   "https://greenboard-team.github.io",
+  "https://raw.githack.com",
   "http://localhost:4173", "http://127.0.0.1:4173",
   "http://localhost:8000", "http://127.0.0.1:8000",
   "http://localhost:5500", "http://127.0.0.1:5500",
 ];
 
+// Vista previa de una rama antes de fusionarla (Cloudflare Pages, proyecto "greenboard-preview"):
+// https://greenboard-preview.pages.dev y sus alias por rama, p. ej. https://pr-4.greenboard-preview.pages.dev
+const PREVIEW = /^https:\/\/([a-z0-9-]+\.)?greenboard-preview\.pages\.dev$/;
+
 function cors(req) {
   const origin = req.headers.get("Origin") || "";
-  const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
+  const ok = ORIGENES.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:") ||
+    PREVIEW.test(origin);
   return {
     "Access-Control-Allow-Origin": ok ? origin : ORIGENES[0],
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Equipo",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
@@ -151,6 +160,17 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/" ) {
       return new Response("greenboard-mvp: GET /lista · POST /apuntarse · GET/POST /foto", { headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" } });
+    }
+    // Datos reales del prototipo, solo con sesión de alumno de U-tad (src/cuentas.js).
+    if (url.pathname.startsWith("/app/")) {
+      const h = new Headers(req.headers);
+      h.delete("X-Interno-Admin");
+      h.delete("X-Interno-Equipo");
+      if (env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`) h.set("X-Interno-Admin", "1");
+      const res = await env.CUENTAS.get(env.CUENTAS.idFromName("cuentas")).fetch(new Request(req, { headers: h }));
+      const out = new Response(res.body, res);
+      for (const [k, v] of Object.entries(headers)) out.headers.set(k, v);
+      return out;
     }
     // Credenciales: se comprueban aquí, con los secretos actuales, y se pasan al objeto como cabeceras internas.
     const admin = !!env.ADMIN_TOKEN && req.headers.get("Authorization") === `Bearer ${env.ADMIN_TOKEN}`;

@@ -18,6 +18,49 @@ URL: `https://greenboard-mvp.utad-study-connector.workers.dev`
 
 Los 5 primeros tienen plaza; el resto sale como lista de espera. El orden es el de llegada al servidor.
 
+## Datos reales de la app (`/mvp/`, solo alumnos de U-tad)
+
+`src/cuentas.js`, en el mismo Worker, con su propio Durable Object (`Cuentas`). Todo va bajo `/app/` y pide la
+cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesión, la página pública no ve nada real.
+
+| Método y ruta | Qué hace |
+|---|---|
+| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Un código `nombre-XXXX:correo` solo vale para ese correo. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
+| `POST /app/verificar` | `{enlace}` del correo mágico -> `{token}`. |
+| `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos, tus elecciones `materias`/`elegidas` y si tienes Blackboard conectado · cerrar sesión. |
+| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-8; puedes tener clase en varios grupos, p. ej. por optativas o cambio de titulación). El `PUT` acepta `{grupos, materias, elegidas}`: `materias` elige con qué grupo cursas cada asignatura y `elegidas` marca que ya has elegido las tuyas. |
+| `GET /app/asignaturas?grupos=A,B` | Todas las asignaturas que dan esos grupos, con los grupos que las dan, para que el alumno marque las suyas. |
+| `GET /app/conflictos?grupos=A,B` | Asignaturas que esos grupos dan en franjas distintas (p. ej. PRO3 a las 15:00 en FIIS4A y a las 09:00 en INSO3D), para elegir con qué grupo cursarlas. |
+| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. Si `elegidas`, solo las asignaturas de `materias`; si no, las de los grupos. |
+| `GET /app/aulas?dia=AAAA-MM-DD&desde=HH:MM&hasta=HH:MM` | Aulas sin clase en ese hueco, y hasta qué hora siguen libres. |
+| `PUT /app/blackboard` · `DELETE` | `{url}` del calendario de Blackboard (Calendario -> ⚙ -> Compartir calendario). Solo `https://u-tad.blackboard.com/webapps/calendar/calendarFeed/<token>/learn.ics`; se prueba antes de guardarlo. Es un secreto de cada alumno: no se registra en logs ni se devuelve nunca. |
+| `GET /app/entregas` | Tu calendario de Blackboard leído en el momento, partido en entregas y eventos. |
+| `GET /app/admin/codigos` | `Authorization: Bearer <ADMIN_TOKEN>`. Cada código vigente (enmascarado: `gb-x…`) con el correo que lo usa, sus grupos y su último acceso. |
+| `DELETE /app/admin/usuario?correo=` | Misma cabecera. Borra los datos de esa persona (grupos, enlace de Blackboard), sus sesiones y la unión con su código. |
+
+Los datos salen del pipeline de Dmitrii (repo privado *Estudios U-tad*): `python -m utad fetch-groups` exporta cada
+día el horario de **todos** los grupos de WebUntis (3 semanas, con los cambios respecto a la exportación anterior)
+a `groups.json`, y `rooms.json` ya tenía la ocupación de las aulas. Los dos se publican en su gist secreto, que el
+Worker lee con el secreto `DATA_BASE`.
+
+**Retirar el acceso a una persona:** quita su código de `INVITE_CODES` (`wrangler secret put` con la lista sin él). Sus
+sesiones abiertas dejan de valer en la siguiente petición y el código ya no sirve para entrar. Para borrar además sus
+datos: `DELETE /app/admin/usuario?correo=…`.
+
+Secretos nuevos (una vez, antes del primer `wrangler deploy` con esto):
+
+```bash
+npx wrangler secret put DATA_BASE       # https://gist.githubusercontent.com/<usuario>/<gist>/raw (el GIST_BASE del conector)
+npx wrangler secret put INVITE_CODES    # los códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea: `nombre-XXXX` o `nombre-XXXX:correo`, separados por comas
+# Solo si se activa el enlace mágico por correo (hace falta una cuenta de envío y un dominio verificado):
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put MAIL_FROM       # "Greenboard <hola@dominio-verificado>"
+```
+
+Probar en local: `.dev.vars` (no se sube) con `DATA_BASE=http://127.0.0.1:8790`, `INVITE_CODES=…` y
+`BB_HOSTS=127.0.0.1:8790`, `npx wrangler dev --port 8787`, y abrir la página con `?api=http://127.0.0.1:8787`.
+Tests de las funciones puras: `node --test test/cuentas.test.mjs`.
+
 ## Operar
 
 Desde esta carpeta, con el `wrangler` del conector (`..\..\..\..\Desktop\Estudios U-tad\connector\node_modules\.bin\wrangler`)
