@@ -45,7 +45,8 @@ export class GreenboardApi {
   horario() { return this.pedir('/horario'); }
   entregas() { return this.pedir('/entregas'); }
   grupos() { return this.pedir('/grupos'); }
-  guardarGrupos(grupos) { return this.pedir('/grupos', { method: 'PUT', body: { grupos } }); }
+  conflictos(grupos) { return this.pedir(`/conflictos?grupos=${encodeURIComponent(grupos.join(','))}`); }
+  guardarGrupos(grupos, materias = {}) { return this.pedir('/grupos', { method: 'PUT', body: { grupos, materias } }); }
   conectarBlackboard(url) { return this.pedir('/blackboard', { method: 'PUT', body: { url } }); }
   quitarBlackboard() { return this.pedir('/blackboard', { method: 'DELETE' }); }
   aulasLibres(dia, desde, hasta) { return this.pedir(`/aulas?dia=${dia}&desde=${desde}&hasta=${hasta}`); }
