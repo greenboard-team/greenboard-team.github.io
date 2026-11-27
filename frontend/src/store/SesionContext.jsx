@@ -105,7 +105,7 @@ export function SesionProvider({ children }) {
   const verDemo = useCallback(() => { sesion.guardar(CLAVES.demo, '1'); setDemo(true); }, []);
   const dejarDemo = useCallback(() => { sesion.borrar(CLAVES.demo); setDemo(false); }, []);
 
-  const guardarGrupos = useCallback(async (grupos) => { await api.guardarGrupos(grupos); await cargar(); }, [api, cargar]);
+  const guardarGrupos = useCallback(async (grupos, materias = {}) => { await api.guardarGrupos(grupos, materias); await cargar(); }, [api, cargar]);
   const conectarBB = useCallback(async (url) => { const r = await api.conectarBlackboard(url); await cargar(); return r; }, [api, cargar]);
   const quitarBB = useCallback(async () => { await api.quitarBlackboard().catch(() => {}); await cargar(); }, [api, cargar]);
 
