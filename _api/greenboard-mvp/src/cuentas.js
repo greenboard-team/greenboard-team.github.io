@@ -223,7 +223,13 @@ async function enviarEnlace(env, correo, enlace) {
   if (!r.ok) throw new Error(`correo ${r.status}`);
 }
 
-const codigosDe = (env) => String(env.INVITE_CODES || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+// Cada entrada es un código suelto (se liga al primer correo que lo usa) o "codigo:correo" (solo vale para ese correo).
+export const codigosDe = (env) => String(env.INVITE_CODES || "").split(",").map((x) => {
+  const i = x.indexOf(":");
+  const codigo = (i === -1 ? x : x.slice(0, i)).trim().toLowerCase();
+  const correo = i === -1 ? "" : x.slice(i + 1).trim().toLowerCase();
+  return { codigo, correo };
+}).filter((x) => x.codigo);
 const enmascara = (c) => c.slice(0, 4) + "…";
 
 // --- El objeto que guarda cuentas y sesiones ---
@@ -235,7 +241,7 @@ export class Cuentas {
     const k = "s:" + await sha256(token), s = await this.st.get(k);
     if (!s || s.exp < Date.now()) return null;
     // Entró con un código que ya no está en INVITE_CODES: acceso retirado.
-    if (s.codigo && !codigosDe(this.env).includes(s.codigo)) { await this.st.delete(k); return null; }
+    if (s.codigo && !codigosDe(this.env).some((c) => c.codigo === s.codigo)) { await this.st.delete(k); return null; }
     return s;
   }
   async nuevaSesion(correo, codigo = null) {
@@ -264,17 +270,18 @@ export class Cuentas {
       if (!(await this.limite("entrar:" + correo, 8, 3600e3))) return json({ ok: false, error: "espera" }, 429);
       const codigo = String(b.codigo || "").trim().toLowerCase();
       if (codigo) {
-        const codigos = codigosDe(env);
-        const ok = codigos.find((c) => iguales(c, codigo));
-        if (!ok) {
+        const entrada = codigosDe(env).find((c) => iguales(c.codigo, codigo));
+        if (!entrada) {
           // Límite global de códigos fallidos: probar correos distintos no sirve para adivinar códigos.
           if (!(await this.limite("codigo-malo", 30, 3600e3))) return json({ ok: false, error: "espera" }, 429);
           return json({ ok: false, error: "codigo" }, 401);
         }
-        const dueño = await this.st.get("c:" + ok);
+        // Un código con correo asignado solo vale para ese correo.
+        if (entrada.correo && entrada.correo !== correo) return json({ ok: false, error: "codigo-usado" }, 401);
+        const dueño = await this.st.get("c:" + entrada.codigo);
         if (dueño && dueño !== correo) return json({ ok: false, error: "codigo-usado" }, 401);
-        if (!dueño) await this.st.put("c:" + ok, correo);
-        return json({ ok: true, token: await this.nuevaSesion(correo, ok) });
+        if (!dueño) await this.st.put("c:" + entrada.codigo, correo);
+        return json({ ok: true, token: await this.nuevaSesion(correo, entrada.codigo) });
       }
       if (!env.RESEND_API_KEY || !env.MAIL_FROM) return json({ ok: false, error: "sin-correo", modo: "codigo" }, 400);
       const enlace = aleatorio();
@@ -296,9 +303,9 @@ export class Cuentas {
       if (req.method === "GET" && ruta === "/admin/codigos") {
         const out = [];
         for (const c of codigosDe(env)) {
-          const correo = (await this.st.get("c:" + c)) || null;
+          const correo = c.correo || (await this.st.get("c:" + c.codigo)) || null;
           const u = correo ? await this.st.get("u:" + correo) : null;
-          out.push({ codigo: enmascara(c), correo, grupos: u?.grupos || [], blackboard: !!u?.bb, ultimo: u?.ultimo || null });
+          out.push({ codigo: enmascara(c.codigo), correo, grupos: u?.grupos || [], blackboard: !!u?.bb, ultimo: u?.ultimo || null });
         }
         return json({ ok: true, codigos: out });
       }

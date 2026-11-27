@@ -1,7 +1,7 @@
 // node --test test/   (desde _api/greenboard-mvp). Funciones puras de src/cuentas.js, sin Worker.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aulasLibres, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, tocaSesion } from "../src/cuentas.js";
+import { aulasLibres, codigosDe, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, tocaSesion } from "../src/cuentas.js";
 
 test("solo entran correos de alumno de U-tad", () => {
   const d = ["live.u-tad.com"];
@@ -93,6 +93,14 @@ test("conflictos: mismo horario en dos grupos no es conflicto", () => {
     { cod: "FIGI", asig: "Física General I", g: ["B"], d: "2026-11-24", h: "11:00", f: "13:00" },
   ] };
   assert.equal(conflictosDeGrupos(datos, ["A", "B"]).length, 0);
+});
+
+test("códigos: sueltos (se ligan al usarlos) o con correo asignado", () => {
+  const c = codigosDe({ INVITE_CODES: " dmitrii-7k2:Dmitry.Puntusov@live.u-tad.com , gb-abc ,, " });
+  assert.deepEqual(c, [
+    { codigo: "dmitrii-7k2", correo: "dmitry.puntusov@live.u-tad.com" },
+    { codigo: "gb-abc", correo: "" },
+  ]);
 });
 
 test("tocaSesion: la asignatura elegida manda sobre el resto de grupos", () => {

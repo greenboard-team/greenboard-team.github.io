@@ -25,7 +25,7 @@ cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesi�
 
 | Método y ruta | Qué hace |
 |---|---|
-| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
+| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Un código `nombre-XXXX:correo` solo vale para ese correo. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
 | `POST /app/verificar` | `{enlace}` del correo mágico -> `{token}`. |
 | `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos y si tienes Blackboard conectado · cerrar sesión. |
 | `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-8; puedes tener clase en varios grupos, p. ej. por optativas o cambio de titulación). El `PUT` acepta `{grupos, materias}`: `materias` elige con qué grupo cursas cada asignatura. |
@@ -50,7 +50,7 @@ Secretos nuevos (una vez, antes del primer `wrangler deploy` con esto):
 
 ```bash
 npx wrangler secret put DATA_BASE       # https://gist.githubusercontent.com/<usuario>/<gist>/raw (el GIST_BASE del conector)
-npx wrangler secret put INVITE_CODES    # los 5 códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea
+npx wrangler secret put INVITE_CODES    # los códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea: `nombre-XXXX` o `nombre-XXXX:correo`, separados por comas
 # Solo si se activa el enlace mágico por correo (hace falta una cuenta de envío y un dominio verificado):
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put MAIL_FROM       # "Greenboard <hola@dominio-verificado>"
