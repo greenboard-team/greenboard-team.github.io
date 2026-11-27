@@ -13,6 +13,16 @@ const ordenar = (clases) => [...clases].sort((x, y) => aMin(x.h) - aMin(y.h));
 /** ¿Se pisan dos intervalos [a1, a2) y [b1, b2)? */
 export const solapan = (a1, a2, b1, b2) => aMin(a1) < aMin(b2) && aMin(b1) < aMin(a2);
 
+/**
+ * Semana con solo las clases de las asignaturas elegidas (ids de `s`). Sin ids, devuelve la semana tal cual.
+ * No muta la original: los huecos y los planes se siguen calculando con el horario completo.
+ */
+export function filtrarSemana(semana, ids = []) {
+  if (!ids.length) return semana;
+  const elegidas = new Set(ids);
+  return Object.fromEntries(Object.entries(semana).map(([dia, clases]) => [dia, clases.filter((c) => elegidas.has(c.s))]));
+}
+
 /** Clases de ese día que coinciden con la franja. */
 export function clasesQueSolapan(semana, { dia, desde, hasta }) {
   return (semana[dia] || []).filter((c) => !c.cancelada && solapan(c.h, c.f, desde, hasta));
