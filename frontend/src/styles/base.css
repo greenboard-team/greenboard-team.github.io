@@ -101,7 +101,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .aviso{display:flex;gap:12px;align-items:center;background:var(--ok-bg);border-left:4px solid var(--accent);border-radius:14px;padding:12px 12px 12px 14px;margin-top:18px}
 .aviso .ic{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--surface);display:grid;place-items:center;flex:none}
 .aviso p{margin:0;flex:1}
-.aviso button{border:0;background:transparent;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.aviso > button{border:0;background:transparent;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
 
 /* Filas de horario y entregas (diapositiva 7) */
 .fila{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);color:inherit;text-decoration:none;border-radius:10px}
@@ -196,6 +196,9 @@ a.fila:hover{background:var(--bg)}
   .guide p{font-size:13px;line-height:1.35}
   .item{grid-template-columns:64px minmax(0,1fr) auto;gap:10px}
   .grupos{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .aviso{flex-wrap:wrap;align-items:flex-start}
+  .aviso > button{margin-left:auto}
+  .aviso p{flex:1 1 100%;order:3}
 }
 
 @media (max-width:360px){
