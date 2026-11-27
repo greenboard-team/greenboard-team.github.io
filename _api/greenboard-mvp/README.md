@@ -28,8 +28,9 @@ cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesi�
 | `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
 | `POST /app/verificar` | `{enlace}` del correo mágico -> `{token}`. |
 | `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos y si tienes Blackboard conectado · cerrar sesión. |
-| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-8; puedes tener clase en varios grupos, p. ej. por optativas o cambio de titulación). |
-| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. |
+| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-8; puedes tener clase en varios grupos, p. ej. por optativas o cambio de titulación). El `PUT` acepta `{grupos, materias}`: `materias` elige con qué grupo cursas cada asignatura. |
+| `GET /app/conflictos?grupos=A,B` | Asignaturas que esos grupos dan en franjas distintas (p. ej. PRO3 a las 15:00 en FIIS4A y a las 09:00 en INSO3D), para elegir con qué grupo cursarlas. |
+| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. Si hay `materias`, cada asignatura se filtra por el grupo elegido. |
 | `GET /app/aulas?dia=AAAA-MM-DD&desde=HH:MM&hasta=HH:MM` | Aulas sin clase en ese hueco, y hasta qué hora siguen libres. |
 | `PUT /app/blackboard` · `DELETE` | `{url}` del calendario de Blackboard (Calendario -> ⚙ -> Compartir calendario). Solo `https://u-tad.blackboard.com/webapps/calendar/calendarFeed/<token>/learn.ics`; se prueba antes de guardarlo. Es un secreto de cada alumno: no se registra en logs ni se devuelve nunca. |
 | `GET /app/entregas` | Tu calendario de Blackboard leído en el momento, partido en entregas y eventos. |

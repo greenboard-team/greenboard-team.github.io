@@ -1,7 +1,7 @@
 // node --test test/   (desde _api/greenboard-mvp). Funciones puras de src/cuentas.js, sin Worker.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aulasLibres, correoValido, enlaceBlackboard, parseIcs } from "../src/cuentas.js";
+import { aulasLibres, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, tocaSesion } from "../src/cuentas.js";
 
 test("solo entran correos de alumno de U-tad", () => {
   const d = ["live.u-tad.com"];
@@ -72,4 +72,32 @@ test("aulas libres: ninguna clase pisa el hueco, y se sabe hasta cuándo", () =>
   assert.equal(r.conDatos, true);
   assert.deepEqual(r.libres.map((x) => [x.aula, x.hastaLas]), [["Aula 001", "17:00"], ["MA04", null]]);
   assert.equal(aulasLibres(rooms, "2027-01-10", "11:00", "13:00").conDatos, false);
+});
+
+test("conflictos: la misma asignatura en grupos con horarios distintos", () => {
+  const datos = { groups: { FIIS4A: "FIIS4A", INSO3D: "INSO3D" }, sessions: [
+    { cod: "PRO3", asig: "Proyectos III", g: ["FIIS4A"], d: "2026-11-24", h: "15:00", f: "17:00", aula: "113" },
+    { cod: "PRO3", asig: "Proyectos III", g: ["INSO3D"], d: "2026-11-24", h: "09:00", f: "11:00", aula: "205" },
+    { cod: "FIGI", asig: "Física General I", g: ["FIIS4A"], d: "2026-11-23", h: "11:00", f: "13:00", aula: "112" },
+  ] };
+  const c = conflictosDeGrupos(datos, ["FIIS4A", "INSO3D"]);
+  assert.deepEqual(c.map((x) => x.clave), ["PRO3"]);
+  assert.deepEqual(c[0].opciones.map((o) => o.grupo), ["FIIS4A", "INSO3D"]);
+  assert.deepEqual(c[0].opciones[0].muestras[0], { d: "2026-11-24", h: "15:00", f: "17:00", aula: "113" });
+  assert.equal(conflictosDeGrupos(datos, ["FIIS4A"]).length, 0);
+});
+
+test("conflictos: mismo horario en dos grupos no es conflicto", () => {
+  const datos = { sessions: [
+    { cod: "FIGI", asig: "Física General I", g: ["A"], d: "2026-11-23", h: "11:00", f: "13:00" },
+    { cod: "FIGI", asig: "Física General I", g: ["B"], d: "2026-11-24", h: "11:00", f: "13:00" },
+  ] };
+  assert.equal(conflictosDeGrupos(datos, ["A", "B"]).length, 0);
+});
+
+test("tocaSesion: la asignatura elegida manda sobre el resto de grupos", () => {
+  const sesion = { cod: "PRO3", g: ["INSO3D"] };
+  assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], {}), true);
+  assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), false);
+  assert.equal(tocaSesion({ cod: "PRO3", g: ["FIIS4A"] }, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), true);
 });
