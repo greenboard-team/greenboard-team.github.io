@@ -45,7 +45,9 @@ export function EntrarPage() {
   );
 }
 
-/** Elegir grupos de WebUntis (doble grado: hasta 3). */
+const MAX_GRUPOS = 8;
+
+/** Elegir grupos de WebUntis. Un alumno puede tener clase en varios (optativas, otro curso, cambio de titulación). */
 export function GruposPage() {
   const { api, academico, guardarGrupos } = useSesion();
   const { avisar } = useUi();
@@ -58,7 +60,11 @@ export function GruposPage() {
   if (!lista) return <div className="puerta"><p className="cargando">Cargando los grupos de WebUntis…</p></div>;
   const f = norm(filtro);
   const filtrados = Object.entries(lista).filter(([g, n]) => !f || norm(g + ' ' + n).includes(f));
-  const elegir = (g) => setElegidos((e) => (e.includes(g) ? e.filter((x) => x !== g) : [...e, g].slice(-3)));
+  const elegir = (g) => setElegidos((e) => {
+    if (e.includes(g)) return e.filter((x) => x !== g);
+    if (e.length >= MAX_GRUPOS) { avisar(`Puedes elegir hasta ${MAX_GRUPOS} grupos`); return e; }
+    return [...e, g];
+  });
   const guardar = async () => {
     try { await guardarGrupos(elegidos); navigate('/inicio'); } catch { avisar('No se han podido guardar los grupos'); }
   };
@@ -66,7 +72,18 @@ export function GruposPage() {
     <div className="puerta" style={{ maxWidth: 720, marginTop: '2vh' }}>
       <span className="brand"><i>G</i>Greenboard</span>
       <h2>¿En qué grupo estás?</h2>
-      <p className="note">Tu horario sale de tu grupo de WebUntis. Si haces doble grado, elige los dos (por ejemplo <b>FIIS4A</b> y <b>MAIS4A</b>) y se juntan en uno. Hasta 3.</p>
+      <p className="note">Tu horario sale de tu grupo de WebUntis. Si haces doble grado, elige los dos (por ejemplo <b>FIIS4A</b> y <b>MAIS4A</b>) y se juntan en uno. Si tienes clase en grupos de otros cursos (optativas, cambio de titulación), elige también esos: hasta 8.</p>
+      {elegidos.length > 0 && (
+        <div className="grupos-elegidos" aria-live="polite">
+          <span className="note">Tus grupos:</span>
+          {elegidos.map((g) => (
+            <button key={g} type="button" className="chip-grupo" onClick={() => elegir(g)} title={`Quitar ${g}`} aria-label={`Quitar ${g}`}>
+              {g} <span aria-hidden="true">×</span>
+            </button>
+          ))}
+          {elegidos.length > 1 && <button type="button" className="linkbtn" onClick={() => setElegidos([])}>Quitar todos</button>}
+        </div>
+      )}
       <div className="campo"><label htmlFor="fg">Buscar grupo</label><input id="fg" type="search" placeholder="MAIS4, Física, Animación…" value={filtro} onChange={(e) => setFiltro(e.target.value)} /></div>
       {filtrados.length ? (
         <div className="grupos">
@@ -76,7 +93,7 @@ export function GruposPage() {
         </div>
       ) : <p className="note">Ningún grupo con ese nombre.</p>}
       <p style={{ margin: '16px 0 0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button className="btn" id="btn-grupos" disabled={!elegidos.length} onClick={guardar}>{elegidos.length ? 'Ver mi horario · ' + elegidos.join(' + ') : 'Elige tu grupo'}</button>
+        <button className="btn" id="btn-grupos" disabled={!elegidos.length} onClick={guardar}>{elegidos.length ? `Ver mi horario (${elegidos.length} ${elegidos.length === 1 ? 'grupo' : 'grupos'})` : 'Elige tus grupos'}</button>
         {academico?.real?.grupos?.length > 0 && <Link to="/inicio" className="note">Cancelar</Link>}
       </p>
     </div>
