@@ -15,7 +15,7 @@ export const solapan = (a1, a2, b1, b2) => aMin(a1) < aMin(b2) && aMin(b1) < aMi
 
 /**
  * Semana con solo las clases de las asignaturas elegidas (ids de `s`). Sin ids, devuelve la semana tal cual.
- * No muta la original: los huecos y los planes se siguen calculando con el horario completo.
+ * No muta la original: sirve para dejar fuera asignaturas de un título anterior y calcular huecos sobre lo que queda.
  */
 export function filtrarSemana(semana, ids = []) {
   if (!ids.length) return semana;
