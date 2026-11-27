@@ -1,0 +1,4 @@
+# El build de /mvp se genera con LF en CI (Linux). Sin esto, Windows lo escribe con CRLF
+# y el check «git diff --exit-code -- ../mvp/index.html» falla en cada push.
+mvp/index.html text eol=lf
+frontend/index.html text eol=lf
