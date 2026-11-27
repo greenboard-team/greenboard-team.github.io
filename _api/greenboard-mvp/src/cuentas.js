@@ -57,12 +57,13 @@ export function correoValido(correo, dominios) {
   return m && dominios.includes(m[1]) ? c : null;
 }
 
-/** ¿Esta sesión entra en el horario del alumno? Si eligió grupo para la asignatura, manda esa elección. */
-export function tocaSesion(x, grupos, materias = {}, codDeAsig = null) {
+/** ¿Esta sesión entra en el horario del alumno? Si eligió sus asignaturas, solo cuentan esas. */
+export function tocaSesion(x, grupos, materias = {}, codDeAsig = null, soloElegidas = false) {
   // Los cambios del pipeline no traen `cod`; se resuelve por el nombre de la asignatura.
   const clave = x.cod || (codDeAsig && codDeAsig.get(x.asig)) || x.asig;
   const elegido = clave && materias[clave];
   if (elegido) return (x.g || []).includes(elegido);
+  if (soloElegidas) return false;   // el alumno ya marcó sus asignaturas: las demás no cuentan
   return (x.g || []).some((g) => grupos.includes(g));
 }
 
@@ -80,11 +81,8 @@ export function sinDuplicados(items) {
   });
 }
 
-/**
- * Asignaturas que varios de los grupos elegidos dan en franjas distintas (p. ej. PRO3 a las 15:00 en
- * FIIS4A y a las 09:00 en INSO3D). El alumno elige con qué grupo cursa cada una.
- */
-export function conflictosDeGrupos(datos, grupos) {
+/** Agrupa las sesiones de los grupos elegidos por asignatura: qué grupos la dan y una muestra de horarios. */
+function porAsignatura(datos, grupos) {
   const sel = new Set(grupos);
   const por = new Map();
   for (const x of datos?.sessions || []) {
@@ -100,20 +98,34 @@ export function conflictosDeGrupos(datos, grupos) {
     }
     por.set(clave, e);
   }
+  return por;
+}
+
+const opcionesDe = (e, grupos) => grupos.filter((g) => e.franjas.has(g)).map((g) => {
+  const ms = [...e.franjas.get(g).values()].sort((a, b) => a.d.localeCompare(b.d) || a.h.localeCompare(b.h));
+  return { grupo: g, muestras: ms.slice(0, 2) };
+});
+
+/** Todas las asignaturas que dan los grupos elegidos, con los grupos que las dan. */
+export function asignaturasDeGrupos(datos, grupos) {
+  return [...porAsignatura(datos, grupos)].map(([clave, e]) => ({
+    clave, cod: e.cod, asig: e.asig, opciones: opcionesDe(e, grupos),
+  }));
+}
+
+/**
+ * Asignaturas que varios de los grupos elegidos dan en franjas distintas (p. ej. PRO3 a las 15:00 en
+ * FIIS4A y a las 09:00 en INSO3D). El alumno elige con qué grupo cursa cada una.
+ */
+export function conflictosDeGrupos(datos, grupos) {
   const out = [];
-  for (const [clave, e] of por) {
+  for (const [clave, e] of porAsignatura(datos, grupos)) {
     if (e.franjas.size < 2) continue;
     // El patrón incluye el día de la semana y el aula: la misma hora en otro día (o en otra aula) también es conflicto.
     const patrones = new Set([...e.franjas.values()].map((f) =>
       [...new Set([...f.values()].map((m) => `${diaSemana(m.d)}|${m.h}-${m.f}|${m.aula}`))].sort().join("|")));
     if (patrones.size < 2) continue;   // mismo día, hora y aula en ambos grupos: no hay nada que elegir
-    out.push({
-      clave, cod: e.cod, asig: e.asig,
-      opciones: grupos.filter((g) => e.franjas.has(g)).map((g) => {
-        const ms = [...e.franjas.get(g).values()].sort((a, b) => a.d.localeCompare(b.d) || a.h.localeCompare(b.h));
-        return { grupo: g, muestras: ms.slice(0, 2) };
-      }),
-    });
+    out.push({ clave, cod: e.cod, asig: e.asig, opciones: opcionesDe(e, grupos) });
   }
   return out;
 }
@@ -352,12 +364,18 @@ export class Cuentas {
       await this.st.delete("s:" + await sha256(token)); return json({ ok: true });
     }
     if (req.method === "GET" && ruta === "/yo") {
-      return json({ correo: s.correo, grupos: u.grupos || [], materias: u.materias || {}, blackboard: !!u.bb });
+      return json({ correo: s.correo, grupos: u.grupos || [], materias: u.materias || {}, elegidas: !!u.elegidas, blackboard: !!u.bb });
     }
     try {
       if (req.method === "GET" && ruta === "/grupos") {
         const g = await dato(env, "groups.json");
         return json({ grupos: g.groups, generado: g.generated });
+      }
+      if (req.method === "GET" && ruta === "/asignaturas") {
+        const g = await dato(env, "groups.json");
+        const pedidos = (url.searchParams.get("grupos") || "").split(",").map((x) => x.trim()).filter(Boolean);
+        const grupos = [...new Set(pedidos)].filter((x) => x in g.groups).slice(0, MAX_GRUPOS);
+        return json({ asignaturas: asignaturasDeGrupos(g, grupos) });
       }
       if (req.method === "GET" && ruta === "/conflictos") {
         const g = await dato(env, "groups.json");
@@ -375,15 +393,17 @@ export class Cuentas {
           if (!grupos.includes(grupo)) continue;
           if ((g.sessions || []).some((x) => (x.cod || x.asig) === clave && (x.g || []).includes(grupo))) materias[clave] = grupo;
         }
-        u.grupos = grupos; u.materias = materias; await this.st.put(uk, u);
-        return json({ ok: true, grupos, materias });
+        u.grupos = grupos; u.materias = materias;
+        u.elegidas = !!(b.elegidas && Object.keys(materias).length);
+        await this.st.put(uk, u);
+        return json({ ok: true, grupos, materias, elegidas: !!u.elegidas });
       }
       if (req.method === "GET" && ruta === "/horario") {
         const g = await dato(env, "groups.json");
         const mios = (u.grupos || []).filter((x) => x in g.groups), materias = u.materias || {};
         const codDeAsig = new Map((g.sessions || []).filter((x) => x.cod).map((x) => [x.asig, x.cod]));
-        const toca = (x) => tocaSesion(x, mios, materias, codDeAsig);
-        return json({ generado: g.generated, semanas: g.weeks, grupos: mios, materias,
+        const toca = (x) => tocaSesion(x, mios, materias, codDeAsig, !!u.elegidas);
+        return json({ generado: g.generated, semanas: g.weeks, grupos: mios, materias, elegidas: !!u.elegidas,
           sesiones: sinDuplicados(g.sessions.filter(toca)), cambios: sinDuplicados((g.cambios || []).filter(toca)) });
       }
       if (req.method === "GET" && ruta === "/aulas") {

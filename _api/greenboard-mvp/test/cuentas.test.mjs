@@ -1,7 +1,7 @@
 // node --test test/   (desde _api/greenboard-mvp). Funciones puras de src/cuentas.js, sin Worker.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aulasLibres, codigosDe, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, sinDuplicados, tocaSesion } from "../src/cuentas.js";
+import { asignaturasDeGrupos, aulasLibres, codigosDe, conflictosDeGrupos, correoValido, enlaceBlackboard, parseIcs, sinDuplicados, tocaSesion } from "../src/cuentas.js";
 
 test("solo entran correos de alumno de U-tad", () => {
   const d = ["live.u-tad.com"];
@@ -125,6 +125,22 @@ test("tocaSesion: la asignatura elegida manda sobre el resto de grupos", () => {
   assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], {}), true);
   assert.equal(tocaSesion(sesion, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), false);
   assert.equal(tocaSesion({ cod: "PRO3", g: ["FIIS4A"] }, ["FIIS4A", "INSO3D"], { PRO3: "FIIS4A" }), true);
+});
+
+test("asignaturas: todas las de los grupos elegidos, con sus opciones", () => {
+  const datos = { sessions: [
+    { cod: "PRO3", asig: "Proyectos III", g: ["FIIS4A"], d: "2026-11-24", h: "15:00", f: "17:00", aula: "113" },
+    { cod: "PRO3", asig: "Proyectos III", g: ["INSO3D"], d: "2026-11-24", h: "09:00", f: "11:00", aula: "205" },
+    { cod: "FIGI", asig: "Física General I", g: ["FIIS4A"], d: "2026-11-23", h: "11:00", f: "13:00", aula: "112" },
+  ] };
+  const a = asignaturasDeGrupos(datos, ["FIIS4A", "INSO3D"]);
+  assert.deepEqual(a.map((x) => x.clave).sort(), ["FIGI", "PRO3"]);
+  assert.deepEqual(a.find((x) => x.clave === "PRO3").opciones.map((o) => o.grupo), ["FIIS4A", "INSO3D"]);
+});
+
+test("tocaSesion: con asignaturas elegidas, las demás no cuentan", () => {
+  assert.equal(tocaSesion({ cod: "FIGI", g: ["FIIS1A"] }, ["FIIS1A"], { PRO3: "FIIS4A" }, null, true), false);
+  assert.equal(tocaSesion({ cod: "PRO3", g: ["FIIS4A"] }, ["FIIS1A"], { PRO3: "FIIS4A" }, null, true), true);
 });
 
 test("tocaSesion: un cambio sin cod resuelve la asignatura por su nombre", () => {
