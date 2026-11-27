@@ -25,11 +25,13 @@ cabecera `Authorization: Bearer <token>` de una sesión, salvo entrar. Sin sesi�
 
 | Método y ruta | Qué hace |
 |---|---|
-| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
+| `POST /app/entrar` | `{correo, codigo}`. El correo tiene que ser `@live.u-tad.com` (`DOMINIOS`). Con un código de `INVITE_CODES` devuelve `{token}`; cada código queda ligado al primer correo que lo usa. Un código `nombre-XXXX:correo` solo vale para ese correo. Sin código y con `RESEND_API_KEY` + `MAIL_FROM`, manda un enlace mágico (15 min, un uso). |
 | `POST /app/verificar` | `{enlace}` del correo mágico -> `{token}`. |
-| `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos y si tienes Blackboard conectado · cerrar sesión. |
-| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-3; doble grado = dos). |
-| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. |
+| `GET /app/yo` · `POST /app/salir` | Tu correo, tus grupos, tus elecciones `materias`/`elegidas` y si tienes Blackboard conectado · cerrar sesión. |
+| `GET /app/grupos` · `PUT /app/grupos` | Los grupos de WebUntis con clase · guardar los tuyos (1-8; puedes tener clase en varios grupos, p. ej. por optativas o cambio de titulación). El `PUT` acepta `{grupos, materias, elegidas}`: `materias` elige con qué grupo cursas cada asignatura y `elegidas` marca que ya has elegido las tuyas. |
+| `GET /app/asignaturas?grupos=A,B` | Todas las asignaturas que dan esos grupos, con los grupos que las dan, para que el alumno marque las suyas. |
+| `GET /app/conflictos?grupos=A,B` | Asignaturas que esos grupos dan en franjas distintas (p. ej. PRO3 a las 15:00 en FIIS4A y a las 09:00 en INSO3D), para elegir con qué grupo cursarlas. |
+| `GET /app/horario` | Tus clases de las próximas semanas (grupos juntos, sin duplicar) y sus cambios. Si `elegidas`, solo las asignaturas de `materias`; si no, las de los grupos. |
 | `GET /app/aulas?dia=AAAA-MM-DD&desde=HH:MM&hasta=HH:MM` | Aulas sin clase en ese hueco, y hasta qué hora siguen libres. |
 | `PUT /app/blackboard` · `DELETE` | `{url}` del calendario de Blackboard (Calendario -> ⚙ -> Compartir calendario). Solo `https://u-tad.blackboard.com/webapps/calendar/calendarFeed/<token>/learn.ics`; se prueba antes de guardarlo. Es un secreto de cada alumno: no se registra en logs ni se devuelve nunca. |
 | `GET /app/entregas` | Tu calendario de Blackboard leído en el momento, partido en entregas y eventos. |
@@ -49,7 +51,7 @@ Secretos nuevos (una vez, antes del primer `wrangler deploy` con esto):
 
 ```bash
 npx wrangler secret put DATA_BASE       # https://gist.githubusercontent.com/<usuario>/<gist>/raw (el GIST_BASE del conector)
-npx wrangler secret put INVITE_CODES    # los 5 códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea
+npx wrangler secret put INVITE_CODES    # los códigos de material/pro3alb/mvp-invite-codes.txt (fuera del repo), en una línea: `nombre-XXXX` o `nombre-XXXX:correo`, separados por comas
 # Solo si se activa el enlace mágico por correo (hace falta una cuenta de envío y un dominio verificado):
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put MAIL_FROM       # "Greenboard <hola@dominio-verificado>"

@@ -2,8 +2,9 @@
 // (la carpeta no se vacía entera porque /mvp comparte espacio con la presentación y el formulario del QR).
 import { readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const mvp = new URL('../../mvp/', import.meta.url).pathname;
+const mvp = fileURLToPath(new URL('../../mvp/', import.meta.url));
 const assets = join(mvp, 'assets');
 const vivos = new Set();
 const pendientes = ['index.html'];
