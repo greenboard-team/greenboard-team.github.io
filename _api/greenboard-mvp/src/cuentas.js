@@ -29,6 +29,8 @@
 
 const SESION_DIAS = 30;
 const ENLACE_MIN = 15;
+// Un alumno puede tener clase en varios grupos (optativas, asignaturas de otro curso o cambio de titulación).
+const MAX_GRUPOS = 8;
 const APP_URL = "https://greenboard-team.github.io/mvp/";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -288,7 +290,7 @@ export class Cuentas {
       if (req.method === "PUT" && ruta === "/grupos") {
         const g = await dato(env, "groups.json"), b = await body();
         const grupos = [...new Set((Array.isArray(b.grupos) ? b.grupos : []).map(String))].filter((x) => x in g.groups);
-        if (grupos.length < 1 || grupos.length > 3) return json({ ok: false, error: "grupos" }, 400);
+        if (grupos.length < 1 || grupos.length > MAX_GRUPOS) return json({ ok: false, error: "grupos" }, 400);
         u.grupos = grupos; await this.st.put(uk, u);
         return json({ ok: true, grupos });
       }
