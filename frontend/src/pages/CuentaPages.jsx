@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../components/common/Icon.jsx';
 import { Hecho } from '../components/common/Piezas.jsx';
 import { AvisoInstalar } from './InicioPage.jsx';
+import { defaultsDeConflicto } from '../domain/conflictos.js';
 import { fmtDia } from '../domain/fechas.js';
 import { norm } from '../domain/texto.js';
 import { useSesion } from '../store/SesionContext.jsx';
@@ -76,9 +77,7 @@ export function GruposPage() {
     try {
       const r = await api.conflictos(elegidos);
       if (!r.conflictos.length) { await guardarGrupos(elegidos, {}); navigate('/inicio'); return; }
-      const porDefecto = {};
-      for (const c of r.conflictos) porDefecto[c.clave] = c.opciones[0].grupo;  // el primer grupo elegido que la da
-      setMaterias(porDefecto);
+      setMaterias(defaultsDeConflicto(r.conflictos, materias));
       setConflictos(r.conflictos);
       setPaso('conflictos');
     } catch { avisar('No se han podido comprobar las asignaturas de esos grupos'); }
@@ -130,18 +129,18 @@ export function GruposPage() {
         <div className="grupos-elegidos" aria-live="polite">
           <span className="note">Tus grupos:</span>
           {elegidos.map((g) => (
-            <button key={g} type="button" className="chip-grupo" onClick={() => elegir(g)} title={`Quitar ${g}`} aria-label={`Quitar ${g}`}>
+            <button key={g} type="button" className="chip-grupo" disabled={ocupado} onClick={() => elegir(g)} title={`Quitar ${g}`} aria-label={`Quitar ${g}`}>
               {g} <span aria-hidden="true">×</span>
             </button>
           ))}
-          {elegidos.length > 1 && <button type="button" className="linkbtn" onClick={() => setElegidos([])}>Quitar todos</button>}
+          {elegidos.length > 1 && <button type="button" className="linkbtn" disabled={ocupado} onClick={() => setElegidos([])}>Quitar todos</button>}
         </div>
       )}
       <div className="campo"><label htmlFor="fg">Buscar grupo</label><input id="fg" type="search" placeholder="MAIS4, Física, Animación…" value={filtro} onChange={(e) => setFiltro(e.target.value)} /></div>
       {filtrados.length ? (
         <div className="grupos">
           {filtrados.map(([g, n]) => (
-            <button key={g} className="grupo" aria-pressed={elegidos.includes(g)} onClick={() => elegir(g)}><b>{g}</b><small>{n}</small></button>
+            <button key={g} className="grupo" aria-pressed={elegidos.includes(g)} disabled={ocupado} onClick={() => elegir(g)}><b>{g}</b><small>{n}</small></button>
           ))}
         </div>
       ) : <p className="note">Ningún grupo con ese nombre.</p>}
